@@ -1,0 +1,1 @@
+# FastAPI Inventory Management System
