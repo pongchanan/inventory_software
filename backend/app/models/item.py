@@ -14,6 +14,7 @@ class Item(Base):
     quantity = Column(Integer, default=1)
     available = Column(Boolean, default=True)
     location = Column(String)  # Cabinet/shelf location
+    image_url = Column(String, nullable=True)  # URL/path to item image
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

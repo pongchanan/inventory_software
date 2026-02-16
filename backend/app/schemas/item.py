@@ -11,6 +11,7 @@ class ItemBase(BaseModel):
     quantity: int = 1
     available: bool = True
     location: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 class ItemCreate(ItemBase):

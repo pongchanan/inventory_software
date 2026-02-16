@@ -4,7 +4,9 @@ from typing import List, Optional
 from datetime import datetime
 from app.database import get_db
 from app.models.compartment import Compartment
+from app.models.item import Item
 from app.schemas.compartment import CompartmentCreate, CompartmentResponse, CompartmentUpdate
+from app.schemas.item import ItemResponse
 
 router = APIRouter(prefix="/api/compartments", tags=["compartments"])
 
@@ -118,3 +120,55 @@ def delete_compartment(locker_number: str, db: Session = Depends(get_db)):
     db.delete(compartment)
     db.commit()
     return None
+
+
+@router.get("/{locker_number}/items", response_model=List[ItemResponse])
+def get_compartment_items(
+    locker_number: str,
+    available_only: bool = False,
+    db: Session = Depends(get_db)
+):
+    """Get all items stored in a specific compartment
+    
+    Normal users can use available_only=True to see only available items.
+    Admins can see all items regardless of availability.
+    """
+    # Verify compartment exists
+    compartment = db.query(Compartment).filter(
+        Compartment.locker_number == locker_number
+    ).first()
+    if not compartment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Compartment {locker_number} not found"
+        )
+    
+    # Get items by location (using locker_number as location identifier)
+    query = db.query(Item).filter(Item.location == locker_number)
+    
+    if available_only:
+        query = query.filter(Item.available == True)
+    
+    items = query.all()
+    return items
+
+
+@router.get("/floor/{floor}/items", response_model=List[ItemResponse])
+def get_floor_items(
+    floor: int,
+    available_only: bool = False,
+    db: Session = Depends(get_db)
+):
+    """Get all items on a specific floor across all compartments"""
+    # Get all compartments on this floor
+    compartments = db.query(Compartment).filter(Compartment.floor == floor).all()
+    locker_numbers = [comp.locker_number for comp in compartments]
+    
+    # Get items in those compartments
+    query = db.query(Item).filter(Item.location.in_(locker_numbers))
+    
+    if available_only:
+        query = query.filter(Item.available == True)
+    
+    items = query.all()
+    return items
