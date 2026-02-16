@@ -4,6 +4,7 @@ from typing import List
 from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse
+from app.auth import hash_password
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -19,7 +20,9 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
             detail=f"User with UID {user.uid} already exists"
         )
     
-    db_user = User(**user.model_dump())
+    db_user = User(**user.model_dump(exclude={"password"}))
+    if user.password:
+        db_user.password_hash = hash_password(user.password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

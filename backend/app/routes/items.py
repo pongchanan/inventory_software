@@ -6,14 +6,16 @@ import shutil
 from datetime import datetime
 from app.database import get_db
 from app.models.item import Item
+from app.models.user import User
 from app.schemas.item import ItemCreate, ItemResponse
+from app.auth import require_admin
 
 router = APIRouter(prefix="/api/items", tags=["items"])
 
 
 @router.post("/", response_model=ItemResponse, status_code=status.HTTP_201_CREATED)
-def create_item(item: ItemCreate, db: Session = Depends(get_db)):
-    """Create a new item"""
+def create_item(item: ItemCreate, admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Create a new item (Admin only)"""
     # Check if UID already exists
     existing = db.query(Item).filter(Item.uid == item.uid).first()
     if existing:
@@ -59,8 +61,8 @@ def list_items(
 
 
 @router.put("/{uid}", response_model=ItemResponse)
-def update_item(uid: str, item_update: ItemCreate, db: Session = Depends(get_db)):
-    """Update item information"""
+def update_item(uid: str, item_update: ItemCreate, admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Update item information (Admin only)"""
     item = db.query(Item).filter(Item.uid == uid).first()
     if not item:
         raise HTTPException(
@@ -77,8 +79,8 @@ def update_item(uid: str, item_update: ItemCreate, db: Session = Depends(get_db)
 
 
 @router.delete("/{uid}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_item(uid: str, db: Session = Depends(get_db)):
-    """Delete an item"""
+def delete_item(uid: str, admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Delete an item (Admin only)"""
     item = db.query(Item).filter(Item.uid == uid).first()
     if not item:
         raise HTTPException(
@@ -95,6 +97,7 @@ def delete_item(uid: str, db: Session = Depends(get_db)):
 async def upload_item_image(
     uid: str,
     file: UploadFile = File(...),
+    admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """Upload an image for an item (Admin only)"""

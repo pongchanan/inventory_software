@@ -1,19 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Package, LayoutGrid, ShieldCheck, Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Package, LayoutGrid, ShieldCheck, Menu, X, LogIn, LogOut, User } from "lucide-react";
 import { useState } from "react";
-
-const navLinks = [
-  { href: "/", label: "Items", icon: Package },
-  { href: "/cabinets", label: "Cabinets", icon: LayoutGrid },
-  { href: "/admin", label: "Admin", icon: ShieldCheck },
-];
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAdmin, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navLinks = [
+    { href: "/", label: "Items", icon: Package },
+    { href: "/cabinets", label: "Cabinets", icon: LayoutGrid },
+    ...(isAdmin
+      ? [{ href: "/admin", label: "Admin", icon: ShieldCheck }]
+      : []),
+  ];
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
 
   return (
     <nav className="bg-white border-b border-border sticky top-0 z-50">
@@ -45,6 +55,31 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            {/* Auth button */}
+            {user ? (
+              <div className="flex items-center gap-2 ml-3 pl-3 border-l border-border">
+                <span className="flex items-center gap-1 text-sm text-muted">
+                  <User className="w-4 h-4" />
+                  {user.name}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="flex items-center gap-1 ml-3 pl-3 border-l border-border px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                Admin Login
+              </Link>
+            )}
           </div>
 
           {/* Mobile toggle */}
@@ -78,6 +113,32 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            {/* Mobile Auth */}
+            {user ? (
+              <>
+                <div className="flex items-center gap-2 px-4 py-2 text-sm text-muted">
+                  <User className="w-4 h-4" />
+                  {user.name}
+                </div>
+                <button
+                  onClick={() => { handleLogout(); setMobileOpen(false); }}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg w-full"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg"
+              >
+                <LogIn className="w-4 h-4" />
+                Admin Login
+              </Link>
+            )}
           </div>
         )}
       </div>

@@ -11,7 +11,8 @@ from app.routes import (
     approvals_router,
     audit_logs_router,
     compartments_router,
-    stats_router
+    stats_router,
+    auth_router,
 )
 import os
 
@@ -66,6 +67,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(items_router)
 app.include_router(transactions_router)

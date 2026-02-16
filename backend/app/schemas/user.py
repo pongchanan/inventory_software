@@ -12,7 +12,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    pass
+    password: Optional[str] = None  # plain-text password, hashed on save
 
 
 class UserResponse(UserBase):
@@ -22,3 +22,14 @@ class UserResponse(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse

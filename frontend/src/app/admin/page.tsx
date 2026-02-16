@@ -3,13 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   fetchItems,
-  createItem,
-  deleteItem,
-  uploadItemImage,
+  createItemAuth,
+  deleteItemAuth,
+  uploadItemImageAuth,
   Item,
   ItemCreate,
   getImageUrl,
 } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   ShieldCheck,
@@ -34,6 +36,8 @@ const emptyForm: ItemCreate = {
 };
 
 export default function AdminPage() {
+  const { user, isAdmin, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +50,13 @@ export default function AdminPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
   const [uploadingUid, setUploadingUid] = useState<string | null>(null);
+
+  // Redirect if not admin
+  useEffect(() => {
+    if (!authLoading && (!user || !isAdmin)) {
+      router.push("/login");
+    }
+  }, [authLoading, user, isAdmin, router]);
 
   const loadItems = useCallback(() => {
     setLoading(true);
@@ -77,11 +88,11 @@ export default function AdminPage() {
     setSuccessMsg(null);
 
     try {
-      const created = await createItem(form);
+      const created = await createItemAuth(form);
 
       // Upload image if selected
       if (imageFile) {
-        await uploadItemImage(created.uid, imageFile);
+        await uploadItemImageAuth(created.uid, imageFile);
       }
 
       setSuccessMsg(`Item "${created.name}" created successfully!`);
@@ -100,7 +111,7 @@ export default function AdminPage() {
     if (!confirm(`Delete item ${uid}? This cannot be undone.`)) return;
     setDeletingUid(uid);
     try {
-      await deleteItem(uid);
+      await deleteItemAuth(uid);
       setSuccessMsg(`Item ${uid} deleted.`);
       loadItems();
     } catch {
@@ -112,7 +123,7 @@ export default function AdminPage() {
   const handleUploadImage = async (uid: string, file: File) => {
     setUploadingUid(uid);
     try {
-      await uploadItemImage(uid, file);
+      await uploadItemImageAuth(uid, file);
       setSuccessMsg(`Image uploaded for ${uid}`);
       loadItems();
     } catch {

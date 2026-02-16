@@ -141,3 +141,88 @@ export function getImageUrl(imageUrl: string | null): string {
   if (imageUrl.startsWith("http")) return imageUrl;
   return `${API_BASE}${imageUrl}`;
 }
+
+// ---------- Auth ----------
+
+export interface AuthUser {
+  id: number;
+  uid: string;
+  name: string;
+  email: string | null;
+  role: string;
+  authorized: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
+}
+
+export async function login(email: string, password: string): Promise<LoginResponse> {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Login failed");
+  }
+  return res.json();
+}
+
+export async function fetchMe(token: string): Promise<AuthUser> {
+  const res = await fetch(`${API_BASE}/api/auth/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Not authenticated");
+  return res.json();
+}
+
+/** Helper: get auth header for admin requests */
+export function authHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("token");
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+/** Overwrite createItem / deleteItem / uploadItemImage to include auth */
+export async function createItemAuth(item: ItemCreate): Promise<Item> {
+  const res = await fetch(`${API_BASE}/api/items/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(item),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to create item");
+  }
+  return res.json();
+}
+
+export async function deleteItemAuth(uid: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/items/${uid}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to delete item" }));
+    throw new Error(err.detail || "Failed to delete item");
+  }
+}
+
+export async function uploadItemImageAuth(uid: string, file: File): Promise<Item> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${API_BASE}/api/items/${uid}/upload-image`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData,
+  });
+  if (!res.ok) throw new Error("Failed to upload image");
+  return res.json();
+}

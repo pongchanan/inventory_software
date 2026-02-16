@@ -6,6 +6,7 @@ from .approvals import router as approvals_router
 from .audit_logs import router as audit_logs_router
 from .compartments import router as compartments_router
 from .stats import router as stats_router
+from .auth import router as auth_router
 
 __all__ = [
     "users_router",
@@ -15,5 +16,6 @@ __all__ = [
     "approvals_router",
     "audit_logs_router",
     "compartments_router",
-    "stats_router"
+    "stats_router",
+    "auth_router",
 ]
