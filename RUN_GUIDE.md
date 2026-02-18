@@ -37,10 +37,11 @@ The project is ready for one-click deployment to Railway using the provided `rai
 ### Deployment Steps:
 1. **GitHub Sync**: Push your code to a GitHub repository.
 2. **Railway Project**: Create a new project on [Railway](https://railway.app/).
-3. **Connect Repo**: Select "Deploy from GitHub Repo" and choose this repository.
-4. **Automatic Detection**: Railway will read `railway.json` and automatically create two services:
-   - `backend`
-   - `frontend`
+3. **Add Services**: Add **two** services from the same GitHub repo.
+4. **Configure Monorepo**: In the settings for each service:
+   - For the first service, set **Root Directory** to `backend`. Rename it to `backend`.
+   - For the second service, set **Root Directory** to `frontend`. Rename it to `frontend`.
+5. **Automatic Detection**: Railway will read the `railway.json` inside each directory and deploy correctly.
 5. **Environment Variables**:
    - For `frontend`, add `NEXT_PUBLIC_API_URL` pointing to your Railway backend URL.
    - For `backend`, ensure `PORT` is set to 3000 (standard for this app).

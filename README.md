@@ -15,9 +15,12 @@ IoT-based inventory management with NFC/RFID tracking.
 
 ## ☁️ Deployment (Railway)
 
-This repo is pre-configured for **Railway Monorepo** deployment.
-- Simply connect this GitHub repo to a Railway project.
-- Railway will automatically detect `railway.json` and deploy the **backend** and **frontend** as separate services.
+This repo is structured as a **Monorepo**. To deploy:
+1. Create **2 separate services** in Railway from this repo.
+2. In Railway Service Settings:
+   - For **Backend**: Set **Root Directory** to `/backend`.
+   - For **Frontend**: Set **Root Directory** to `/frontend`.
+3. Railway will automatically detect the `railway.json` in each folder.
 
 ## 📁 Structure
 - `/backend`: FastAPI (Python)
