@@ -91,7 +91,7 @@ def root():
 @app.get("/health")
 def health_check():
     """Health check for monitoring"""
-    return {"status": "healthy"}
+    return {"status": "healthy"} 
 
 
 if __name__ == "__main__":
