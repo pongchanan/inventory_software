@@ -1,34 +1,39 @@
-"""Create a default admin user. Run once after DB reset."""
-import sys
-import os
-sys.path.insert(0, os.path.dirname(__file__))
-
 from app.database import SessionLocal, init_db
 from app.models.user import User
 from app.auth import hash_password
 
-init_db()
-db = SessionLocal()
+def create_admin():
+    db = SessionLocal()
+    init_db()
+    
+    admin_email = "admin@example.com"
+    admin_password = "adminpassword123"
+    
+    admin = db.query(User).filter(User.email == admin_email).first()
+    if not admin:
+        print(f"Creating admin user: {admin_email}")
+        admin = User(
+            uid="ADMIN001",
+            name="System Admin",
+            email=admin_email,
+            password_hash=hash_password(admin_password),
+            role="admin",
+            authorized=True
+        )
+        db.add(admin)
+        db.commit()
+        print("✅ Admin created successfully!")
+    else:
+        print(f"Admin {admin_email} already exists. Updating password...")
+        admin.password_hash = hash_password(admin_password)
+        db.commit()
+        print("✅ Admin password updated!")
+    
+    print(f"\nLogin Details:")
+    print(f"Email: {admin_email}")
+    print(f"Password: {admin_password}")
+    
+    db.close()
 
-EMAIL = "admin@inventory.local"
-PASSWORD = "admin123"
-
-existing = db.query(User).filter(User.email == EMAIL).first()
-if existing:
-    print(f"Admin user already exists (uid={existing.uid})")
-else:
-    admin = User(
-        uid="ADMIN001",
-        name="Administrator",
-        email=EMAIL,
-        role="admin",
-        password_hash=hash_password(PASSWORD),
-        authorized=True,
-    )
-    db.add(admin)
-    db.commit()
-    print(f"✅ Admin user created!")
-    print(f"   Email:    {EMAIL}")
-    print(f"   Password: {PASSWORD}")
-
-db.close()
+if __name__ == "__main__":
+    create_admin()
