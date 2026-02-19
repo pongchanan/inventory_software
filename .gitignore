@@ -10,33 +10,37 @@ venv/
 *.sqlite
 *.sqlite3
 .env
+.env.local
+.env*.local
 .DS_Store
 uploads/
 
 # Frontend
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.*
+frontend/.yarn/*
+!frontend/.yarn/patches
+!frontend/.yarn/plugins
+!frontend/.yarn/releases
+!frontend/.yarn/versions
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Ignore test directory's package files (tests should use root package.json)
+frontend/test/package.json
+frontend/test/package-lock.json
+frontend/test/node_modules/
 
 # testing
-/coverage
+frontend/coverage/
 
 # next.js
-/.next/
-/out/
+frontend/.next/
+frontend/out/
 
 # production
-/build
+frontend/build/
 
 # misc
-.DS_Store
 *.pem
 
 # debug
@@ -45,13 +49,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+frontend/next-env.d.ts
 
+# Keep package-lock.json for CI
+!frontend/package-lock.json
