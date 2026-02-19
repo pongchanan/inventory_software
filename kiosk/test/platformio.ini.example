@@ -1,0 +1,71 @@
+# PlatformIO Configuration for Testing
+# 
+# This file configures the kiosk project for use with PlatformIO,
+# which provides better testing and CI/CD integration than Arduino IDE.
+#
+# To use:
+# 1. Install PlatformIO: https://platformio.org/install
+# 2. Run: pio init --board esp32dev
+# 3. Copy this file to the project root as platformio.ini
+# 4. Run tests: pio test
+
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+monitor_speed = 115200
+
+# Libraries required by the kiosk
+lib_deps = 
+    adafruit/Adafruit PN532@^1.3.1
+    miguelbalboa/MFRC522@^1.4.10
+    bblanchon/ArduinoJson@^6.21.3
+
+# Build flags
+build_flags = 
+    -D CORE_DEBUG_LEVEL=3
+    -D CONFIG_ARDUHAL_LOG_COLORS=1
+
+# Upload settings
+upload_speed = 921600
+upload_port = COM3  ; Change to your port
+
+# Monitor settings
+monitor_port = COM3  ; Change to your port
+monitor_filters = 
+    colorize
+    time
+
+# Test configuration
+test_framework = unity
+test_build_project_src = yes
+
+[env:test]
+platform = espressif32
+board = esp32dev
+framework = arduino
+lib_deps = 
+    ${env:esp32dev.lib_deps}
+    bxparks/AUnit@^1.7.1
+test_framework = unity
+test_build_project_src = yes
+
+# For native testing (without hardware)
+[env:native]
+platform = native
+test_framework = unity
+build_flags = 
+    -std=c++11
+    -D UNIT_TEST
+    -D NATIVE_BUILD
+
+# CI/CD environment
+[env:ci]
+platform = espressif32
+board = esp32dev
+framework = arduino
+lib_deps = ${env:esp32dev.lib_deps}
+test_framework = unity
+build_flags = 
+    -D CI_BUILD=1
+    -D UNIT_TEST=1
