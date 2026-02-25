@@ -8,7 +8,7 @@ import {
   uploadItemImageAuth,
   Item,
   ItemCreate,
-  getImageUrl,
+  fetchImageUrl,
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -48,6 +48,7 @@ export default function AdminPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
   const [uploadingUid, setUploadingUid] = useState<string | null>(null);
 
@@ -102,7 +103,9 @@ export default function AdminPage() {
       setShowForm(false);
       loadItems();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Failed to create item");
+      setSubmitError(
+        err instanceof Error ? err.message : "Failed to create item",
+      );
     }
     setSubmitting(false);
   };
@@ -263,7 +266,9 @@ export default function AdminPage() {
                 <input
                   type="checkbox"
                   checked={form.available ?? true}
-                  onChange={(e) => setForm({ ...form, available: e.target.checked })}
+                  onChange={(e) =>
+                    setForm({ ...form, available: e.target.checked })
+                  }
                   className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
                 />
                 Available
@@ -277,7 +282,9 @@ export default function AdminPage() {
             </label>
             <textarea
               value={form.description || ""}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
               rows={3}
               className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="Item description..."
@@ -297,7 +304,9 @@ export default function AdminPage() {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => handleImageSelect(e.target.files?.[0] || null)}
+                  onChange={(e) =>
+                    handleImageSelect(e.target.files?.[0] || null)
+                  }
                 />
               </label>
               {imageFile && (
@@ -357,17 +366,16 @@ export default function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={item.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-4 py-3">
-                      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
-                        <Image
-                          src={getImageUrl(item.image_url)}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
+                      <AdminItemImage
+                        item={item}
+                        imageUrls={imageUrls}
+                        setImageUrls={setImageUrls}
+                      />
                     </td>
                     <td className="px-4 py-3 font-mono text-xs">{item.uid}</td>
                     <td className="px-4 py-3 font-medium">{item.name}</td>
@@ -446,6 +454,39 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Small helper component that lazy-loads a presigned image URL for the admin table */
+function AdminItemImage({
+  item,
+  imageUrls,
+  setImageUrls,
+}: {
+  item: Item;
+  imageUrls: Record<string, string>;
+  setImageUrls: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+}) {
+  useEffect(() => {
+    if (item.image_url && !imageUrls[item.uid]) {
+      fetchImageUrl(item.uid).then((url) =>
+        setImageUrls((prev) => ({ ...prev, [item.uid]: url })),
+      );
+    }
+  }, [item.uid, item.image_url, imageUrls, setImageUrls]);
+
+  const src = imageUrls[item.uid] || "/placeholder.png";
+
+  return (
+    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
+      <Image
+        src={src}
+        alt={item.name}
+        fill
+        className="object-cover"
+        unoptimized
+      />
     </div>
   );
 }

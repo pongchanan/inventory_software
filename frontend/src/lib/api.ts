@@ -136,6 +136,29 @@ export async function fetchFloorItems(
 
 // ---------- Helpers ----------
 
+/**
+ * Fetch a presigned URL for an item image from the backend.
+ * Returns "/placeholder.png" when the item has no image.
+ */
+export async function fetchImageUrl(uid: string): Promise<string> {
+  try {
+    const res = await fetch(`${API_BASE}/api/items/${uid}/image-url`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return "/placeholder.png";
+    const data = await res.json();
+    return data.url;
+  } catch {
+    return "/placeholder.png";
+  }
+}
+
+/**
+ * Synchronous helper kept for backward compatibility.
+ * - null / empty  → placeholder
+ * - starts with "http" → already a presigned or external URL
+ * - otherwise → legacy path (prepend API_BASE)
+ */
 export function getImageUrl(imageUrl: string | null): string {
   if (!imageUrl) return "/placeholder.png";
   if (imageUrl.startsWith("http")) return imageUrl;

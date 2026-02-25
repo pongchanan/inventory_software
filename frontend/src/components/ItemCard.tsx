@@ -1,18 +1,27 @@
-import { Item, getImageUrl } from "@/lib/api";
+import { Item, fetchImageUrl } from "@/lib/api";
 import Image from "next/image";
 import { CheckCircle, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface ItemCardProps {
   item: Item;
 }
 
 export default function ItemCard({ item }: ItemCardProps) {
+  const [imgSrc, setImgSrc] = useState("/placeholder.png");
+
+  useEffect(() => {
+    if (item.image_url) {
+      fetchImageUrl(item.uid).then(setImgSrc);
+    }
+  }, [item.uid, item.image_url]);
+
   return (
     <div className="bg-white rounded-xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       {/* Image */}
       <div className="relative w-full h-48 bg-gray-100">
         <Image
-          src={getImageUrl(item.image_url)}
+          src={imgSrc}
           alt={item.name}
           fill
           className="object-cover"
@@ -44,7 +53,9 @@ export default function ItemCard({ item }: ItemCardProps) {
         </div>
 
         {item.description && (
-          <p className="mt-1 text-sm text-muted line-clamp-2">{item.description}</p>
+          <p className="mt-1 text-sm text-muted line-clamp-2">
+            {item.description}
+          </p>
         )}
 
         <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">

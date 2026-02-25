@@ -39,13 +39,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Create uploads directory if it doesn't exist
+# Legacy: serve old uploaded images that still live on local disk.
+# New uploads go to S3, but images uploaded before the migration are still in
+# the local uploads/ folder.  This mount lets them keep working.
 UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(f"{UPLOAD_DIR}/items", exist_ok=True)
-
-# Mount static files for serving uploaded images
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+if os.path.isdir(UPLOAD_DIR):
+    app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # CORS Configuration - Allow React dashboards to connect
 origins = [
@@ -84,17 +83,18 @@ def root():
     return {
         "message": "Smart Inventory Management API",
         "status": "online",
-        "docs": "/docs"
+        "docs": "/docs",
     }
 
 
 @app.get("/health")
 def health_check():
     """Health check for monitoring"""
-    return {"status": "healthy"} 
+    return {"status": "healthy"}
 
 
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.environ.get("PORT", 3000))
     uvicorn.run(app, host="0.0.0.0", port=port)
