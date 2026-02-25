@@ -33,3 +33,21 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+class KioskPrepareRequest(BaseModel):
+    kiosk_id: str
+    name: str
+    email: str
+    password: str
+
+
+class KioskScanRequest(BaseModel):
+    kiosk_id: str
+    uid: str
+
+
+class KioskStatusResponse(BaseModel):
+    status: str
+    access_token: Optional[str] = None
+    user: Optional[UserResponse] = None

@@ -235,6 +235,8 @@ void checkUserScan() {
 bool checkUserAuthorization(String uid) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
+
+    // --- STEP 1: Check existing user authorization ---
     // Construct API URL
     // e.g., http://192.168.1.100:3000/api/users/UID1234
     String url = String(serverUrl) + "/api/users/" + uid;
@@ -248,7 +250,6 @@ bool checkUserAuthorization(String uid) {
     if (httpCode > 0) {
       Serial.printf("API Response Code: %d\n", httpCode);
       // Assume 200 OK means authorized.
-      // You can also parse JSON payload ("authorized": true) if needed.
       if (httpCode == 200) {
         http.end();
         return true;
@@ -257,7 +258,40 @@ bool checkUserAuthorization(String uid) {
       Serial.printf("API Error: %s\n", http.errorToString(httpCode).c_str());
     }
     http.end();
-    return false; // Deny if error or not 200
+
+    // --- STEP 2: Registration Fallback ---
+    // If not 200 OK (e.g., 404 Not Found), try the Registration flow.
+    if (httpCode != 200) {
+      Serial.println(
+          "Card not authorized or not found. Trying Registration Flow...");
+
+      String regUrl = String(serverUrl) + "/api/auth/kiosk/scan";
+      http.begin(regUrl);
+      http.addHeader("Content-Type", "application/json");
+
+      // Hardware encoded Kiosk ID. This must match the Web frontend.
+      String jsonPayload =
+          "{\"kiosk_id\":\"kiosk_demo_01\",\"uid\":\"" + uid + "\"}";
+
+      Serial.print("Sending Registration Payload: ");
+      Serial.println(jsonPayload);
+
+      int regCode = http.POST(jsonPayload);
+
+      if (regCode == 200) {
+        Serial.println("Registration Successful! Backend matched Mobile Form.");
+        http.end();
+
+        // Grant access on first registration (optional, can be false if you
+        // just want them to register and not open yet).
+        return true;
+      } else {
+        Serial.printf("Registration Failed: Code %d\n", regCode);
+      }
+      http.end();
+    }
+
+    return false; // Deny if all flows fail
   }
 
   // Fallback for offline testing - Allow specific mock UID or Always Allow
