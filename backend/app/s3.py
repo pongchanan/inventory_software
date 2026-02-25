@@ -30,8 +30,16 @@ def get_s3_client():
     """Return a reusable boto3 S3 client configured for Railway Storage."""
     global _s3_client
     if _s3_client is None:
-        endpoint = os.environ.get("AWS_ENDPOINT_URL", "https://storage.railway.app")
-        region = os.environ.get("AWS_REGION", "us-east-1")
+        endpoint = (
+            os.environ.get("AWS_ENDPOINT_URL")
+            or os.environ.get("AWS_ENDPOINT_URL_S3")
+            or "https://storage.railway.app"
+        )
+        region = (
+            os.environ.get("AWS_REGION")
+            or os.environ.get("AWS_DEFAULT_REGION")
+            or "us-east-1"
+        )
         access_key = os.environ.get("AWS_ACCESS_KEY_ID")
         secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 
@@ -61,15 +69,18 @@ def get_s3_client():
 
 
 def _bucket() -> str:
-    """Return the bucket name from env."""
-    bucket = os.environ.get("BUCKET")
-    if not bucket:
-        logger.error("BUCKET environment variable is not set.")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Storage service not configured (missing BUCKET)",
-        )
-    return bucket
+    """Return the bucket name from env, checking multiple possible var names."""
+    for var in ("S3_BUCKET_NAME", "BUCKET", "BUCKET_NAME", "S3_BUCKET"):
+        bucket = os.environ.get(var)
+        if bucket:
+            return bucket
+    logger.error(
+        "Bucket environment variable is not set. Checked: S3_BUCKET_NAME, BUCKET, BUCKET_NAME, S3_BUCKET"
+    )
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Storage service not configured (missing bucket name)",
+    )
 
 
 # ---- utility functions -------------------------------------------------------
