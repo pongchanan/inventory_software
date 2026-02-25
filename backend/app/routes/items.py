@@ -174,14 +174,16 @@ def get_item_image_url(uid: str, request: Request, db: Session = Depends(get_db)
 
     if _is_legacy_path(item.image_url):
         # Legacy images were stored on local disk which is ephemeral on Railway.
-        # Check if the file still exists; if not, the image is lost.
+        # Check if the file still exists; if not, clear the stale path.
         legacy_file = item.image_url.lstrip("/")  # "uploads/items/..."
         if os.path.isfile(legacy_file):
             base_url = str(request.base_url).rstrip("/")
             return {"url": f"{base_url}{item.image_url}"}
         else:
             # File is gone (Railway redeploy wiped it).
-            # Return 404 so the frontend shows a placeholder.
+            # Clear the stale path so we don't keep checking.
+            item.image_url = None
+            db.commit()
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Legacy image no longer available. Please re-upload.",
