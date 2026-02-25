@@ -10,12 +10,15 @@ Environment variables (injected by Railway when you add a Storage Bucket):
 """
 
 import os
+import logging
 from datetime import datetime
 
 import boto3
 from botocore.config import Config
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError, EndpointConnectionError
 from fastapi import HTTPException, status
+
+logger = logging.getLogger(__name__)
 
 
 # ---- client singleton -------------------------------------------------------
@@ -27,16 +30,30 @@ def get_s3_client():
     """Return a reusable boto3 S3 client configured for Railway Storage."""
     global _s3_client
     if _s3_client is None:
+        endpoint = os.environ.get("AWS_ENDPOINT_URL", "https://storage.railway.app")
+        region = os.environ.get("AWS_REGION", "us-east-1")
+        access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+        secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+
+        if not access_key or not secret_key:
+            logger.error(
+                "S3 credentials not found. Set AWS_ACCESS_KEY_ID and "
+                "AWS_SECRET_ACCESS_KEY environment variables."
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Storage service not configured (missing credentials)",
+            )
+
+        logger.info("Initializing S3 client → endpoint=%s  region=%s", endpoint, region)
         _s3_client = boto3.client(
             "s3",
-            endpoint_url=os.environ.get(
-                "AWS_ENDPOINT_URL", "https://storage.railway.app"
-            ),
-            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-            region_name=os.environ.get("AWS_REGION", "us-east-1"),
+            endpoint_url=endpoint,
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_key,
+            region_name=region,
             config=Config(
-                s3={"addressing_style": "virtual"},  # virtual-hosted style
+                s3={"addressing_style": "path"},  # Railway needs path-style
                 signature_version="s3v4",
             ),
         )
@@ -45,7 +62,14 @@ def get_s3_client():
 
 def _bucket() -> str:
     """Return the bucket name from env."""
-    return os.environ["BUCKET"]
+    bucket = os.environ.get("BUCKET")
+    if not bucket:
+        logger.error("BUCKET environment variable is not set.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Storage service not configured (missing BUCKET)",
+        )
+    return bucket
 
 
 # ---- utility functions -------------------------------------------------------
@@ -93,9 +117,16 @@ def upload_file_to_s3(file_bytes: bytes, uid: str, file_ext: str) -> str:
             ContentType=CONTENT_TYPES.get(file_ext, "application/octet-stream"),
         )
     except ClientError as e:
+        logger.exception("S3 put_object failed for key=%s", key)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload image to storage: {e}",
+        )
+    except (NoCredentialsError, EndpointConnectionError) as e:
+        logger.exception("S3 connection/credentials error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Storage service unavailable: {e}",
         )
 
     return key
@@ -122,9 +153,16 @@ def generate_presigned_url(key: str, expires_in: int = 3600) -> str:
             ExpiresIn=expires_in,
         )
     except ClientError as e:
+        logger.exception("Failed to generate presigned URL for key=%s", key)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate image URL: {e}",
+        )
+    except (NoCredentialsError, EndpointConnectionError) as e:
+        logger.exception("S3 connection/credentials error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Storage service unavailable: {e}",
         )
     return url
 
