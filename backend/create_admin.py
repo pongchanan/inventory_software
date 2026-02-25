@@ -7,13 +7,18 @@ def create_admin():
     init_db()
     
     admin_email = "admin@example.com"
-    admin_password = "adminpassword123"
+    admin_password = "admin123"
+    admin_uid = "ADMIN001"
     
-    admin = db.query(User).filter(User.email == admin_email).first()
+    # Check if admin exists by email or UID
+    admin = db.query(User).filter(
+        (User.email == admin_email) | (User.uid == admin_uid)
+    ).first()
+    
     if not admin:
         print(f"Creating admin user: {admin_email}")
         admin = User(
-            uid="ADMIN001",
+            uid=admin_uid,
             name="System Admin",
             email=admin_email,
             password_hash=hash_password(admin_password),
@@ -24,13 +29,16 @@ def create_admin():
         db.commit()
         print("✅ Admin created successfully!")
     else:
-        print(f"Admin {admin_email} already exists. Updating password...")
+        print(f"Admin user already exists (UID: {admin.uid}, Email: {admin.email})")
+        print("Updating password and ensuring admin role...")
         admin.password_hash = hash_password(admin_password)
+        admin.role = "admin"
+        admin.authorized = True
         db.commit()
-        print("✅ Admin password updated!")
+        print("✅ Admin password and role updated!")
     
     print(f"\nLogin Details:")
-    print(f"Email: {admin_email}")
+    print(f"Email: {admin.email}")
     print(f"Password: {admin_password}")
     
     db.close()

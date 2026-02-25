@@ -9,6 +9,11 @@ import {
   Item,
   ItemCreate,
   fetchImageUrl,
+  fetchLoanDetails,
+  fetchActiveLoanDetails,
+  fetchCabinetAccessLogs,
+  LoanDetail,
+  AuditLogDetail,
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -23,6 +28,11 @@ import {
   CheckCircle,
   X,
   ImageIcon,
+  Package,
+  History,
+  Users,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 
 const emptyForm: ItemCreate = {
@@ -51,6 +61,14 @@ export default function AdminPage() {
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
   const [uploadingUid, setUploadingUid] = useState<string | null>(null);
+  
+  // New state for loans and cabinet access
+  const [activeTab, setActiveTab] = useState<"items" | "loans" | "cabinet">("items");
+  const [loans, setLoans] = useState<LoanDetail[]>([]);
+  const [activeLoans, setActiveLoans] = useState<LoanDetail[]>([]);
+  const [cabinetLogs, setCabinetLogs] = useState<AuditLogDetail[]>([]);
+  const [loansLoading, setLoansLoading] = useState(false);
+  const [cabinetLoading, setCabinetLoading] = useState(false);
 
   // Redirect if not admin
   useEffect(() => {
@@ -70,6 +88,36 @@ export default function AdminPage() {
   useEffect(() => {
     loadItems();
   }, [loadItems]);
+
+  const loadLoans = useCallback(() => {
+    setLoansLoading(true);
+    Promise.all([
+      fetchLoanDetails(),
+      fetchActiveLoanDetails()
+    ])
+      .then(([allLoans, active]) => {
+        setLoans(allLoans);
+        setActiveLoans(active);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoansLoading(false));
+  }, []);
+
+  const loadCabinetLogs = useCallback(() => {
+    setCabinetLoading(true);
+    fetchCabinetAccessLogs(72) // Last 72 hours
+      .then(setCabinetLogs)
+      .catch((e) => setError(e.message))
+      .finally(() => setCabinetLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "loans") {
+      loadLoans();
+    } else if (activeTab === "cabinet") {
+      loadCabinetLogs();
+    }
+  }, [activeTab, loadLoans, loadCabinetLogs]);
 
   const handleImageSelect = (file: File | null) => {
     setImageFile(file);
@@ -145,19 +193,58 @@ export default function AdminPage() {
             Admin Panel
           </h1>
           <p className="text-sm text-muted mt-1">
-            Add, manage, and upload images for inventory items
+            Manage inventory, track borrowing, and monitor cabinet access
           </p>
         </div>
 
+        {activeTab === "items" && (
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setSubmitError(null);
+            }}
+            className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover transition-colors text-sm font-medium"
+          >
+            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            {showForm ? "Cancel" : "Add Item"}
+          </button>
+        )}
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex gap-2 border-b border-border">
         <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setSubmitError(null);
-          }}
-          className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover transition-colors text-sm font-medium"
+          onClick={() => setActiveTab("items")}
+          className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+            activeTab === "items"
+              ? "text-primary border-b-2 border-primary"
+              : "text-muted hover:text-foreground"
+          }`}
         >
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {showForm ? "Cancel" : "Add Item"}
+          <Package className="w-4 h-4" />
+          Items
+        </button>
+        <button
+          onClick={() => setActiveTab("loans")}
+          className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+            activeTab === "loans"
+              ? "text-primary border-b-2 border-primary"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          Borrowed Items
+        </button>
+        <button
+          onClick={() => setActiveTab("cabinet")}
+          className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
+            activeTab === "cabinet"
+              ? "text-primary border-b-2 border-primary"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          <History className="w-4 h-4" />
+          Cabinet Access
         </button>
       </div>
 
@@ -183,7 +270,7 @@ export default function AdminPage() {
       )}
 
       {/* Add Item Form */}
-      {showForm && (
+      {showForm && activeTab === "items" && (
         <form
           onSubmit={handleSubmit}
           className="bg-white rounded-xl border border-border p-6 space-y-4"
@@ -344,114 +431,326 @@ export default function AdminPage() {
       )}
 
       {/* Items Table */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20 text-muted">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          Loading items...
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-xs font-medium text-muted uppercase tracking-wider">
-                <tr>
-                  <th className="px-4 py-3">Image</th>
-                  <th className="px-4 py-3">UID</th>
-                  <th className="px-4 py-3">Name</th>
-                  <th className="px-4 py-3">Category</th>
-                  <th className="px-4 py-3">Location</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {items.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-4 py-3">
-                      <AdminItemImage
-                        item={item}
-                        imageUrls={imageUrls}
-                        setImageUrls={setImageUrls}
-                      />
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs">{item.uid}</td>
-                    <td className="px-4 py-3 font-medium">{item.name}</td>
-                    <td className="px-4 py-3 text-muted">
-                      {item.category || "—"}
-                    </td>
-                    <td className="px-4 py-3 text-muted">
-                      {item.location || "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                          item.available
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
+      {activeTab === "items" && (
+        <>
+          {loading ? (
+            <div className="flex items-center justify-center py-20 text-muted">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              Loading items...
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-border overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">Image</th>
+                      <th className="px-4 py-3">UID</th>
+                      <th className="px-4 py-3">Name</th>
+                      <th className="px-4 py-3">Category</th>
+                      <th className="px-4 py-3">Location</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {items.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-gray-50 transition-colors"
                       >
-                        {item.available ? "Available" : "Unavailable"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {/* Upload Image */}
-                        <label
-                          className={`cursor-pointer p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors ${
-                            uploadingUid === item.uid
-                              ? "opacity-50 pointer-events-none"
-                              : ""
-                          }`}
-                          title="Upload image"
-                        >
-                          {uploadingUid === item.uid ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Upload className="w-4 h-4" />
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleUploadImage(item.uid, file);
-                              e.target.value = "";
-                            }}
+                        <td className="px-4 py-3">
+                          <AdminItemImage
+                            item={item}
+                            imageUrls={imageUrls}
+                            setImageUrls={setImageUrls}
                           />
-                        </label>
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs">{item.uid}</td>
+                        <td className="px-4 py-3 font-medium">{item.name}</td>
+                        <td className="px-4 py-3 text-muted">
+                          {item.category || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-muted">
+                          {item.location || "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                              item.available
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {item.available ? "Available" : "Unavailable"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            {/* Upload Image */}
+                            <label
+                              className={`cursor-pointer p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors ${
+                                uploadingUid === item.uid
+                                  ? "opacity-50 pointer-events-none"
+                                  : ""
+                              }`}
+                              title="Upload image"
+                            >
+                              {uploadingUid === item.uid ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Upload className="w-4 h-4" />
+                              )}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleUploadImage(item.uid, file);
+                                  e.target.value = "";
+                                }}
+                              />
+                            </label>
 
-                        {/* Delete */}
-                        <button
-                          onClick={() => handleDelete(item.uid)}
-                          disabled={deletingUid === item.uid}
-                          className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors disabled:opacity-50"
-                          title="Delete item"
-                        >
-                          {deletingUid === item.uid ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                            {/* Delete */}
+                            <button
+                              onClick={() => handleDelete(item.uid)}
+                              disabled={deletingUid === item.uid}
+                              className="p-1.5 rounded-lg hover:bg-red-50 text-red-600 transition-colors disabled:opacity-50"
+                              title="Delete item"
+                            >
+                              {deletingUid === item.uid ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
 
-                {items.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="text-center py-10 text-muted">
-                      No items yet. Click &quot;Add Item&quot; to get started.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                    {items.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="text-center py-10 text-muted">
+                          No items yet. Click &quot;Add Item&quot; to get started.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Loans Tab */}
+      {activeTab === "loans" && (
+        <div className="space-y-4">
+          {loansLoading ? (
+            <div className="flex items-center justify-center py-20 text-muted">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              Loading borrowed items...
+            </div>
+          ) : (
+            <>
+              {/* Active Loans */}
+              <div className="bg-white rounded-xl border border-border overflow-hidden">
+                <div className="px-4 py-3 bg-yellow-50 border-b border-border">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                    Currently Borrowed ({activeLoans.length})
+                  </h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                      <tr>
+                        <th className="px-4 py-3">Borrower</th>
+                        <th className="px-4 py-3">Email</th>
+                        <th className="px-4 py-3">Item</th>
+                        <th className="px-4 py-3">Category</th>
+                        <th className="px-4 py-3">Borrowed</th>
+                        <th className="px-4 py-3">Due</th>
+                        <th className="px-4 py-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {activeLoans.map((loan) => (
+                        <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3 font-medium">{loan.user_name}</td>
+                          <td className="px-4 py-3 text-muted text-xs">{loan.user_email || "—"}</td>
+                          <td className="px-4 py-3 font-medium">{loan.item_name}</td>
+                          <td className="px-4 py-3 text-muted">{loan.item_category || "—"}</td>
+                          <td className="px-4 py-3 text-xs text-muted">
+                            {new Date(loan.borrowed_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-muted">
+                            {new Date(loan.due_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                loan.status === "overdue"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                              }`}
+                            >
+                              {loan.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      {activeLoans.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="text-center py-10 text-muted">
+                            No active loans
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* All Loans History */}
+              <div className="bg-white rounded-xl border border-border overflow-hidden">
+                <div className="px-4 py-3 bg-gray-50 border-b border-border">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Borrowing History ({loans.length})
+                  </h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                      <tr>
+                        <th className="px-4 py-3">Borrower</th>
+                        <th className="px-4 py-3">Item</th>
+                        <th className="px-4 py-3">Borrowed</th>
+                        <th className="px-4 py-3">Returned</th>
+                        <th className="px-4 py-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {loans.slice(0, 50).map((loan) => (
+                        <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3 font-medium">{loan.user_name}</td>
+                          <td className="px-4 py-3">{loan.item_name}</td>
+                          <td className="px-4 py-3 text-xs text-muted">
+                            {new Date(loan.borrowed_at).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-muted">
+                            {loan.returned_at ? new Date(loan.returned_at).toLocaleString() : "—"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                                loan.status === "returned"
+                                  ? "bg-green-100 text-green-700"
+                                  : loan.status === "overdue"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                              }`}
+                            >
+                              {loan.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      {loans.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="text-center py-10 text-muted">
+                            No loan history
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Cabinet Access Tab */}
+      {activeTab === "cabinet" && (
+        <div className="bg-white rounded-xl border border-border overflow-hidden">
+          <div className="px-4 py-3 bg-gray-50 border-b border-border">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <History className="w-4 h-4" />
+              Cabinet Access Logs (Last 72 Hours)
+            </h3>
           </div>
+          {cabinetLoading ? (
+            <div className="flex items-center justify-center py-20 text-muted">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              Loading cabinet access logs...
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3">Time</th>
+                    <th className="px-4 py-3">User</th>
+                    <th className="px-4 py-3">User UID</th>
+                    <th className="px-4 py-3">Action</th>
+                    <th className="px-4 py-3">Item</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Message</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {cabinetLogs.map((log) => (
+                    <tr key={log.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 text-xs text-muted">
+                        {new Date(log.timestamp).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 font-medium">{log.user_name || "Unknown"}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-muted">{log.user}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                            log.type === "unlock"
+                              ? "bg-blue-100 text-blue-700"
+                              : log.type === "lock"
+                              ? "bg-gray-100 text-gray-700"
+                              : "bg-purple-100 text-purple-700"
+                          }`}
+                        >
+                          {log.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs">{log.item || "—"}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                            log.status === "success"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {log.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted">{log.message}</td>
+                    </tr>
+                  ))}
+                  {cabinetLogs.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="text-center py-10 text-muted">
+                        No cabinet access logs in the last 72 hours
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

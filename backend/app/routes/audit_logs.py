@@ -4,9 +4,27 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 from app.database import get_db
 from app.models.audit_log import AuditLog
+from app.models.user import User
 from app.schemas.audit_log import AuditLogCreate, AuditLogResponse
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/audit-logs", tags=["audit-logs"])
+
+
+class AuditLogDetail(BaseModel):
+    """Enhanced audit log with user details"""
+    id: int
+    timestamp: datetime
+    type: str
+    user: str
+    user_name: Optional[str]
+    item: Optional[str]
+    status: str
+    message: str
+    ip_address: Optional[str]
+    
+    class Config:
+        from_attributes = True
 
 
 @router.post("/", response_model=AuditLogResponse, status_code=status.HTTP_201_CREATED)
@@ -72,3 +90,39 @@ def get_audit_log(log_id: int, db: Session = Depends(get_db)):
             detail=f"Audit log {log_id} not found"
         )
     return log
+
+
+@router.get("/cabinet-access/recent", response_model=List[AuditLogDetail])
+def get_cabinet_access_logs(
+    hours: int = 24,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """Get recent cabinet unlock/access events with user details"""
+    cutoff = datetime.utcnow() - timedelta(hours=hours)
+    
+    # Filter for unlock events (cabinet access)
+    logs = db.query(AuditLog).filter(
+        AuditLog.timestamp >= cutoff,
+        AuditLog.type.in_(["unlock", "lock", "scan"])
+    ).order_by(AuditLog.timestamp.desc()).limit(limit).all()
+    
+    # Enrich with user details
+    log_details = []
+    for log in logs:
+        user = db.query(User).filter(User.uid == log.user).first()
+        
+        log_details.append(AuditLogDetail(
+            id=log.id,
+            timestamp=log.timestamp,
+            type=log.type,
+            user=log.user,
+            user_name=user.name if user else "Unknown User",
+            item=log.item,
+            status=log.status,
+            message=log.message,
+            ip_address=log.ip_address
+        ))
+    
+    return log_details
+

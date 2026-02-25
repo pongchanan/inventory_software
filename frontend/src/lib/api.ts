@@ -249,3 +249,66 @@ export async function uploadItemImageAuth(uid: string, file: File): Promise<Item
   if (!res.ok) throw new Error("Failed to upload image");
   return res.json();
 }
+
+// ---------- Loans ----------
+
+export interface LoanDetail {
+  id: number;
+  user_uid: string;
+  user_name: string;
+  user_email: string | null;
+  item_uid: string;
+  item_name: string;
+  item_category: string | null;
+  borrowed_at: string;
+  due_at: string;
+  returned_at: string | null;
+  status: string;
+}
+
+export async function fetchLoanDetails(statusFilter?: string): Promise<LoanDetail[]> {
+  const params = new URLSearchParams();
+  if (statusFilter) params.set("status_filter", statusFilter);
+  const url = params.toString() 
+    ? `${API_BASE}/api/loans/details/all?${params}` 
+    : `${API_BASE}/api/loans/details/all`;
+  const res = await fetch(url, { 
+    cache: "no-store",
+    headers: authHeaders()
+  });
+  if (!res.ok) throw new Error("Failed to fetch loan details");
+  return res.json();
+}
+
+export async function fetchActiveLoanDetails(): Promise<LoanDetail[]> {
+  const res = await fetch(`${API_BASE}/api/loans/details/active`, { 
+    cache: "no-store",
+    headers: authHeaders()
+  });
+  if (!res.ok) throw new Error("Failed to fetch active loan details");
+  return res.json();
+}
+
+// ---------- Audit Logs ----------
+
+export interface AuditLogDetail {
+  id: number;
+  timestamp: string;
+  type: string;
+  user: string;
+  user_name: string | null;
+  item: string | null;
+  status: string;
+  message: string;
+  ip_address: string | null;
+}
+
+export async function fetchCabinetAccessLogs(hours: number = 24): Promise<AuditLogDetail[]> {
+  const res = await fetch(`${API_BASE}/api/audit-logs/cabinet-access/recent?hours=${hours}`, { 
+    cache: "no-store",
+    headers: authHeaders()
+  });
+  if (!res.ok) throw new Error("Failed to fetch cabinet access logs");
+  return res.json();
+}
+
