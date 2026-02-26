@@ -2,7 +2,7 @@ import requests
 import time
 import random
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:3000"
 KIOSK_ID = "kiosk_demo_01"
 
 def simulate_flow():

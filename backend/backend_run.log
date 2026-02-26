@@ -1,0 +1,7 @@
+INFO:     Started server process [14474]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:3000 (Press CTRL+C to quit)
+🚀 Initializing database...
+✅ Database ready!
+INFO:     127.0.0.1:60852 - "POST /api/auth/kiosk/prepare_registration HTTP/1.1" 200 OK

@@ -3,13 +3,17 @@
     "version": "1.0.0",
     "description": "Monorepo for Smart Inventory Management System",
     "scripts": {
-        "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run backend\" \"npm run frontend\"",
+        "dev": "dotenv -e .env -- concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run backend\" \"npm run frontend\"",
         "backend": "cd backend && (ls venv/bin/python3 >/dev/null 2>&1 && ./venv/bin/python3 main.py || python3 main.py)",
         "frontend": "cd frontend && npm run dev",
         "install-all": "npm install && cd frontend && npm install && cd ../backend && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt",
-        "build": "cd frontend && npm run build"
+        "build": "cd frontend && npm run build",
+        "kiosk:config": "python3 scripts/generate_kiosk_config.py"
     },
     "devDependencies": {
         "concurrently": "^8.2.2"
+    },
+    "dependencies": {
+        "dotenv-cli": "^11.0.0"
     }
 }

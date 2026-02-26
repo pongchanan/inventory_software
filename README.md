@@ -22,6 +22,20 @@ This repo is structured as a **Monorepo**. To deploy:
    - For **Frontend**: Set **Root Directory** to `/frontend`.
 3. Railway will automatically detect the `railway.json` in each folder.
 
+## 🔌 Kiosk / ESP32 Configuration
+
+Because the kiosk usually connects via a Mobile Hotspot, WiFi credentials and the API IP need to be updated frequently:
+1. Update `WIFI_SSID`, `WIFI_PASSWORD`, and `NEXT_PUBLIC_API_URL` in your root `.env` file.
+2. Run the config generator:
+   ```bash
+   npm run kiosk:config
+   ```
+   *This automatically generates `kiosk/kiosk_main/kiosk_config.h`.*
+3. **First flash:** Upload code via USB cable.
+4. **Push Updates (OTA):** Once connected to WiFi, you can push future updates wirelessly:
+   - In Arduino IDE / VSCode, select the Network Port (e.g. `kiosk-smart-inventory at 10.x.x.x`)
+   - Click Upload.
+
 ## 📁 Structure
 - `/backend`: FastAPI (Python)
 - `/frontend`: Next.js (TypeScript)
