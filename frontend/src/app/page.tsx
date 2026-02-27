@@ -1,84 +1,29 @@
 "use client";
 
-import { useState } from 'react';
-import { useInventory } from '../services/hooks/useInventory';
-import { useDamageReport } from '../services/hooks/useDamageReport';
-
-// Layout Components
-import { BottomNav, TabType } from '../components/layout/BottomNav';
-
-// View Components
-import { HomeView } from '../components/views/HomeView';
-import { BorrowedView } from '../components/views/BorrowedView';
-import { ProfileView } from '../components/views/ProfileView';
-import { ReportModal } from '../components/features/ReportModal';
+import { useState, useEffect } from 'react';
+import { useMediaQuery } from '../services/hooks/useMediaQuery';
+import { MobileApp } from '../components/views/MobileApp';
+import { DesktopApp } from '../components/views/DesktopApp';
+import Navbar from '../components/Navbar';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('home');
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+  const [mounted, setMounted] = useState(false);
 
-  const {
-    items,
-    borrowedItems,
-    currentUser,
-    searchQuery,
-    setSearchQuery,
-    sortBy,
-    setSortBy,
-    sortedItems,
-    isLoading
-  } = useInventory();
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const {
-    isReportModalOpen,
-    selectedItem,
-    reportImage,
-    openReportModal,
-    closeReportModal,
-    handleImageChange,
-    handleRemoveImage,
-    submitReport
-  } = useDamageReport();
+  // Avoid hydration mismatch by waiting for first client render
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#f5f5f5] flex flex-col items-center justify-center">
+        {/* Simple placeholder loader */}
+        <div className="animate-pulse w-12 h-12 bg-gray-300 rounded-full mb-4"></div>
+        <div className="animate-pulse h-4 bg-gray-300 w-24 rounded"></div>
+      </div>
+    );
+  }
 
-  return (
-    <div className="max-w-md mx-auto bg-[#f5f5f5] min-h-screen relative flex flex-col shadow-2xl overflow-hidden font-sans">
-      <main className="flex-grow">
-        {activeTab === 'home' && (
-          <HomeView
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            items={sortedItems}
-          />
-        )}
-
-        {activeTab === 'borrowed' && (
-          <BorrowedView
-            borrowedItems={borrowedItems}
-            onReportClick={openReportModal}
-          />
-        )}
-
-        {activeTab === 'profile' && (
-          <ProfileView user={currentUser} />
-        )}
-      </main>
-
-      <BottomNav
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        borrowedCount={borrowedItems.length}
-      />
-
-      <ReportModal
-        isOpen={isReportModalOpen}
-        selectedItem={selectedItem}
-        reportImage={reportImage}
-        onClose={closeReportModal}
-        onImageChange={handleImageChange}
-        onRemoveImage={handleRemoveImage}
-        onSubmit={submitReport}
-      />
-    </div>
-  );
+  return isDesktop ? <DesktopApp /> : <MobileApp />;
 }
