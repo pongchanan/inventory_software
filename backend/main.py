@@ -1,3 +1,10 @@
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env from the same directory as main.py
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -14,7 +21,6 @@ from app.routes import (
     stats_router,
     auth_router,
 )
-import os
 
 
 @asynccontextmanager
