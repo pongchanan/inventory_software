@@ -7,6 +7,7 @@ import {
   useState,
   ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import { AuthUser, fetchMe } from "@/lib/api";
 
 interface AuthContextType {
@@ -31,6 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const router = useRouter();
 
   // On mount, check localStorage
   useEffect(() => {
@@ -69,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
+    router.push("/login");
   };
 
   const isAdmin = user?.role === "admin";

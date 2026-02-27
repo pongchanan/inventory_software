@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3000";
 
 export interface Item {
   id: number;
@@ -269,10 +269,10 @@ export interface LoanDetail {
 export async function fetchLoanDetails(statusFilter?: string): Promise<LoanDetail[]> {
   const params = new URLSearchParams();
   if (statusFilter) params.set("status_filter", statusFilter);
-  const url = params.toString() 
-    ? `${API_BASE}/api/loans/details/all?${params}` 
+  const url = params.toString()
+    ? `${API_BASE}/api/loans/details/all?${params}`
     : `${API_BASE}/api/loans/details/all`;
-  const res = await fetch(url, { 
+  const res = await fetch(url, {
     cache: "no-store",
     headers: authHeaders()
   });
@@ -281,7 +281,7 @@ export async function fetchLoanDetails(statusFilter?: string): Promise<LoanDetai
 }
 
 export async function fetchActiveLoanDetails(): Promise<LoanDetail[]> {
-  const res = await fetch(`${API_BASE}/api/loans/details/active`, { 
+  const res = await fetch(`${API_BASE}/api/loans/details/active`, {
     cache: "no-store",
     headers: authHeaders()
   });
@@ -304,7 +304,7 @@ export interface AuditLogDetail {
 }
 
 export async function fetchCabinetAccessLogs(hours: number = 24): Promise<AuditLogDetail[]> {
-  const res = await fetch(`${API_BASE}/api/audit-logs/cabinet-access/recent?hours=${hours}`, { 
+  const res = await fetch(`${API_BASE}/api/audit-logs/cabinet-access/recent?hours=${hours}`, {
     cache: "no-store",
     headers: authHeaders()
   });

@@ -9,10 +9,10 @@ import {
     Settings,
     LogOut
 } from 'lucide-react';
-import { User } from '../../../domain/models/Item';
+import { AuthUser } from '../../../lib/api';
 
 interface DesktopSidebarProps {
-    currentUser: User | null;
+    currentUser: AuthUser | null;
     onLogout: () => void;
     currentPath: string;
 }
@@ -73,11 +73,11 @@ export function DesktopSidebar({ currentUser, onLogout, currentPath }: DesktopSi
 
             <div className="p-4 border-t">
                 <Link href="/profile" className="block hover:bg-gray-100 rounded-2xl transition-colors">
-                    <div className="bg-gray-50 p-4 rounded-2xl flex items-center gap-3 justify-center">
-                        <div className="w-10 h-10 bg-[#ee4d2d] rounded-full flex items-center justify-center text-white font-bold">{currentUser?.initial || 'U'}</div>
+                    <div className="bg-gray-50 p-4 rounded-2xl flex items-center gap-3 ">
+                        <div className="w-10 h-10 bg-[#ee4d2d] rounded-full flex items-center justify-center text-white font-bold">{currentUser?.name?.[0]?.toUpperCase() || 'U'}</div>
                         <div className="overflow-hidden">
-                            <p className="text-xs font-bold truncate">{currentUser?.name || "Loading..."}</p>
-                            <p className="text-[10px] text-gray-500">{currentUser?.studentId || "-"}</p>
+                            <p className="text-xs font-bold truncate">{currentUser?.name || "Guest User"}</p>
+                            <p className="text-[10px] text-gray-500">{currentUser?.email ? currentUser.email.split('@')[0] : "-"}</p>
                         </div>
                     </div>
                 </Link>
