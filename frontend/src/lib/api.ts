@@ -373,6 +373,7 @@ export interface LoanDetail {
   item_uid: string;
   item_name: string;
   item_category: string | null;
+  item_image_url: string | null;
   borrowed_at: string;
   due_at: string;
   returned_at: string | null;

@@ -35,7 +35,8 @@ export const inventoryRepository = {
                     id: loan.id,
                     name: loan.item_name,
                     date: formatter.format(dateObj),
-                    loc: loan.item_category || 'ตู้ไม่ระบุ'
+                    loc: loan.item_category || 'ตู้ไม่ระบุ',
+                    img: getImageUrl(loan.item_image_url)
                 };
             });
         } catch (error) {

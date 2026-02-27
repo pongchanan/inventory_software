@@ -12,6 +12,7 @@ export interface BorrowedItem {
     name: string;
     date: string;
     loc: string;
+    img: string;
 }
 
 export interface User {

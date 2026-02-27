@@ -22,6 +22,7 @@ class LoanDetail(BaseModel):
     item_uid: str
     item_name: str
     item_category: Optional[str]
+    item_image_url: Optional[str]
     borrowed_at: datetime
     due_at: datetime
     returned_at: Optional[datetime]
@@ -206,6 +207,7 @@ def get_all_loan_details(
             item_uid=loan.item_uid,
             item_name=item.name if item else "Unknown Item",
             item_category=item.category if item else None,
+            item_image_url=item.image_url if item else None,
             borrowed_at=loan.borrowed_at,
             due_at=loan.due_at,
             returned_at=loan.returned_at,

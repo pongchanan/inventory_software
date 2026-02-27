@@ -9,6 +9,8 @@ interface ReportModalProps {
     onClose: () => void;
     onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onRemoveImage: () => void;
+    reportDetail: string;
+    setReportDetail: (val: string) => void;
     onSubmit: () => void;
 }
 
@@ -19,6 +21,8 @@ export function ReportModal({
     onClose,
     onImageChange,
     onRemoveImage,
+    reportDetail,
+    setReportDetail,
     onSubmit
 }: ReportModalProps) {
     if (!isOpen) return null;
@@ -47,6 +51,8 @@ export function ReportModal({
 
                     <label className="block text-xs font-bold text-gray-700 mb-2">รายละเอียดที่พบ</label>
                     <textarea
+                        value={reportDetail}
+                        onChange={(e) => setReportDetail(e.target.value)}
                         placeholder="เช่น ขาพินหัก, ไฟไม่เข้า, บอร์ดไหม้..."
                         className="w-full border-2 border-gray-100 rounded-xl p-4 text-sm h-28 outline-none focus:border-[#ee4d2d] bg-gray-50 transition-all mb-6 resize-none"
                     ></textarea>

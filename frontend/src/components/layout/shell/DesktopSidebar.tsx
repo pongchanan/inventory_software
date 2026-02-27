@@ -40,12 +40,7 @@ export function DesktopSidebar({ currentUser, onLogout, currentPath }: DesktopSi
                     <Home size={20} /> หน้าหลัก
                 </Link>
 
-                <Link
-                    href="/cabinets"
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/cabinets') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
-                >
-                    <Package size={20} /> รายการในตู้
-                </Link>
+
 
                 {currentUser && (
                     <>

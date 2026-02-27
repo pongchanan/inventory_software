@@ -15,6 +15,19 @@ export default function BorrowedPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
 
+    const {
+        isReportModalOpen,
+        selectedItem,
+        reportImage,
+        reportDetail,
+        setReportDetail,
+        openReportModal,
+        closeReportModal,
+        handleImageChange,
+        handleRemoveImage,
+        submitReport
+    } = useDamageReport();
+
     useEffect(() => {
         if (!authLoading && !user) {
             router.push('/login');
@@ -25,19 +38,8 @@ export default function BorrowedPage() {
         return null; // Or a loading spinner
     }
 
-    const {
-        isReportModalOpen,
-        selectedItem,
-        reportImage,
-        openReportModal,
-        closeReportModal,
-        handleImageChange,
-        handleRemoveImage,
-        submitReport
-    } = useDamageReport();
-
     return (
-        <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">
             <h2 className="text-3xl font-black mb-8">รายการยืมของฉัน</h2>
 
             <div className="space-y-4">
@@ -45,7 +47,7 @@ export default function BorrowedPage() {
                     <div key={item.id} className="bg-white p-4 sm:p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 border border-gray-50 hover:border-orange-100 transition-colors">
                         <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-50 rounded-2xl overflow-hidden flex-shrink-0 border relative">
                             <Image
-                                src="https://images.unsplash.com/photo-1555664424-778a1e5e1b48?w=200"
+                                src={item.img}
                                 alt={item.name}
                                 fill
                                 style={{ objectFit: 'cover' }}
@@ -97,9 +99,11 @@ export default function BorrowedPage() {
                 isOpen={isReportModalOpen}
                 selectedItem={selectedItem}
                 reportImage={reportImage}
+                reportDetail={reportDetail}
                 onClose={closeReportModal}
                 onImageChange={handleImageChange}
                 onRemoveImage={handleRemoveImage}
+                setReportDetail={setReportDetail}
                 onSubmit={submitReport}
             />
         </div>
