@@ -2,6 +2,9 @@
 
 import { useInventory } from '../../../services/hooks/useInventory';
 import { useDamageReport } from '../../../services/hooks/useDamageReport';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { Package, MapPin, History, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { ReportModal } from '../../../components/features/ReportModal';
@@ -9,6 +12,18 @@ import { BorrowedItem } from '../../../domain/models/Item';
 
 export default function BorrowedPage() {
     const { borrowedItems } = useInventory();
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!authLoading && !user) {
+            router.push('/login');
+        }
+    }, [user, authLoading, router]);
+
+    if (authLoading || !user) {
+        return null; // Or a loading spinner
+    }
 
     const {
         isReportModalOpen,

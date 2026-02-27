@@ -3,9 +3,22 @@
 import { useAuth } from '@/context/AuthContext';
 import { User, Mail, LogOut, Clock, ShieldCheck, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function ProfilePage() {
-    const { user, isAdmin, logout } = useAuth();
+    const { user, isAdmin, logout, loading: authLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!authLoading && !user) {
+            router.push('/login');
+        }
+    }, [user, authLoading, router]);
+
+    if (authLoading || !user) {
+        return null;
+    }
 
     return (
         <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">

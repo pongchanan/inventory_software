@@ -25,15 +25,16 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                 className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400 hover:text-gray-600'}`}
             >
                 <Home size={22} strokeWidth={isActive('/') ? 2.5 : 2} />
-                <span className="text-[10px] font-bold">Home</span>
+                <span className="text-[10px] font-bold">หน้าหลัก</span>
             </Link>
 
             <Link
-                href="/borrowed"
+                href={borrowedCount !== undefined ? "/borrowed" : "/login"} // borrowedCount !== undefined implies authentication context checks could run, alternatively check auth context.
+                // Alternatively, relying strictly on authContext passed directly:
                 className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative ${isActive('/borrowed') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400 hover:text-gray-600'}`}
             >
                 <Package size={22} strokeWidth={isActive('/borrowed') ? 2.5 : 2} />
-                <span className="text-[10px] font-bold">Borrowed</span>
+                <span className="text-[10px] font-bold">ยืมของ</span>
                 {borrowedCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
                         {borrowedCount}
@@ -46,7 +47,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                 className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/profile') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400 hover:text-gray-600'}`}
             >
                 <User size={22} strokeWidth={isActive('/profile') ? 2.5 : 2} />
-                <span className="text-[10px] font-bold">Profile</span>
+                <span className="text-[10px] font-bold">โปรไฟล์</span>
             </Link>
         </div>
     );

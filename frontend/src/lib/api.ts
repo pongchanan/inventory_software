@@ -1,4 +1,15 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3000";
+const getApiBase = () => {
+  // If we are in the browser, always base the API URL on the current hostname
+  if (typeof window !== "undefined") {
+    // Usually frontend is 3001 and backend is 3000
+    return `http://${window.location.hostname}:3000`;
+  }
+  // Fallback for SSR
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  return "http://127.0.0.1:3000";
+};
+
+export const API_BASE = getApiBase();
 
 export interface Item {
   id: number;

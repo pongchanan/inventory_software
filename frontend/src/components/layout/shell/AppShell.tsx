@@ -13,9 +13,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { user: currentUser, logout } = useAuth();
 
-    // Allow kiosk and login to be complete fullscreen bypassing the shell entirely
+    // Allow kiosk, login, and register to be complete fullscreen bypassing the shell entirely
     // although they should be outside the route group anyway, this is a safety measure
-    if (pathname.startsWith('/login') || pathname.startsWith('/kiosk')) {
+    if (pathname.startsWith('/login') || pathname.startsWith('/kiosk') || pathname.startsWith('/register')) {
         return <>{children}</>;
     }
 
