@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Package, LayoutGrid, ShieldCheck, Menu, X, LogIn, LogOut, User } from "lucide-react";
+import {
+  Package,
+  LayoutGrid,
+  ShieldCheck,
+  ClipboardList,
+  Menu,
+  X,
+  LogIn,
+  LogOut,
+  User,
+} from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -16,7 +26,10 @@ export default function Navbar() {
     { href: "/", label: "Items", icon: Package },
     { href: "/cabinets", label: "Cabinets", icon: LayoutGrid },
     ...(isAdmin
-      ? [{ href: "/admin", label: "Admin", icon: ShieldCheck }]
+      ? [
+          { href: "/loans", label: "Loans", icon: ClipboardList },
+          { href: "/admin", label: "Admin", icon: ShieldCheck },
+        ]
       : []),
   ];
 
@@ -30,7 +43,10 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-bold text-xl text-primary"
+          >
             <Package className="w-6 h-6" />
             Smart Inventory
           </Link>
@@ -87,7 +103,11 @@ export default function Navbar() {
             className="md:hidden p-2 rounded-lg hover:bg-gray-100"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
           </button>
         </div>
 
@@ -122,7 +142,10 @@ export default function Navbar() {
                   {user.name}
                 </div>
                 <button
-                  onClick={() => { handleLogout(); setMobileOpen(false); }}
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
                   className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg w-full"
                 >
                   <LogOut className="w-4 h-4" />

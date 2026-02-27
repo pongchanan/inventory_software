@@ -134,6 +134,105 @@ export async function fetchFloorItems(
   return res.json();
 }
 
+// ---------- Loans ----------
+
+export interface Loan {
+  id: number;
+  user_uid: string;
+  item_uid: string;
+  borrowed_at: string;
+  due_at: string;
+  returned_at: string | null;
+  status: string; // active, returned, overdue
+}
+
+export interface LoanCreate {
+  user_uid: string;
+  item_uid: string;
+  due_at: string;
+}
+
+export async function fetchActiveLoans(userUid?: string): Promise<Loan[]> {
+  const params = new URLSearchParams();
+  if (userUid) params.set("user_uid", userUid);
+  const url = params.toString()
+    ? `${API_BASE}/api/loans/active?${params}`
+    : `${API_BASE}/api/loans/active`;
+  const res = await fetch(url, { cache: "no-store", headers: authHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch active loans");
+  return res.json();
+}
+
+export async function fetchOverdueLoans(): Promise<Loan[]> {
+  const res = await fetch(`${API_BASE}/api/loans/overdue`, {
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to fetch overdue loans");
+  return res.json();
+}
+
+export async function fetchAllLoans(statusFilter?: string): Promise<Loan[]> {
+  const params = new URLSearchParams();
+  if (statusFilter) params.set("status_filter", statusFilter);
+  const url = params.toString()
+    ? `${API_BASE}/api/loans/?${params}`
+    : `${API_BASE}/api/loans/`;
+  const res = await fetch(url, { cache: "no-store", headers: authHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch loans");
+  return res.json();
+}
+
+export async function fetchUserLoans(
+  userUid: string,
+  includeReturned = false
+): Promise<Loan[]> {
+  const params = new URLSearchParams();
+  if (includeReturned) params.set("include_returned", "true");
+  const url = params.toString()
+    ? `${API_BASE}/api/loans/user/${userUid}?${params}`
+    : `${API_BASE}/api/loans/user/${userUid}`;
+  const res = await fetch(url, { cache: "no-store", headers: authHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch user loans");
+  return res.json();
+}
+
+export async function createLoan(loan: LoanCreate): Promise<Loan> {
+  const res = await fetch(`${API_BASE}/api/loans/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(loan),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to create loan");
+  }
+  return res.json();
+}
+
+export async function returnLoan(loanId: number): Promise<Loan> {
+  const res = await fetch(`${API_BASE}/api/loans/${loanId}/return`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to return loan");
+  }
+  return res.json();
+}
+
+// ---------- Users (admin) ----------
+
+export async function fetchUsers(): Promise<AuthUser[]> {
+  const res = await fetch(`${API_BASE}/api/users/`, {
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to fetch users");
+  return res.json();
+}
+
 // ---------- Helpers ----------
 
 /**
