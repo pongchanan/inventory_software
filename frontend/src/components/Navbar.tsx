@@ -27,8 +27,8 @@ export default function Navbar() {
     { href: "/cabinets", label: "Cabinets", icon: LayoutGrid },
     ...(isAdmin
       ? [
+          { href: "/loans", label: "Loans", icon: ClipboardList },
           { href: "/admin", label: "Admin", icon: ShieldCheck },
-          { href: "/admin/loans", label: "Loans", icon: ClipboardList },
         ]
       : []),
   ];
