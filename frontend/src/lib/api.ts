@@ -272,7 +272,10 @@ export async function fetchImageUrl(uid: string): Promise<string> {
 export function getImageUrl(imageUrl: string | null): string {
   if (!imageUrl) return "/placeholder.png";
   if (imageUrl.startsWith("http")) return imageUrl;
-  return `${API_BASE}${imageUrl}`;
+
+  const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+  const path = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+  return `${base}${path}`;
 }
 
 // ---------- Auth ----------

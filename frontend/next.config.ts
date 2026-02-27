@@ -12,12 +12,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "**",
-        pathname: "/uploads/**",
       },
       {
         protocol: "https",
         hostname: "**",
-        pathname: "/uploads/**",
       },
       {
         protocol: "https",
