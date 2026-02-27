@@ -41,7 +41,7 @@ def create_item(
 
 
 @router.get("/{uid}", response_model=ItemResponse)
-def get_item(uid: str, db: Session = Depends(get_db)):
+def get_item(uid: str, request: Request, db: Session = Depends(get_db)):
     """Get item by UID"""
     item = db.query(Item).filter(Item.uid == uid).first()
     if not item:
@@ -49,11 +49,18 @@ def get_item(uid: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Item with UID {uid} not found",
         )
+    if item.image_url:
+        if _is_legacy_path(item.image_url):
+            base_url = str(request.base_url).rstrip("/")
+            item.image_url = f"{base_url}{item.image_url}"
+        else:
+            item.image_url = generate_presigned_url(item.image_url, expires_in=3600)
     return item
 
 
 @router.get("/", response_model=List[ItemResponse])
 def list_items(
+    request: Request,
     skip: int = 0,
     limit: int = 100,
     available: bool = None,
@@ -66,6 +73,13 @@ def list_items(
         query = query.filter(Item.available == available)
 
     items = query.offset(skip).limit(limit).all()
+    for item in items:
+        if item.image_url:
+            if _is_legacy_path(item.image_url):
+                base_url = str(request.base_url).rstrip("/")
+                item.image_url = f"{base_url}{item.image_url}"
+            else:
+                item.image_url = generate_presigned_url(item.image_url, expires_in=3600)
     return items
 
 
@@ -195,7 +209,7 @@ def get_item_image_url(uid: str, request: Request, db: Session = Depends(get_db)
 
 @router.get("/by-location/{location}", response_model=List[ItemResponse])
 def get_items_by_location(
-    location: str, available_only: bool = False, db: Session = Depends(get_db)
+    location: str, request: Request, available_only: bool = False, db: Session = Depends(get_db)
 ):
     """Get all items in a specific location/compartment"""
     query = db.query(Item).filter(Item.location == location)
@@ -204,4 +218,11 @@ def get_items_by_location(
         query = query.filter(Item.available == True)
 
     items = query.all()
+    for item in items:
+        if item.image_url:
+            if _is_legacy_path(item.image_url):
+                base_url = str(request.base_url).rstrip("/")
+                item.image_url = f"{base_url}{item.image_url}"
+            else:
+                item.image_url = generate_presigned_url(item.image_url, expires_in=3600)
     return items

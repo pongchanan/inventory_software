@@ -19,7 +19,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
     };
 
     return (
-        <div className="absolute bottom-0 w-full bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-around p-4 pb-6 z-50 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+        <div className="fixed bottom-0 w-full max-w-md bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-around p-4 pb-6 z-50 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
             <Link
                 href="/"
                 className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400 hover:text-gray-600'}`}
