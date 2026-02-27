@@ -1,4 +1,5 @@
 import { X, AlertTriangle, Camera } from 'lucide-react';
+import Image from 'next/image';
 import { BorrowedItem } from '../../domain/models/Item';
 
 interface ReportModalProps {
@@ -61,7 +62,13 @@ export function ReportModal({
                         </label>
                     ) : (
                         <div className="relative h-48 bg-gray-900 rounded-xl overflow-hidden mb-6 border flex items-center justify-center group">
-                            <img src={reportImage} alt="Evidence Preview" className="w-full h-full object-contain opacity-90" />
+                            <Image
+                                src={reportImage}
+                                alt="Evidence Preview"
+                                fill
+                                style={{ objectFit: 'contain' }}
+                                className="opacity-90"
+                            />
                             <div className="absolute inset-0 bg-black/20 transition-opacity group-hover:bg-black/40"></div>
                             <button
                                 onClick={onRemoveImage}

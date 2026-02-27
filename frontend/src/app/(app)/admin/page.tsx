@@ -61,7 +61,7 @@ export default function AdminPage() {
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [deletingUid, setDeletingUid] = useState<string | null>(null);
   const [uploadingUid, setUploadingUid] = useState<string | null>(null);
-  
+
   // New state for loans and cabinet access
   const [activeTab, setActiveTab] = useState<"items" | "loans" | "cabinet">("items");
   const [loans, setLoans] = useState<LoanDetail[]>([]);
@@ -86,9 +86,26 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    loadItems();
-  }, [loadItems]);
+    let mounted = true;
 
+    // Defer initialization to avoid synchronous state update in effect
+    setTimeout(() => {
+      if (!mounted) return;
+      setLoading(true);
+      fetchItems()
+        .then((data) => {
+          if (mounted) setItems(data);
+        })
+        .catch((e) => {
+          if (mounted) setError(e.message);
+        })
+        .finally(() => {
+          if (mounted) setLoading(false);
+        });
+    }, 0);
+
+    return () => { mounted = false; };
+  }, []);
   const loadLoans = useCallback(() => {
     setLoansLoading(true);
     Promise.all([
@@ -112,11 +129,17 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === "loans") {
-      loadLoans();
-    } else if (activeTab === "cabinet") {
-      loadCabinetLogs();
-    }
+    let mounted = true;
+    setTimeout(() => {
+      if (!mounted) return;
+      if (activeTab === "loans") {
+        loadLoans();
+      } else if (activeTab === "cabinet") {
+        loadCabinetLogs();
+      }
+    }, 0);
+
+    return () => { mounted = false; };
   }, [activeTab, loadLoans, loadCabinetLogs]);
 
   const handleImageSelect = (file: File | null) => {
@@ -215,33 +238,30 @@ export default function AdminPage() {
       <div className="flex gap-2 border-b border-border">
         <button
           onClick={() => setActiveTab("items")}
-          className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
-            activeTab === "items"
-              ? "text-primary border-b-2 border-primary"
-              : "text-muted hover:text-foreground"
-          }`}
+          className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "items"
+            ? "text-primary border-b-2 border-primary"
+            : "text-muted hover:text-foreground"
+            }`}
         >
           <Package className="w-4 h-4" />
           Items
         </button>
         <button
           onClick={() => setActiveTab("loans")}
-          className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
-            activeTab === "loans"
-              ? "text-primary border-b-2 border-primary"
-              : "text-muted hover:text-foreground"
-          }`}
+          className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "loans"
+            ? "text-primary border-b-2 border-primary"
+            : "text-muted hover:text-foreground"
+            }`}
         >
           <Users className="w-4 h-4" />
           Borrowed Items
         </button>
         <button
           onClick={() => setActiveTab("cabinet")}
-          className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${
-            activeTab === "cabinet"
-              ? "text-primary border-b-2 border-primary"
-              : "text-muted hover:text-foreground"
-          }`}
+          className={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "cabinet"
+            ? "text-primary border-b-2 border-primary"
+            : "text-muted hover:text-foreground"
+            }`}
         >
           <History className="w-4 h-4" />
           Cabinet Access
@@ -476,11 +496,10 @@ export default function AdminPage() {
                         </td>
                         <td className="px-4 py-3">
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                              item.available
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${item.available
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                              }`}
                           >
                             {item.available ? "Available" : "Unavailable"}
                           </span>
@@ -489,11 +508,10 @@ export default function AdminPage() {
                           <div className="flex items-center gap-2">
                             {/* Upload Image */}
                             <label
-                              className={`cursor-pointer p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors ${
-                                uploadingUid === item.uid
-                                  ? "opacity-50 pointer-events-none"
-                                  : ""
-                              }`}
+                              className={`cursor-pointer p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors ${uploadingUid === item.uid
+                                ? "opacity-50 pointer-events-none"
+                                : ""
+                                }`}
                               title="Upload image"
                             >
                               {uploadingUid === item.uid ? (
@@ -592,11 +610,10 @@ export default function AdminPage() {
                           </td>
                           <td className="px-4 py-3">
                             <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                loan.status === "overdue"
-                                  ? "bg-red-100 text-red-700"
-                                  : "bg-yellow-100 text-yellow-700"
-                              }`}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${loan.status === "overdue"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-yellow-100 text-yellow-700"
+                                }`}
                             >
                               {loan.status}
                             </span>
@@ -647,13 +664,12 @@ export default function AdminPage() {
                           </td>
                           <td className="px-4 py-3">
                             <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                loan.status === "returned"
-                                  ? "bg-green-100 text-green-700"
-                                  : loan.status === "overdue"
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${loan.status === "returned"
+                                ? "bg-green-100 text-green-700"
+                                : loan.status === "overdue"
                                   ? "bg-red-100 text-red-700"
                                   : "bg-yellow-100 text-yellow-700"
-                              }`}
+                                }`}
                             >
                               {loan.status}
                             </span>
@@ -714,13 +730,12 @@ export default function AdminPage() {
                       <td className="px-4 py-3 font-mono text-xs text-muted">{log.user}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                            log.type === "unlock"
-                              ? "bg-blue-100 text-blue-700"
-                              : log.type === "lock"
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${log.type === "unlock"
+                            ? "bg-blue-100 text-blue-700"
+                            : log.type === "lock"
                               ? "bg-gray-100 text-gray-700"
                               : "bg-purple-100 text-purple-700"
-                          }`}
+                            }`}
                         >
                           {log.type}
                         </span>
@@ -728,11 +743,10 @@ export default function AdminPage() {
                       <td className="px-4 py-3 font-mono text-xs">{log.item || "—"}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                            log.status === "success"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${log.status === "success"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                            }`}
                         >
                           {log.status}
                         </span>

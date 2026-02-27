@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-export default function KioskRegistrationPage() {
+function KioskRegistrationForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
     // The QR code on the kiosk should look like: https://your-domain.com/kiosk/register?kiosk_id=kiosk_demo_01
@@ -224,5 +224,13 @@ export default function KioskRegistrationPage() {
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function KioskRegistrationPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><p className="text-gray-500 font-medium">กำลังโหลดแบบฟอร์ม...</p></div>}>
+            <KioskRegistrationForm />
+        </Suspense>
     )
 }

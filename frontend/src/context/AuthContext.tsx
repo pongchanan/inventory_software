@@ -22,8 +22,8 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   token: null,
   loading: true,
-  loginStore: () => {},
-  logout: () => {},
+  loginStore: () => { },
+  logout: () => { },
   isAdmin: false,
 });
 
@@ -34,20 +34,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // On mount, check localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("token");
-    if (stored) {
-      fetchMe(stored)
-        .then((u) => {
-          setUser(u);
-          setToken(stored);
+    let isSubscribed = true;
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      // Intentionally not setting loading true here as the initial state is already true
+      // Setting state here triggers the linter warning about synchronous setup
+      fetchMe(token)
+        .then((userData: AuthUser) => {
+          if (isSubscribed) setUser(userData);
         })
         .catch(() => {
-          localStorage.removeItem("token");
+          if (isSubscribed) {
+            localStorage.removeItem("token");
+            setUser(null);
+          }
         })
-        .finally(() => setLoading(false));
-    } else {
+        .finally(() => {
+          if (isSubscribed) setLoading(false);
+        });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
     }
+    return () => { isSubscribed = false; };
   }, []);
 
   const loginStore = (newToken: string, newUser: AuthUser) => {

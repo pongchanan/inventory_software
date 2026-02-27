@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import {
   fetchCompartments,
   fetchCompartmentItems,
-  Compartment,
-  Item,
+  Compartment
 } from "@/lib/api";
-import ItemCard from "@/components/ItemCard";
+import { Item } from "@/domain/models/Item";
+import { ItemCard } from "@/components/inventory/ItemCard";
 import {
   LayoutGrid,
   ChevronDown,
@@ -71,8 +71,19 @@ export default function CabinetsPage() {
     if (!isOpen && !compartmentItems[lockerNumber]) {
       setItemLoading((prev) => ({ ...prev, [lockerNumber]: true }));
       try {
-        const items = await fetchCompartmentItems(lockerNumber);
-        setCompartmentItems((prev) => ({ ...prev, [lockerNumber]: items }));
+        const rawItems = await fetchCompartmentItems(lockerNumber);
+        const processedItems: Item[] = rawItems.map(item => ({
+          id: parseInt(item.uid.replace(/\D/g, '')) || Math.floor(Math.random() * 10000), // fallback if uid isn't numeric
+          name: item.name,
+          qty: item.quantity,
+          total: item.quantity,
+          cabinet: lockerNumber,
+          loc: item.location || lockerNumber,
+          date: new Date().toISOString().split('T')[0],
+          status: item.available ? 'available' : 'borrowed',
+          img: item.image_url || 'https://images.unsplash.com/photo-1555664424-778a1e5e1b48?w=200'
+        }));
+        setCompartmentItems((prev) => ({ ...prev, [lockerNumber]: processedItems }));
       } catch {
         setCompartmentItems((prev) => ({ ...prev, [lockerNumber]: [] }));
       }
@@ -154,9 +165,8 @@ export default function CabinetsPage() {
                         {comp.locker_number}
                       </span>
                       <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          statusColor[comp.status] || "bg-gray-100 text-gray-600"
-                        }`}
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[comp.status] || "bg-gray-100 text-gray-600"
+                          }`}
                       >
                         {comp.status}
                       </span>

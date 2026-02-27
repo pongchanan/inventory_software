@@ -1,4 +1,5 @@
 import { Item } from '../../domain/models/Item';
+import Image from 'next/image';
 
 interface ItemCardProps {
     item: Item;
@@ -10,11 +11,12 @@ export function ItemCard({ item }: ItemCardProps) {
     return (
         <div className="bg-white rounded shadow-sm overflow-hidden flex flex-col border border-transparent active:border-[#ee4d2d] transition-colors">
             <div className="relative pt-[100%] bg-gray-50">
-                <img
+                <Image
                     src={item.img}
-                    className="absolute inset-0 w-full h-full object-cover"
                     alt={item.name}
-                    loading="lazy"
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
                 <div className="absolute top-1 left-1 bg-white/90 text-[#ee4d2d] text-[8px] px-1 rounded-sm font-bold border border-orange-100 shadow-sm">
                     {item.cabinet}
