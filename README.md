@@ -31,10 +31,7 @@ Because the kiosk usually connects via a Mobile Hotspot, WiFi credentials and th
    npm run kiosk:config
    ```
    *This automatically generates `kiosk/kiosk_main/kiosk_config.h`.*
-3. **First flash:** Upload code via USB cable.
-4. **Push Updates (OTA):** Once connected to WiFi, you can push future updates wirelessly:
-   - In Arduino IDE / VSCode, select the Network Port (e.g. `kiosk-smart-inventory at 10.x.x.x`)
-   - Click Upload.
+3. **Upload Code:** Connect the ESP32 via USB and upload the code using Arduino IDE or VSCode.
 
 ## 📁 Structure
 - `/backend`: FastAPI (Python)
