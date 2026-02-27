@@ -1,0 +1,189 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import {
+    fetchLoanDetails,
+    fetchActiveLoanDetails,
+    LoanDetail,
+} from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+    Wrench,
+    Loader2,
+    AlertCircle,
+    X,
+    History,
+    Clock,
+    AlertTriangle,
+    User,
+    CheckCircle2,
+} from "lucide-react";
+
+export default function LoansAdminPage() {
+    const { user, isAdmin, loading: authLoading } = useAuth();
+    const router = useRouter();
+    const [loans, setLoans] = useState<LoanDetail[]>([]);
+    const [activeLoans, setActiveLoans] = useState<LoanDetail[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Redirect if not admin
+    useEffect(() => {
+        if (!authLoading && (!user || !isAdmin)) {
+            router.push("/login");
+        }
+    }, [authLoading, user, isAdmin, router]);
+
+    const loadLoans = useCallback(() => {
+        setLoading(true);
+        Promise.all([
+            fetchLoanDetails(),
+            fetchActiveLoanDetails()
+        ])
+            .then(([allLoans, active]) => {
+                setLoans(allLoans);
+                setActiveLoans(active);
+            })
+            .catch((e) => setError(e.message))
+            .finally(() => setLoading(false));
+    }, []);
+
+    useEffect(() => {
+        loadLoans();
+    }, [loadLoans]);
+
+    const formatDate = (date: string) => {
+        return new Date(date).toLocaleString('th-TH', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const StatusBadge = ({ status }: { status: string }) => {
+        switch (status) {
+            case 'returned':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-green-50 text-green-600 border border-green-100 uppercase tracking-wider">
+                        <CheckCircle2 size={12} /> คืนสำเร็จ
+                    </span>
+                );
+            case 'overdue':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-red-50 text-red-600 border border-red-100 uppercase tracking-wider">
+                        <AlertTriangle size={12} /> เลยกำหนดคืน
+                    </span>
+                );
+            case 'active':
+            default:
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wider">
+                        <Clock size={12} /> กำลังยืม
+                    </span>
+                );
+        }
+    };
+
+    if (authLoading || !user || !isAdmin) return null;
+
+    return (
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+            <div>
+                <h1 className="text-3xl font-black text-gray-900 flex items-center gap-2">
+                    <Wrench className="w-8 h-8 text-[#ee4d2d]" />
+                    ยืม-คืน & แจ้งซ่อม
+                </h1>
+                <p className="text-gray-500 font-medium mt-1">ติดตามสถานะการยืมอุปกรณ์ และจัดการรายงานของชำรุดจากผู้ใช้งาน</p>
+            </div>
+
+            {loading ? (
+                <div className="py-20 text-center"><Loader2 className="w-10 h-10 animate-spin mx-auto text-gray-200" /></div>
+            ) : error ? (
+                <div className="p-4 bg-red-50 text-red-600 rounded-2xl font-bold border border-red-100">{error}</div>
+            ) : (
+                <>
+                    {/* ACTIVE LOANS SECTION */}
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-black flex items-center gap-2 px-2">
+                            <AlertTriangle className="text-orange-500" size={24} /> รายการที่กำลังถูกยืมอยู่ ({activeLoans.length})
+                        </h3>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {activeLoans.map(loan => (
+                                <div key={loan.id} className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-start gap-4">
+                                    <div className="w-16 h-16 bg-gray-50 rounded-2xl overflow-hidden border relative">
+                                        <Image src={loan.item_image_url || "/placeholder.png"} alt={loan.item_name} fill className="object-cover" />
+                                    </div>
+                                    <div className="flex-grow">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h4 className="font-bold text-gray-900 leading-tight">{loan.item_name}</h4>
+                                            <StatusBadge status={loan.status} />
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-3">
+                                            <User size={12} /> {loan.user_name} ({loan.user_uid})
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-50">
+                                            <div>
+                                                <p className="text-[10px] uppercase font-black text-gray-400 tracking-wider">วันยืม</p>
+                                                <p className="text-[11px] font-bold text-gray-700">{formatDate(loan.borrowed_at)}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-black text-gray-400 tracking-wider">กำหนดคืน</p>
+                                                <p className="text-[11px] font-bold text-red-600">{formatDate(loan.due_at)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* FULL HISTORY TABLE */}
+                    <div className="space-y-4 pt-4">
+                        <h3 className="text-xl font-black flex items-center gap-2 px-2">
+                            <History className="text-gray-400" size={24} /> ประวัติการยืม-คืนทั้งหมด
+                        </h3>
+                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50 border-b border-gray-100">
+                                        <tr>
+                                            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">ชื่อผู้ยืม</th>
+                                            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">อุปกรณ์</th>
+                                            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">วันยืม - วันคืน</th>
+                                            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">สถานะ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {loans.slice(0, 50).map(loan => (
+                                            <tr key={loan.id} className="hover:bg-gray-50/50 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <p className="font-bold text-gray-900 leading-none mb-1">{loan.user_name}</p>
+                                                    <p className="text-[10px] text-gray-400 font-bold tracking-tight">{loan.user_email || loan.user_uid}</p>
+                                                </td>
+                                                <td className="px-6 py-4 font-bold text-sm text-gray-700">{loan.item_name}</td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <div className="text-[11px] font-bold text-gray-500">
+                                                        {formatDate(loan.borrowed_at)}
+                                                        {loan.returned_at && <span className="text-green-500 mx-1">→</span>}
+                                                        {loan.returned_at && <span className="text-green-600">{formatDate(loan.returned_at)}</span>}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <StatusBadge status={loan.status} />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}

@@ -7,7 +7,11 @@ import {
     History,
     LayoutDashboard,
     Settings,
-    LogOut
+    LogOut,
+    Cpu,
+    Wrench,
+    Users,
+    FileText
 } from 'lucide-react';
 import { AuthUser } from '../../../lib/api';
 
@@ -65,13 +69,45 @@ export function DesktopSidebar({ currentUser, onLogout, currentPath }: DesktopSi
 
                         <Link
                             href="/admin"
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin') && currentPath === '/admin' ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                         >
-                            <LayoutDashboard size={20} /> ตรวจสอบตู้ (M2)
+                            <LayoutDashboard size={20} /> แดชบอร์ดภาพรวม
                         </Link>
-                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-gray-500 hover:bg-gray-50">
-                            <Settings size={20} /> ตั้งค่าระบบ
-                        </button>
+
+                        <Link
+                            href="/admin/inventory"
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/inventory') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+                        >
+                            <Settings size={20} /> จัดการอุปกรณ์ถาวร
+                        </Link>
+
+                        <Link
+                            href="/admin/hardware"
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/hardware') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+                        >
+                            <Cpu size={20} /> จัดการตู้ & ฮาร์ดแวร์
+                        </Link>
+
+                        <Link
+                            href="/admin/loans"
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/loans') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+                        >
+                            <Wrench size={20} /> ยืม-คืน & แจ้งซ่อม
+                        </Link>
+
+                        <Link
+                            href="/admin/users"
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/users') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+                        >
+                            <Users size={20} /> จัดการสมาชิก
+                        </Link>
+
+                        <Link
+                            href="/admin/logs"
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/logs') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+                        >
+                            <FileText size={20} /> ล็อกระบบ & รายงาน
+                        </Link>
                     </>
                 )}
             </nav>
