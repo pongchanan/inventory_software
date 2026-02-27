@@ -1,15 +1,17 @@
 "use client";
 
 import Link from 'next/link';
-import { Home, Package, User } from 'lucide-react';
+import { Home, Package, User, History, Cpu, Users, LayoutDashboard, Wrench } from 'lucide-react';
 import { useInventory } from '../../../services/hooks/useInventory';
+import { useAuth } from '@/context/AuthContext';
 
 interface MobileBottomNavProps {
     currentPath: string;
 }
 
 export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
-    const { borrowedItems } = useInventory(); // Keep dynamic count just for mobile nav
+    const { user, isAdmin } = useAuth();
+    const { borrowedItems } = useInventory();
     const borrowedCount = borrowedItems.length;
 
     const isActive = (path: string) => {
@@ -18,33 +20,88 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
         return false;
     };
 
+    if (!user) return null;
+
+    if (isAdmin) {
+        return (
+            <div className="fixed bottom-0 w-full bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-around p-4 pb-6 z-50 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+                <Link
+                    href="/admin"
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/admin') && currentPath === '/admin' ? 'text-gray-900 scale-110' : 'text-gray-400'}`}
+                >
+                    <LayoutDashboard size={22} strokeWidth={isActive('/admin') && currentPath === '/admin' ? 2.5 : 2} />
+                    <span className="text-[10px] font-bold">สรุปผล</span>
+                </Link>
+
+                <Link
+                    href="/admin/hardware"
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/admin/hardware') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400'}`}
+                >
+                    <Cpu size={22} strokeWidth={isActive('/admin/hardware') ? 2.5 : 2} />
+                    <span className="text-[10px] font-bold">คุมตู้</span>
+                </Link>
+
+                <Link
+                    href="/admin/users"
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/admin/users') ? 'text-blue-500 scale-110' : 'text-gray-400'}`}
+                >
+                    <Users size={22} strokeWidth={isActive('/admin/users') ? 2.5 : 2} />
+                    <span className="text-[10px] font-bold">สมาชิก</span>
+                </Link>
+
+                <Link
+                    href="/admin/loans"
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/admin/loans') ? 'text-orange-500 scale-110' : 'text-gray-400'}`}
+                >
+                    <Wrench size={22} strokeWidth={isActive('/admin/loans') ? 2.5 : 2} />
+                    <span className="text-[10px] font-bold">ยืม-คืน</span>
+                </Link>
+
+                <Link
+                    href="/profile"
+                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/profile') ? 'text-gray-900 scale-110' : 'text-gray-400'}`}
+                >
+                    <User size={22} strokeWidth={isActive('/profile') ? 2.5 : 2} />
+                    <span className="text-[10px] font-bold">ตั้งค่า</span>
+                </Link>
+            </div>
+        );
+    }
+
     return (
-        <div className="fixed bottom-0 w-full max-w-md bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-around p-4 pb-6 z-50 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+        <div className="fixed bottom-0 w-full bg-white/80 backdrop-blur-xl border-t border-gray-100 flex justify-around p-4 pb-6 z-50 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
             <Link
                 href="/"
-                className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400'}`}
             >
                 <Home size={22} strokeWidth={isActive('/') ? 2.5 : 2} />
-                <span className="text-[10px] font-bold">หน้าหลัก</span>
+                <span className="text-[10px] font-bold">ของในตู้</span>
             </Link>
 
             <Link
-                href={borrowedCount !== undefined ? "/borrowed" : "/login"} // borrowedCount !== undefined implies authentication context checks could run, alternatively check auth context.
-                // Alternatively, relying strictly on authContext passed directly:
-                className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative ${isActive('/borrowed') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400 hover:text-gray-600'}`}
+                href="/borrowed"
+                className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative ${isActive('/borrowed') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400'}`}
             >
                 <Package size={22} strokeWidth={isActive('/borrowed') ? 2.5 : 2} />
-                <span className="text-[10px] font-bold">ยืมของ</span>
+                <span className="text-[10px] font-bold">ยืม-คืน</span>
                 {borrowedCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
+                    <span className="absolute -top-1 -right-1 bg-[#ee4d2d] text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
                         {borrowedCount}
                     </span>
                 )}
             </Link>
 
             <Link
+                href="/history"
+                className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/history') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400'}`}
+            >
+                <History size={22} strokeWidth={isActive('/history') ? 2.5 : 2} />
+                <span className="text-[10px] font-bold">ประวัติ</span>
+            </Link>
+
+            <Link
                 href="/profile"
-                className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/profile') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/profile') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400'}`}
             >
                 <User size={22} strokeWidth={isActive('/profile') ? 2.5 : 2} />
                 <span className="text-[10px] font-bold">โปรไฟล์</span>
@@ -52,3 +109,4 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
         </div>
     );
 }
+

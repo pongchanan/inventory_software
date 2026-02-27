@@ -15,10 +15,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Already logged in — redirect to admin or home based on role later. For now just admin.
+  // Already logged in — redirect to admin or home based on role.
   useEffect(() => {
     if (user) {
-      router.push("/admin");
+      if (user.role === 'admin') {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     }
   }, [user, router]);
 
@@ -33,7 +37,11 @@ export default function LoginPage() {
     try {
       const res = await login(email, password);
       loginStore(res.access_token, res.user);
-      router.push("/admin");
+      if (res.user.role === 'admin') {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     }

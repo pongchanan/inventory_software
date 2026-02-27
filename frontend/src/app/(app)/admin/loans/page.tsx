@@ -147,7 +147,8 @@ export default function LoansAdminPage() {
                             <History className="text-gray-400" size={24} /> ประวัติการยืม-คืนทั้งหมด
                         </h3>
                         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                            <div className="overflow-x-auto">
+                            {/* Desktop Table */}
+                            <div className="hidden md:block overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead className="bg-gray-50 border-b border-gray-100">
                                         <tr>
@@ -179,6 +180,27 @@ export default function LoansAdminPage() {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+
+                            {/* Mobile Card View */}
+                            <div className="md:hidden divide-y divide-gray-50">
+                                {loans.slice(0, 50).map(loan => (
+                                    <div key={loan.id} className="p-4 space-y-3">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="font-bold text-gray-900">{loan.user_name}</p>
+                                                <p className="text-[10px] text-gray-400 font-bold">{loan.user_uid}</p>
+                                            </div>
+                                            <StatusBadge status={loan.status} />
+                                        </div>
+                                        <p className="text-sm font-bold text-gray-700">{loan.item_name}</p>
+                                        <div className="text-[10px] font-bold text-gray-400 flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
+                                            <Clock size={12} />
+                                            {formatDate(loan.borrowed_at)}
+                                            {loan.returned_at && <span className="text-green-500">→ {formatDate(loan.returned_at)}</span>}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

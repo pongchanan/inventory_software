@@ -19,6 +19,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         return <>{children}</>;
     }
 
+    if (isDesktop === undefined) {
+        // Prevent hydration mismatch by rendering a minimal shell or null until mounted
+        return null;
+    }
+
     if (isDesktop) {
         return (
             <div className="flex h-screen bg-[#f8f9fa] font-sans text-gray-800 overflow-hidden">

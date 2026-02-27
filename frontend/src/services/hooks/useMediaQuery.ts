@@ -1,18 +1,11 @@
-import { useState, useEffect, useLayoutEffect } from 'react';
-
-// Use strict fallback to prevent hydration mismatch for window object
-const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+import { useState, useEffect } from 'react';
 
 export function useMediaQuery(query: string) {
-    const [matches, setMatches] = useState(false);
+    const [matches, setMatches] = useState<boolean | undefined>(undefined);
 
-    useIsomorphicLayoutEffect(() => {
+    useEffect(() => {
         const mediaQuery = window.matchMedia(query);
-
-        // Initial set - safe in layout effect
-        if (matches !== mediaQuery.matches) {
-            setMatches(mediaQuery.matches);
-        }
+        setMatches(mediaQuery.matches);
 
         const handler = (event: MediaQueryListEvent) => {
             setMatches(event.matches);
@@ -20,7 +13,9 @@ export function useMediaQuery(query: string) {
 
         mediaQuery.addEventListener('change', handler);
         return () => mediaQuery.removeEventListener('change', handler);
-    }, [query, matches]);
+    }, [query]);
 
+    // Default to true (desktop) on server to avoid layout shift on desktop devices, 
+    // but better yet is returning undefined and handling it in the component.
     return matches;
 }

@@ -79,9 +79,14 @@ export default function AdminDashboard() {
           </h1>
           <p className="text-gray-500 font-medium mt-1">ยินดีต้อนรับคุณ {user.name}, ข้อมูลสรุปสถานะระบบล่าสุด</p>
         </div>
-        <div className="hidden sm:flex items-center gap-2 bg-green-50 px-4 py-2 rounded-2xl border border-green-100">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-green-700 text-xs font-black uppercase tracking-widest">System Online</span>
+        <div className="flex items-center gap-2">
+          <Link href="/" className="sm:hidden flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-xl text-[10px] font-black uppercase tracking-wider">
+            ไปยังหน้ายืมของ <ArrowRight size={12} />
+          </Link>
+          <div className="hidden sm:flex items-center gap-2 bg-green-50 px-4 py-2 rounded-2xl border border-green-100">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-green-700 text-xs font-black uppercase tracking-widest">System Online</span>
+          </div>
         </div>
       </div>
 

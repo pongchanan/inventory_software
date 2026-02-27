@@ -119,7 +119,8 @@ export default function LogsAdminPage() {
             </div>
 
             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
@@ -146,8 +147,8 @@ export default function LogsAdminPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${log.type === "unlock" ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                                log.type === "lock" ? "bg-gray-50 text-gray-600 border-gray-100" :
-                                                    "bg-purple-50 text-purple-600 border-purple-100"
+                                            log.type === "lock" ? "bg-gray-50 text-gray-600 border-gray-100" :
+                                                "bg-purple-50 text-purple-600 border-purple-100"
                                             }`}>
                                             {log.type}
                                         </span>
@@ -166,6 +167,34 @@ export default function LogsAdminPage() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden divide-y divide-gray-50">
+                    {loading ? (
+                        <div className="py-10 text-center"><Loader2 size={24} className="animate-spin text-gray-200 mx-auto" /></div>
+                    ) : filteredLogs.length === 0 ? (
+                        <div className="py-10 text-center text-gray-400 font-bold text-sm">ไม่พบบันทึก</div>
+                    ) : filteredLogs.map((log) => (
+                        <div key={log.id} className="p-4 space-y-2">
+                            <div className="flex justify-between items-start">
+                                <span className="text-[10px] font-black text-gray-400">{new Date(log.timestamp).toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${log.type === "unlock" ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-gray-50 text-gray-600"}`}>
+                                    {log.type}
+                                </span>
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-900">{log.user_name || "Unknown"}</p>
+                                <p className="text-[10px] font-medium text-gray-500 mt-1 line-clamp-2">{log.message}</p>
+                            </div>
+                            <div className="flex justify-between items-center pt-2">
+                                {log.item ? <span className="text-[9px] font-mono font-bold text-orange-500">#{log.item}</span> : <span></span>}
+                                <span className={`text-[9px] font-black uppercase ${log.status === 'success' ? 'text-green-500' : 'text-red-500'}`}>
+                                    ● {log.status}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
