@@ -18,7 +18,7 @@ export default function LoginPage() {
   // Already logged in — redirect to admin or home based on role.
   useEffect(() => {
     if (user) {
-      if (user.role === 'admin') {
+      if (user.role === "admin") {
         router.push("/admin");
       } else {
         router.push("/");
@@ -37,7 +37,7 @@ export default function LoginPage() {
     try {
       const res = await login(email, password);
       loginStore(res.access_token, res.user);
-      if (res.user.role === 'admin') {
+      if (res.user.role === "admin") {
         router.push("/admin");
       } else {
         router.push("/");
@@ -128,15 +128,22 @@ export default function LoginPage() {
             <Package size={24} className="text-[#ee4d2d]" />
           </div>
           <h1 className="font-black text-2xl tracking-tight leading-none uppercase">
-            Smart<br /><span className="text-gray-400">Inventory</span>
+            Smart
+            <br />
+            <span className="text-gray-400">Inventory</span>
           </h1>
         </div>
 
         {/* Hero Text (Bottom) */}
         <div className="relative z-10 max-w-lg">
-          <h2 className="text-5xl font-black mb-6 leading-tight">ระบบจัดการ<br />ยืมคืนอุปกรณ์ IoT</h2>
+          <h2 className="text-5xl font-black mb-6 leading-tight">
+            ระบบจัดการ
+            <br />
+            ยืมคืนอุปกรณ์ IoT
+          </h2>
           <p className="text-gray-400 text-lg leading-relaxed">
-            ระบบลงทะเบียน ยืม และ คืน อุปกรณ์อัตโนมัติ ใช้งานง่าย รองรับการยืนยันตัวตนด้วยบัตรนักศึกษา และการแจ้งเตือนแบบเรียลไทม์
+            ระบบลงทะเบียน ยืม และ คืน อุปกรณ์อัตโนมัติ ใช้งานง่าย
+            รองรับการยืนยันตัวตนด้วยบัตรนักศึกษา และการแจ้งเตือนแบบเรียลไทม์
           </p>
         </div>
       </div>
@@ -160,13 +167,17 @@ export default function LoginPage() {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-md mb-6 border border-white/30 shadow-xl">
               <Package className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-4xl font-black tracking-tight uppercase">Smart Inventory</h1>
+            <h1 className="text-4xl font-black tracking-tight uppercase">
+              Smart Inventory
+            </h1>
             <p className="mt-2 text-white/80">ลงชื่อเข้าใช้งานระบบ</p>
           </div>
 
           {/* Desktop Heading (Only visible on Desktop) */}
           <div className="hidden lg:block mb-10">
-            <h2 className="text-4xl font-black text-gray-900 mb-2">ยินดีต้อนรับกลับ! 👋</h2>
+            <h2 className="text-4xl font-black text-gray-900 mb-2">
+              ยินดีต้อนรับกลับ! 👋
+            </h2>
             <p className="text-gray-500">กรุณาลงชื่อเข้าใช้เพื่อจัดการระบบ</p>
           </div>
 
@@ -180,7 +191,9 @@ export default function LoginPage() {
 
           <div className="text-center mt-8 space-x-1 text-sm">
             <span className="text-gray-500 font-medium">พบปัญหา?</span>
-            <a href="#" className="font-bold text-[#ee4d2d] hover:underline">ติดต่อผู้ดูแลระบบ</a>
+            <a href="#" className="font-bold text-[#ee4d2d] hover:underline">
+              ติดต่อผู้ดูแลระบบ
+            </a>
           </div>
         </div>
       </div>
