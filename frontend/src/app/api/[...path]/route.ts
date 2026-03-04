@@ -1,26 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import dns from "node:dns";
 
 /**
  * Catch-all API proxy route: /api/[...path]
  *
  * Forwards all /api/* requests to the backend at runtime using BACKEND_URL.
  *
- * Why NOT next.config.ts rewrites?
- *   next.config.ts with `output: "standalone"` evaluates rewrites at BUILD TIME.
- *   BACKEND_URL is a Railway runtime variable — not available during build —
- *   so it would resolve to undefined/localhost and fail with ECONNREFUSED.
- *
- * Why NOT NEXT_PUBLIC_BACKEND_URL?
- *   NEXT_PUBLIC_* vars are also inlined at build time, same problem.
- *
- * This route handler reads process.env.BACKEND_URL at REQUEST TIME (runtime),
- * so it correctly picks up the Railway internal hostname every time.
- *
- * Flow:
- *   Browser → https://frontend.railway.app/api/**
- *     → this handler (Next.js server, inside Railway private network)
- *       → http://inventorysoftware-backend.railway.internal:PORT/api/**
+ * Railway internal networking (.railway.internal) resolves to IPv6 addresses.
+ * Node.js fetch (undici) defaults to IPv4 → ECONNREFUSED.
+ * Fix: force Node.js to prefer IPv6 for DNS resolution.
  */
+dns.setDefaultResultOrder("verbatim");
 
 function getBackendUrl(): string {
     const url = process.env.BACKEND_URL ?? "http://127.0.0.1:3000";
@@ -67,8 +57,11 @@ async function proxyRequest(req: NextRequest, path: string[]): Promise<NextRespo
     } catch (error) {
         const backendUrl = process.env.BACKEND_URL ?? "(not set)";
         console.error(`[proxy] FAILED → BACKEND_URL=${backendUrl}`, error);
+        const detail = error instanceof Error
+            ? `${error.message}${error.cause ? ` | cause: ${JSON.stringify(error.cause)}` : ""}`
+            : String(error);
         return NextResponse.json(
-            { error: "Backend unavailable", detail: String(error) },
+            { error: "Backend unavailable", detail, backendUrl },
             { status: 502 }
         );
     }
