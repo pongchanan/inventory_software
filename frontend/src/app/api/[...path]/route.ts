@@ -1,95 +1,102 @@
 import { NextRequest, NextResponse } from "next/server";
-import dns from "node:dns";
 
 /**
- * Catch-all API proxy route: /api/[...path]
+ * Catch-all API proxy route.
+ * Forwards /api/* requests to the backend using BACKEND_URL at runtime.
  *
- * Forwards all /api/* requests to the backend at runtime using BACKEND_URL.
- *
- * Railway internal networking (.railway.internal) resolves to IPv6 addresses.
- * Node.js fetch (undici) defaults to IPv4 → ECONNREFUSED.
- * Fix: force Node.js to prefer IPv6 for DNS resolution.
+ * BACKEND_URL (no NEXT_PUBLIC_ prefix) is read from process.env at RUNTIME,
+ * so it picks up the Railway internal hostname correctly.
  */
-dns.setDefaultResultOrder("verbatim");
 
 function getBackendUrl(): string {
-    const url = process.env.BACKEND_URL ?? "http://127.0.0.1:3000";
-    return url.replace(/\/+$/, ""); // strip trailing slash
+  const url = process.env.BACKEND_URL ?? "http://localhost:3000";
+  return url.replace(/\/+$/, "");
 }
 
-async function proxyRequest(req: NextRequest, path: string[]): Promise<NextResponse> {
-    try {
-        const base = getBackendUrl();
-        const targetUrl = new URL(`${base}/api/${path.join("/")}`);
+async function proxyRequest(req: NextRequest, path: string) {
+  try {
+    const base = getBackendUrl();
+    const targetUrl = `${base}/api/${path}`;
+    const url = new URL(targetUrl);
 
-        // Forward query params
-        req.nextUrl.searchParams.forEach((value, key) => {
-            targetUrl.searchParams.set(key, value);
-        });
+    // Forward query params
+    req.nextUrl.searchParams.forEach((value, key) => {
+      url.searchParams.set(key, value);
+    });
 
-        // Forward relevant request headers (auth token, content-type, etc.)
-        const forwardHeaders: Record<string, string> = {
-            "Content-Type": req.headers.get("Content-Type") ?? "application/json",
-        };
-        const authorization = req.headers.get("Authorization");
-        if (authorization) forwardHeaders["Authorization"] = authorization;
+    const headers: Record<string, string> = {};
+    const contentType = req.headers.get("Content-Type");
+    if (contentType) headers["Content-Type"] = contentType;
+    const authorization = req.headers.get("Authorization");
+    if (authorization) headers["Authorization"] = authorization;
 
-        const fetchOptions: RequestInit = {
-            method: req.method,
-            headers: forwardHeaders,
-        };
+    const fetchOptions: RequestInit = {
+      method: req.method,
+      headers,
+    };
 
-        if (["POST", "PUT", "PATCH"].includes(req.method)) {
-            fetchOptions.body = await req.text();
-        }
-
-        console.log(`[proxy] ${req.method} ${targetUrl.toString()}`);
-
-        const res = await fetch(targetUrl.toString(), fetchOptions);
-        const data = await res.text();
-
-        return new NextResponse(data, {
-            status: res.status,
-            headers: {
-                "Content-Type": res.headers.get("Content-Type") ?? "application/json",
-            },
-        });
-    } catch (error) {
-        const backendUrl = process.env.BACKEND_URL ?? "(not set)";
-        console.error(`[proxy] FAILED → BACKEND_URL=${backendUrl}`, error);
-        const detail = error instanceof Error
-            ? `${error.message}${error.cause ? ` | cause: ${JSON.stringify(error.cause)}` : ""}`
-            : String(error);
-        return NextResponse.json(
-            { error: "Backend unavailable", detail, backendUrl },
-            { status: 502 }
-        );
+    // Forward body for POST/PUT/PATCH
+    if (["POST", "PUT", "PATCH"].includes(req.method)) {
+      fetchOptions.body = await req.text();
     }
+
+    console.log(`[proxy] ${req.method} ${url.toString()}`);
+
+    const res = await fetch(url.toString(), fetchOptions);
+    const data = await res.text();
+
+    return new NextResponse(data, {
+      status: res.status,
+      headers: {
+        "Content-Type": res.headers.get("Content-Type") ?? "application/json",
+      },
+    });
+  } catch (error) {
+    const backendUrl = process.env.BACKEND_URL ?? "(not set)";
+    console.error(`[proxy] ERROR → BACKEND_URL=${backendUrl}`, error);
+    return NextResponse.json(
+      { error: "Backend unavailable", detail: String(error) },
+      { status: 502 }
+    );
+  }
 }
 
-type RouteContext = { params: Promise<{ path: string[] }> };
-
-export async function GET(req: NextRequest, ctx: RouteContext) {
-    const { path } = await ctx.params;
-    return proxyRequest(req, path);
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  return proxyRequest(req, path.join("/"));
 }
 
-export async function POST(req: NextRequest, ctx: RouteContext) {
-    const { path } = await ctx.params;
-    return proxyRequest(req, path);
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  return proxyRequest(req, path.join("/"));
 }
 
-export async function PUT(req: NextRequest, ctx: RouteContext) {
-    const { path } = await ctx.params;
-    return proxyRequest(req, path);
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  return proxyRequest(req, path.join("/"));
 }
 
-export async function PATCH(req: NextRequest, ctx: RouteContext) {
-    const { path } = await ctx.params;
-    return proxyRequest(req, path);
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  return proxyRequest(req, path.join("/"));
 }
 
-export async function DELETE(req: NextRequest, ctx: RouteContext) {
-    const { path } = await ctx.params;
-    return proxyRequest(req, path);
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  return proxyRequest(req, path.join("/"));
 }

@@ -1,24 +1,13 @@
-const ensureProtocol = (url: string): string => {
-    // Guard against env vars set without a protocol (e.g. "example.com" instead of "https://example.com")
-    if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
-        return `https://${url}`;
-    }
-    return url;
-};
+/**
+ * API client for the inventory backend.
+ *
+ * All requests use relative paths (/api/...) so they go to the same origin.
+ * In production, the catch-all route handler at /api/[...path]/route.ts
+ * proxies them to the backend via BACKEND_URL (Railway internal network).
+ * Locally, the same proxy forwards to http://localhost:3000.
+ */
 
-const getApiBase = () => {
-    // Server-side (SSR): call the internal backend directly via Railway private network
-    if (typeof window === "undefined") {
-        if (process.env.BACKEND_URL) return ensureProtocol(process.env.BACKEND_URL);
-        return "http://127.0.0.1:3000";
-    }
-    // Client-side (browser): use a relative base so the request goes to the same
-    // HTTPS origin as the frontend. next.config.ts rewrites /api/* to the internal
-    // backend — the browser never needs to reach the backend directly.
-    return "";
-};
-
-export const API_BASE = getApiBase();
+export const API_BASE = "";
 
 export interface Item {
     id: number;
