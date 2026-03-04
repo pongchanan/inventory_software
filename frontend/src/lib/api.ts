@@ -1,10 +1,18 @@
+const ensureProtocol = (url: string): string => {
+    // Guard against env vars set without a protocol (e.g. "example.com" instead of "https://example.com")
+    if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+        return `https://${url}`;
+    }
+    return url;
+};
+
 const getApiBase = () => {
     // Server-side (SSR / API routes): use Railway internal network URL — never reaches the browser
     if (typeof window === "undefined") {
-        if (process.env.BACKEND_URL) return process.env.BACKEND_URL;
+        if (process.env.BACKEND_URL) return ensureProtocol(process.env.BACKEND_URL);
     }
     // Client-side (browser): must use the public HTTPS URL — .railway.internal is not reachable from the browser
-    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+    if (process.env.NEXT_PUBLIC_API_URL) return ensureProtocol(process.env.NEXT_PUBLIC_API_URL);
     // Local dev fallback: mirror the page protocol to avoid Mixed Content on HTTPS
     if (typeof window !== "undefined") {
         return `${window.location.protocol}//${window.location.hostname}:3000`;
