@@ -1,18 +1,13 @@
-const getApiBase = () => {
-    // Server-side (SSR / API routes): use Railway internal network URL — never reaches the browser
-    if (typeof window === "undefined") {
-        if (process.env.BACKEND_URL) return process.env.BACKEND_URL;
-    }
-    // Client-side (browser): must use the public HTTPS URL — .railway.internal is not reachable from the browser
-    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-    // Local dev fallback: mirror the page protocol to avoid Mixed Content on HTTPS
-    if (typeof window !== "undefined") {
-        return `${window.location.protocol}//${window.location.hostname}:3000`;
-    }
-    return "http://127.0.0.1:3000";
-};
+/**
+ * API client for the inventory backend.
+ *
+ * All requests use relative paths (/api/...) so they go to the same origin.
+ * In production, the catch-all route handler at /api/[...path]/route.ts
+ * proxies them to the backend via BACKEND_URL (Railway internal network).
+ * Locally, the same proxy forwards to http://localhost:3000.
+ */
 
-export const API_BASE = getApiBase();
+export const API_BASE = "";
 
 export interface Item {
     id: number;
