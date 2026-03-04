@@ -1,5 +1,5 @@
 const getApiBase = () => {
-    if (process.env.API_ENDPOINT) return process.env.API_ENDPOINT;
+    if (process.env.BACKEND_URL) return process.env.BACKEND_URL;
     if (typeof window !== "undefined") {
         return `http://${window.location.hostname}:3000`;
     }
