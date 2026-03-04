@@ -1,5 +1,5 @@
 const getApiBase = () => {
-    if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+    if (process.env.API_ENDPOINT) return process.env.API_ENDPOINT;
     if (typeof window !== "undefined") {
         return `http://${window.location.hostname}:3000`;
     }
