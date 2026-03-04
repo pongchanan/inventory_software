@@ -7,17 +7,15 @@ const ensureProtocol = (url: string): string => {
 };
 
 const getApiBase = () => {
-    // Server-side (SSR / API routes): use Railway internal network URL — never reaches the browser
+    // Server-side (SSR): call the internal backend directly via Railway private network
     if (typeof window === "undefined") {
         if (process.env.BACKEND_URL) return ensureProtocol(process.env.BACKEND_URL);
+        return "http://127.0.0.1:3000";
     }
-    // Client-side (browser): must use the public HTTPS URL — .railway.internal is not reachable from the browser
-    if (process.env.NEXT_PUBLIC_API_URL) return ensureProtocol(process.env.NEXT_PUBLIC_API_URL);
-    // Local dev fallback: mirror the page protocol to avoid Mixed Content on HTTPS
-    if (typeof window !== "undefined") {
-        return `${window.location.protocol}//${window.location.hostname}:3000`;
-    }
-    return "http://127.0.0.1:3000";
+    // Client-side (browser): use a relative base so the request goes to the same
+    // HTTPS origin as the frontend. next.config.ts rewrites /api/* to the internal
+    // backend — the browser never needs to reach the backend directly.
+    return "";
 };
 
 export const API_BASE = getApiBase();
