@@ -301,14 +301,8 @@ export async function login(email: string, password: string): Promise<LoginRespo
         body: JSON.stringify({ email, password }),
     });
     if (!res.ok) {
-        let message = `Login failed (${res.status})`;
-        try {
-            const err = await res.json();
-            message = err.detail || message;
-        } catch {
-            // response was not JSON (e.g. proxy error or wrong URL)
-        }
-        throw new Error(message);
+        const err = await res.json();
+        throw new Error(err.detail || "Login failed");
     }
     return res.json();
 }
