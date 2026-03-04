@@ -23,8 +23,8 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   token: null,
   loading: true,
-  loginStore: () => { },
-  logout: () => { },
+  loginStore: () => {},
+  logout: () => {},
   isAdmin: false,
 });
 
@@ -41,8 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("token");
 
     if (token) {
-      // Intentionally not setting loading true here as the initial state is already true
-      // Setting state here triggers the linter warning about synchronous setup
       fetchMe(token)
         .then((userData: AuthUser) => {
           if (isSubscribed) setUser(userData);
@@ -56,16 +54,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .finally(() => {
           if (isSubscribed) setLoading(false);
         });
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+    } else {
+      // No token — nothing to validate, mark auth check as done immediately
       setLoading(false);
     }
-    return () => { isSubscribed = false; };
+    return () => {
+      isSubscribed = false;
+    };
   }, []);
 
   const loginStore = (newToken: string, newUser: AuthUser) => {
     localStorage.setItem("token", newToken);
     setToken(newToken);
     setUser(newUser);
+    // Ensure loading is false after explicit login so auth guards don't block rendering
+    setLoading(false);
   };
 
   const logout = () => {
