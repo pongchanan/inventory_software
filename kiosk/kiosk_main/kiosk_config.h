@@ -3,16 +3,8 @@
 #ifndef KIOSK_CONFIG_H
 #define KIOSK_CONFIG_H
 
-// WiFi Configuration
 const char *ssid = "OplorHotspot";
 const char *password = "1212312121";
-
-// MQTT Configuration
-const char *mqttBroker = "10.89.160.230";  // Your server IP
-const int mqttPort = 1883;                  // Default MQTT port
-const char *kioskId = "kiosk_demo_01";      // Unique kiosk identifier
-
-// Legacy HTTP (fallback only)
 const char *serverUrl = "http://10.89.160.230:3000";
 
 #endif // KIOSK_CONFIG_H
