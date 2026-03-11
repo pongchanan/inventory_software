@@ -20,6 +20,8 @@ import {
     User,
     CheckCircle2,
 } from "lucide-react";
+import { LoansDesktopShell } from "./_components/LoansDesktopShell";
+import { LoansMobileShell } from "./_components/LoansMobileShell";
 
 export default function LoansAdminPage() {
     const { user, isAdmin, loading: authLoading } = useAuth();
@@ -147,61 +149,8 @@ export default function LoansAdminPage() {
                             <History className="text-gray-400" size={24} /> ประวัติการยืม-คืนทั้งหมด
                         </h3>
                         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-                            {/* Desktop Table */}
-                            <div className="hidden md:block overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-gray-50 border-b border-gray-100">
-                                        <tr>
-                                            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">ชื่อผู้ยืม</th>
-                                            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">อุปกรณ์</th>
-                                            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">วันยืม - วันคืน</th>
-                                            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">สถานะ</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-50">
-                                        {loans.slice(0, 50).map(loan => (
-                                            <tr key={loan.id} className="hover:bg-gray-50/50 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <p className="font-bold text-gray-900 leading-none mb-1">{loan.user_name}</p>
-                                                    <p className="text-[10px] text-gray-400 font-bold tracking-tight">{loan.user_email || loan.user_uid}</p>
-                                                </td>
-                                                <td className="px-6 py-4 font-bold text-sm text-gray-700">{loan.item_name}</td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <div className="text-[11px] font-bold text-gray-500">
-                                                        {formatDate(loan.borrowed_at)}
-                                                        {loan.returned_at && <span className="text-green-500 mx-1">→</span>}
-                                                        {loan.returned_at && <span className="text-green-600">{formatDate(loan.returned_at)}</span>}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <StatusBadge status={loan.status} />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Mobile Card View */}
-                            <div className="md:hidden divide-y divide-gray-50">
-                                {loans.slice(0, 50).map(loan => (
-                                    <div key={loan.id} className="p-4 space-y-3">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="font-bold text-gray-900">{loan.user_name}</p>
-                                                <p className="text-[10px] text-gray-400 font-bold">{loan.user_uid}</p>
-                                            </div>
-                                            <StatusBadge status={loan.status} />
-                                        </div>
-                                        <p className="text-sm font-bold text-gray-700">{loan.item_name}</p>
-                                        <div className="text-[10px] font-bold text-gray-400 flex items-center gap-2 bg-gray-50 p-2 rounded-lg">
-                                            <Clock size={12} />
-                                            {formatDate(loan.borrowed_at)}
-                                            {loan.returned_at && <span className="text-green-500">→ {formatDate(loan.returned_at)}</span>}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            <LoansDesktopShell loans={loans} formatDate={formatDate} StatusBadge={StatusBadge} />
+                            <LoansMobileShell loans={loans} formatDate={formatDate} StatusBadge={StatusBadge} />
                         </div>
                     </div>
                 </>

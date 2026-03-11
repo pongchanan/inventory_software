@@ -3,9 +3,10 @@
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import Image from 'next/image';
 import { useHistory } from '@/services/hooks/useHistory';
-import { Search, Filter, History, MapPin, Clock, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { Search, Filter, History, Clock, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { HistoryDesktopShell } from './_components/HistoryDesktopShell';
+import { HistoryMobileShell } from './_components/HistoryMobileShell';
 
 export default function HistoryPage() {
     const { user, loading: authLoading } = useAuth();
@@ -163,95 +164,8 @@ export default function HistoryPage() {
                 </div>
             ) : (
                 <>
-                    {/* DESKTOP VIEW (Table) */}
-                    <div className="hidden md:block bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50 border-b border-gray-100">
-                                    <th className="py-4 px-6 text-xs font-black text-gray-500 uppercase tracking-wider w-20">รูปภาพ</th>
-                                    <th className="py-4 px-6 text-xs font-black text-gray-500 uppercase tracking-wider">อุปกรณ์ที่ยืม</th>
-                                    <th className="py-4 px-6 text-xs font-black text-gray-500 uppercase tracking-wider text-center">วันที่ทำรายการยืม</th>
-                                    <th className="py-4 px-6 text-xs font-black text-gray-500 uppercase tracking-wider text-center">สถานะปัจจุบัน</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {historyItems.map((item) => (
-                                    <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                                        <td className="py-4 px-6">
-                                            <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden border relative">
-                                                <Image src={item.img} alt={item.name} fill style={{ objectFit: 'cover' }} sizes="3rem" />
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-6">
-                                            <h4 className="font-bold text-gray-900 mb-0.5">{item.name}</h4>
-                                            <div className="flex items-center gap-1 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                                                <MapPin size={10} className="text-gray-300" /> {item.category}
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-6 text-center text-sm font-medium text-gray-600">
-                                            {formatDate(item.borrowedAt)}
-                                            {item.returnedAt && (
-                                                <div className="text-[11px] text-green-600 mt-1 font-bold">
-                                                    (คืนเมื่อ: {formatDate(item.returnedAt)})
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="py-4 px-6 text-center">
-                                            <StatusBadge status={item.status} />
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* MOBILE VIEW (Card Timeline) */}
-                    <div className="md:hidden flex flex-col gap-4 relative">
-                        {/* Timeline line connecting cards */}
-                        <div className="absolute left-[24px] top-6 bottom-6 w-0.5 bg-gray-100 z-0"></div>
-
-                        {historyItems.map((item) => (
-                            <div key={item.id} className="bg-white p-4 rounded-3xl shadow-sm border border-gray-100 relative z-10 w-full ml-4 w-[calc(100%-1rem)]">
-                                {/* Timeline Dot */}
-                                <div className={`absolute -left-[20px] top-6 w-3 h-3 rounded-full border-2 border-white shadow-sm
-                                    ${item.status === 'returned' ? 'bg-green-500' : item.status === 'overdue' ? 'bg-red-500' : 'bg-blue-500'}
-                                `}></div>
-
-                                <div className="flex items-start gap-4 mb-3">
-                                    <div className="w-14 h-14 bg-gray-50 rounded-2xl overflow-hidden border relative shrink-0">
-                                        <Image src={item.img} alt={item.name} fill style={{ objectFit: 'cover' }} sizes="3.5rem" />
-                                    </div>
-                                    <div className="flex-grow">
-                                        <h4 className="font-bold text-gray-900 leading-tight mb-1">{item.name}</h4>
-                                        <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                                            <MapPin size={10} className="text-gray-300" /> {item.category}
-                                        </div>
-                                        <StatusBadge status={item.status} />
-                                    </div>
-                                </div>
-
-                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 text-[11px] font-medium text-gray-500 space-y-1.5 flex flex-col">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-400 font-bold uppercase tracking-wider">วันยืม</span>
-                                        <span className="text-gray-700">{formatDate(item.borrowedAt)}</span>
-                                    </div>
-                                    {item.status === 'returned' && item.returnedAt ? (
-                                        <div className="flex justify-between items-center pt-1.5 border-t border-gray-200/60">
-                                            <span className="text-green-500/80 font-bold uppercase tracking-wider flex items-center gap-1">
-                                                วันคืน
-                                            </span>
-                                            <span className="text-green-700 font-bold">{formatDate(item.returnedAt)}</span>
-                                        </div>
-                                    ) : (
-                                        <div className="flex justify-between items-center pt-1.5 border-t border-gray-200/60">
-                                            <span className="text-orange-500/80 font-bold uppercase tracking-wider">กำหนดคืน</span>
-                                            <span className="text-orange-700 font-bold">{formatDate(item.dueAt)}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <HistoryDesktopShell historyItems={historyItems} formatDate={formatDate} StatusBadge={StatusBadge} />
+                    <HistoryMobileShell historyItems={historyItems} formatDate={formatDate} StatusBadge={StatusBadge} />
                 </>
             )}
         </div>
