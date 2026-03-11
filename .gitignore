@@ -1,5 +1,6 @@
 node_modules/
 dist/
+kiosk/kiosk_main/kiosk_config.h
 
 # Backend
 __pycache__/
