@@ -37,3 +37,7 @@ Because the kiosk usually connects via a Mobile Hotspot, WiFi credentials and th
 - `/backend`: FastAPI (Python)
 - `/frontend`: Next.js (TypeScript)
 - `/kiosk`: ESP32 Firmware (Arduino)
+
+## 📐 Architecture Documents
+- `VISION_BASED_INVENTORY_ARCHITECTURE.md`: Vision-first drawer architecture, slot-based tracking model, lifecycle, and draft data model
+- `PROJECT_STRUCTURE_BEFORE_AFTER.md`: Repository structure analysis, current vs target layout, and readability guidelines
