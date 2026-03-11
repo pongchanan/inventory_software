@@ -1,12 +1,19 @@
 import os
-import sys
+from pathlib import Path
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from passlib.context import CryptContext
 
 # Configuration matches backend/app/auth.py
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-DATABASE_URL = "postgresql://postgres:ThKfWmKKUNcJMeumICeaiPxZISnoOeBX@gondola.proxy.rlwy.net:56989/railway"
+ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(ROOT / ".env", override=True)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set in environment/.env")
 
 def hash_pw(password):
     return pwd_context.hash(password)
@@ -30,7 +37,7 @@ with engine.connect() as conn:
         hashed_pwd = hash_pw(password)
         conn.execute(text("""
             INSERT INTO users (uid, name, email, password_hash, role, authorized, created_at, updated_at)
-            VALUES (:uid, :name, :email, :password_hash, :role, :authorized, NOW(), NOW())
+            VALUES (:uid, :name, :email, :password_hash, :role, :authorized, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         """), {
             "uid": uid,
             "name": name,

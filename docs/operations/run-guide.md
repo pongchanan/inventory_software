@@ -18,6 +18,13 @@ Run the following command from the root directory to install all dependencies. T
 npm run install-all
 ```
 
+Note: the current `install-all` script uses a Unix-style pip path. On Windows,
+if that step fails, create/activate `backend/venv` manually and run:
+
+```bash
+pip install -r backend/requirements.txt
+```
+
 ### 3. Running the System
 Start both servers with a single command:
 
@@ -42,8 +49,8 @@ The project is ready for one-click deployment to Railway using the provided `rai
    - For the first service, set **Root Directory** to `backend`. Rename it to `backend`.
    - For the second service, set **Root Directory** to `frontend`. Rename it to `frontend`.
 5. **Automatic Detection**: Railway will read the `railway.json` inside each directory and deploy correctly.
-5. **Environment Variables**:
-   - For `frontend`, add `NEXT_PUBLIC_API_URL` pointing to your Railway backend URL.
+6. **Environment Variables**:
+   - For `frontend`, add `BACKEND_URL` pointing to your Railway backend URL.
    - For `backend`, ensure `PORT` is set to 3000 (standard for this app).
 
 ---
