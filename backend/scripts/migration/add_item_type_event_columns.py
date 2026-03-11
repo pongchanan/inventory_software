@@ -25,14 +25,22 @@ from app.database import engine
 
 def table_exists(conn, table_name: str) -> bool:
     return conn.execute(
-        text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name"),
+        text(
+            "SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_name = :name"
+        ),
         {"name": table_name},
     ).fetchone() is not None
 
 
 def column_exists(conn, table_name: str, column_name: str) -> bool:
-    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
-    return any(r[1] == column_name for r in rows)
+    return conn.execute(
+        text(
+            "SELECT 1 FROM information_schema.columns "
+            "WHERE table_schema = 'public' AND table_name = :table AND column_name = :col"
+        ),
+        {"table": table_name, "col": column_name},
+    ).fetchone() is not None
 
 
 def add_column_if_missing(conn, table_name: str, column_name: str, column_sql: str):
