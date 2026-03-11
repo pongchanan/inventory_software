@@ -1,6 +1,173 @@
 # Smart Inventory Management API
 
-FastAPI backend for IoT inventory system with NFC/RFID tracking.
+FastAPI backend for the IoT inventory system with NFC/RFID tracking, MQTT broker integration, S3 image storage, and JWT authentication.
+
+## Features
+
+- 🔐 JWT authentication (email/password login + NFC UID card)
+- 📦 Item tracking with RFID tags and S3-hosted images
+- 📊 Transaction logging (borrow/return)
+- 📅 Loan management with due dates and overdue tracking
+- ✅ Approval workflow for high-value items
+- 📝 Comprehensive audit logging
+- 🗄️ Compartment/locker status monitoring
+- 📈 Dashboard statistics and analytics
+- 🏥 System health monitoring
+- 📡 MQTT message handling for kiosk events
+- 🎯 RESTful API with automatic Swagger docs
+
+## Setup
+
+### 1. Install Python Dependencies
+
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+### 2. Configure Environment
+
+```bash
+cp .env.example .env
+# Edit .env with your values (see .env.example for all required variables)
+```
+
+Key variables:
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | SQLite (local) or PostgreSQL (production) |
+| `JWT_SECRET` | Secret key for signing JWT tokens |
+| `JWT_ALGORITHM` | Algorithm for JWT (default `HS256`) |
+| `AWS_*` / `S3_BUCKET_NAME` | S3-compatible storage for item images |
+| `MOSQUITTO_TCP_HOST/PORT` | MQTT broker address |
+| `MOSQUITTO_USER` | MQTT broker username |
+| `MQTT_SUBSCRIBE_TOPICS` | Topics the backend listens on (e.g. `kiosk/#`) |
+| `MQTT_PUBLISH_TOPICS` | Topics the backend publishes to (e.g. `kiosk/response`) |
+
+### 3. Run the Server
+
+```bash
+# From backend directory
+python main.py
+```
+
+Or with auto-reload:
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 3000 --reload
+```
+
+Server starts at **http://localhost:3000**
+
+## API Documentation
+
+Once running:
+- **Swagger UI**: http://localhost:3000/docs
+- **ReDoc**: http://localhost:3000/redoc
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/login` — Login with email + password, returns JWT
+- `GET /api/auth/me` — Return current authenticated user
+- `POST /api/auth/kiosk/prepare_registration` — Prepare a pending registration session (frontend → backend)
+- `GET /api/auth/kiosk/status/{session_id}` — Poll registration status (frontend polls until kiosk scans card)
+
+### Users
+- `POST /api/users/` — Create user
+- `GET /api/users/` — List all users
+- `GET /api/users/{uid}` — Get user by NFC UID
+- `PUT /api/users/{uid}` — Update user
+- `DELETE /api/users/{uid}` — Delete user
+
+### Items
+- `POST /api/items/` — Create item
+- `GET /api/items/` — List all items (filter by availability)
+- `GET /api/items/{uid}` — Get item by RFID UID
+- `PUT /api/items/{uid}` — Update item
+- `DELETE /api/items/{uid}` — Delete item
+- `POST /api/items/{uid}/upload-image` — Upload item image to S3
+
+### Transactions
+- `POST /api/transactions/` — Record transaction
+- `GET /api/transactions/` — List transactions (with filters)
+- `GET /api/transactions/{id}` — Get specific transaction
+- `DELETE /api/transactions/{id}` — Delete transaction
+
+### Loans
+- `POST /api/loans/` — Create loan (borrow item)
+- `GET /api/loans/` — List loans (with filters)
+- `GET /api/loans/active` — All active loans
+- `GET /api/loans/overdue` — Overdue loans
+- `GET /api/loans/user/{user_uid}` — Loans for a specific user
+- `GET /api/loans/{loan_id}` — Get specific loan
+- `POST /api/loans/{loan_id}/return` — Mark loan as returned
+
+### Approvals
+- `POST /api/approvals/` — Submit approval request
+- `GET /api/approvals/` — List all approvals
+- `GET /api/approvals/pending` — Pending approvals
+- `GET /api/approvals/{id}` — Get specific approval
+- `POST /api/approvals/{id}/approve` — Approve (admin)
+- `POST /api/approvals/{id}/reject` — Reject (admin)
+
+### Compartments
+- `POST /api/compartments/` — Create compartment
+- `GET /api/compartments/` — List compartments
+- `GET /api/compartments/{locker_number}` — Get compartment
+- `PUT /api/compartments/{locker_number}` — Update compartment
+- `DELETE /api/compartments/{locker_number}` — Delete compartment
+
+### Audit Logs
+- `POST /api/audit-logs/` — Create log entry
+- `GET /api/audit-logs/` — List logs
+- `GET /api/audit-logs/recent?hours=24` — Recent logs
+- `GET /api/audit-logs/{id}` — Get specific entry
+
+### Statistics
+- `GET /api/stats/dashboard` — Full dashboard stats
+- `GET /api/stats/user/{user_uid}` — Per-user stats
+- `GET /api/stats/system-health` — System health
+
+## MQTT Kiosk Integration
+
+The backend subscribes to kiosk topics and publishes responses via `app/mqtt.py` + `app/mqtt_handlers.py`.
+
+| Topic (kiosk publishes) | Handler | Payload |
+|---|---|---|
+| `kiosk/open_cabinet` | `open_cabinet` | `{"rfid": "<NFC UID>"}` |
+| `kiosk/register_card` | `register_card` | `{"uid": "<RFID UID>"}` |
+| `kiosk/heartbeat` | `handle_heartbeat` | `{"status": "alive", "uptime_ms": ...}` |
+
+| Topic (backend publishes) | When |
+|---|---|
+| `kiosk/response` | After every handler — `{"status": "ok|error", "message": "..."}` |
+
+### Registration flow
+1. Frontend `POST /api/auth/kiosk/prepare_registration` → gets back `session_id`
+2. Backend (TODO) publishes to kiosk to start waiting for card scan
+3. User scans card at kiosk → kiosk publishes `kiosk/register_card {uid}`
+4. `register_card` handler creates the user, marks session as `success`
+5. Frontend polls `GET /api/auth/kiosk/status/{session_id}` → receives JWT + user on success
+
+## Database
+
+Defaults to SQLite (`inventory.db`) for local development. Set `DATABASE_URL` to a PostgreSQL URL for production.
+
+To reset: delete `inventory.db` and restart the server.
+
+## Database Tables
+
+| Table | Description |
+|---|---|
+| `users` | NFC UID, name, email, role, authorization status |
+| `items` | RFID UID, name, category, availability, S3 image URL |
+| `transactions` | Raw borrow/return events from kiosk |
+| `loans` | Active/returned loans with due dates |
+| `approvals` | Admin approval requests |
+| `audit_logs` | System activity trail |
+| `compartments` | Physical locker status |
+
 
 ## Features
 
