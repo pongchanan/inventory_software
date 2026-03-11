@@ -81,35 +81,35 @@ Once running:
 - `DELETE /api/users/{uid}` — Delete user
 
 ### Items
-- `POST /api/items/` — Create item
-- `GET /api/items/` — List all items (filter by availability)
-- `GET /api/items/{uid}` — Get item by RFID UID
-- `PUT /api/items/{uid}` — Update item
-- `DELETE /api/items/{uid}` — Delete item
-- `POST /api/items/{uid}/upload-image` — Upload item image to S3
+- `POST /api/item-types/` — Create item
+- `GET /api/item-types/` — List all items (filter by availability)
+- `GET /api/item-types/{uid}` — Get item by RFID UID
+- `PUT /api/item-types/{uid}` — Update item
+- `DELETE /api/item-types/{uid}` — Delete item
+- `POST /api/item-types/{uid}/upload-image` — Upload item image to S3
 
 ### Transactions
-- `POST /api/transactions/` — Record transaction
-- `GET /api/transactions/` — List transactions (with filters)
-- `GET /api/transactions/{id}` — Get specific transaction
-- `DELETE /api/transactions/{id}` — Delete transaction
+- `POST /api/inventory/events/` — Record transaction
+- `GET /api/inventory/events/` — List transactions (with filters)
+- `GET /api/inventory/events/{id}` — Get specific transaction
+- `DELETE /api/inventory/events/{id}` — Delete transaction
 
 ### Loans
-- `POST /api/loans/` — Create loan (borrow item)
-- `GET /api/loans/` — List loans (with filters)
-- `GET /api/loans/active` — All active loans
-- `GET /api/loans/overdue` — Overdue loans
-- `GET /api/loans/user/{user_uid}` — Loans for a specific user
-- `GET /api/loans/{loan_id}` — Get specific loan
-- `POST /api/loans/{loan_id}/return` — Mark loan as returned
+- `POST /api/inventory/events/` — Create loan (borrow item)
+- `GET /api/inventory/events/` — List loans (with filters)
+- `GET /api/inventory/events/active` — All active loans
+- `GET /api/inventory/events/overdue` — Overdue loans
+- `GET /api/inventory/events/user/{user_uid}` — Loans for a specific user
+- `GET /api/inventory/events/{loan_id}` — Get specific loan
+- `POST /api/inventory/events/{loan_id}/return` — Mark loan as returned
 
 ### Approvals
-- `POST /api/approvals/` — Submit approval request
-- `GET /api/approvals/` — List all approvals
-- `GET /api/approvals/pending` — Pending approvals
-- `GET /api/approvals/{id}` — Get specific approval
-- `POST /api/approvals/{id}/approve` — Approve (admin)
-- `POST /api/approvals/{id}/reject` — Reject (admin)
+- `POST /api/audit-logs/` — Submit approval request
+- `GET /api/audit-logs/` — List all approvals
+- `GET /api/audit-logs/pending` — Pending approvals
+- `GET /api/audit-logs/{id}` — Get specific approval
+- `POST /api/audit-logs/{id}/approve` — Approve (admin)
+- `POST /api/audit-logs/{id}/reject` — Reject (admin)
 
 ### Compartments
 - `POST /api/compartments/` — Create compartment
@@ -233,34 +233,34 @@ Once running, visit:
 - `DELETE /api/users/{uid}` - Delete user
 
 ### Items
-- `POST /api/items/` - Create new item
-- `GET /api/items/{uid}` - Get item by UID
-- `GET /api/items/` - List all items (filter by availability)
-- `PUT /api/items/{uid}` - Update item
-- `DELETE /api/items/{uid}` - Delete item
+- `POST /api/item-types/` - Create new item
+- `GET /api/item-types/{uid}` - Get item by UID
+- `GET /api/item-types/` - List all items (filter by availability)
+- `PUT /api/item-types/{uid}` - Update item
+- `DELETE /api/item-types/{uid}` - Delete item
 
 ### Transactions
-- `POST /api/transactions/` - Record transaction (kiosk)
-- `GET /api/transactions/` - List transactions (with filters)
-- `GET /api/transactions/{id}` - Get specific transaction
-- `DELETE /api/transactions/{id}` - Delete transaction
+- `POST /api/inventory/events/` - Record transaction (kiosk)
+- `GET /api/inventory/events/` - List transactions (with filters)
+- `GET /api/inventory/events/{id}` - Get specific transaction
+- `DELETE /api/inventory/events/{id}` - Delete transaction
 
 ### Loans (Borrow/Return Tracking)
-- `POST /api/loans/` - Create new loan (borrow item)
-- `GET /api/loans/active` - Get all active loans (optional user filter)
-- `GET /api/loans/overdue` - Get overdue loans
-- `GET /api/loans/user/{user_uid}` - Get loans for specific user
-- `POST /api/loans/{loan_id}/return` - Mark loan as returned
-- `GET /api/loans/` - List all loans with filtering
-- `GET /api/loans/{loan_id}` - Get specific loan
+- `POST /api/inventory/events/` - Create new loan (borrow item)
+- `GET /api/inventory/events/active` - Get all active loans (optional user filter)
+- `GET /api/inventory/events/overdue` - Get overdue loans
+- `GET /api/inventory/events/user/{user_uid}` - Get loans for specific user
+- `POST /api/inventory/events/{loan_id}/return` - Mark loan as returned
+- `GET /api/inventory/events/` - List all loans with filtering
+- `GET /api/inventory/events/{loan_id}` - Get specific loan
 
 ### Approvals (High-Value Items)
-- `POST /api/approvals/` - Submit approval request
-- `GET /api/approvals/pending` - Get pending approval requests
-- `POST /api/approvals/{id}/approve` - Approve request (admin)
-- `POST /api/approvals/{id}/reject` - Reject request (admin)
-- `GET /api/approvals/` - List all approvals (with filters)
-- `GET /api/approvals/{id}` - Get specific approval request
+- `POST /api/audit-logs/` - Submit approval request
+- `GET /api/audit-logs/pending` - Get pending approval requests
+- `POST /api/audit-logs/{id}/approve` - Approve request (admin)
+- `POST /api/audit-logs/{id}/reject` - Reject request (admin)
+- `GET /api/audit-logs/` - List all approvals (with filters)
+- `GET /api/audit-logs/{id}` - Get specific approval request
 
 ### Audit Logs
 - `POST /api/audit-logs/` - Create audit log entry
@@ -301,7 +301,7 @@ curl http://localhost:3000/api/users/A1B2C3D4
 
 ### Add an item:
 ```bash
-curl -X POST http://localhost:3000/api/items/ \
+curl -X POST http://localhost:3000/api/item-types/ \
   -H "Content-Type: application/json" \
   -d '{
     "uid": "ITEM001",
@@ -313,7 +313,7 @@ curl -X POST http://localhost:3000/api/items/ \
 
 ### Record a transaction:
 ```bash
-curl -X POST http://localhost:3000/api/transactions/ \
+curl -X POST http://localhost:3000/api/inventory/events/ \
   -H "Content-Type: application/json" \
   -d '{
     "user_uid": "A1B2C3D4",
@@ -324,7 +324,7 @@ curl -X POST http://localhost:3000/api/transactions/ \
 
 ### Create a loan (borrow item):
 ```bash
-curl -X POST http://localhost:3000/api/loans/ \
+curl -X POST http://localhost:3000/api/inventory/events/ \
   -H "Content-Type: application/json" \
   -d '{
     "user_uid": "A1B2C3D4",
@@ -335,12 +335,12 @@ curl -X POST http://localhost:3000/api/loans/ \
 
 ### Get active loans for a user:
 ```bash
-curl http://localhost:3000/api/loans/active?user_uid=A1B2C3D4
+curl http://localhost:3000/api/inventory/events/active?user_uid=A1B2C3D4
 ```
 
 ### Submit approval request:
 ```bash
-curl -X POST http://localhost:3000/api/approvals/ \
+curl -X POST http://localhost:3000/api/audit-logs/ \
   -H "Content-Type: application/json" \
   -d '{
     "user_uid": "A1B2C3D4",
@@ -445,3 +445,4 @@ For production use:
 3. Configure kiosk with server IP
 4. Test end-to-end with hardware
 5. Connect React dashboards
+

@@ -81,17 +81,20 @@ def seed_data():
     
     print()
     
-    # Add items
-    print("Adding items...")
+    # Add item types
+    print("Adding item types...")
     for item in items:
         try:
-            response = requests.post(f"{BASE_URL}/api/items/", json=item)
+            response = requests.post(
+                f"{BASE_URL}/api/item-types",
+                json={"name": item["name"]},
+            )
             if response.status_code == 201:
-                print(f"✅ Created item: {item['name']} (UID: {item['uid']})")
+                print(f"✅ Created item type: {item['name']}")
             else:
-                print(f"⚠️  Item {item['name']}: {response.json()}")
+                print(f"⚠️  Item type {item['name']}: {response.json()}")
         except Exception as e:
-            print(f"❌ Error creating item {item['name']}: {e}")
+            print(f"❌ Error creating item type {item['name']}: {e}")
     
     print("\n✅ Seeding complete!")
     print(f"\n📝 Test the API at: {BASE_URL}/docs")

@@ -15,7 +15,6 @@ from app.routes import (
     auth_router,
     inventory_router,
     item_types_router,
-    legacy_compat_router,
     observations_router,
     storage_router,
     users_router,
@@ -83,7 +82,6 @@ app.include_router(storage_router)
 app.include_router(access_sessions_router)
 app.include_router(observations_router)
 app.include_router(inventory_router)
-app.include_router(legacy_compat_router)
 
 
 @app.get("/")

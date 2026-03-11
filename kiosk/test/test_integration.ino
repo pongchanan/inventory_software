@@ -230,7 +230,7 @@ bool testAPIConnection() {
   }
   
   HTTPClient http;
-  String testURL = String(TEST_SERVER_URL) + "/api/items/";
+  String testURL = String(TEST_SERVER_URL) + "/api/item-types";
   
   Serial.print(F("\n  Testing API: "));
   Serial.println(testURL);

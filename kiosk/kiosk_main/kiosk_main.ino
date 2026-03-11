@@ -365,12 +365,14 @@ void sendTransactionData(String user, String item) {
 
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.begin(String(serverUrl) + "/api/transactions"); // Adjust endpoint
+    http.begin(String(serverUrl) + "/api/audit-logs");
     http.addHeader("Content-Type", "application/json");
 
-    // JSON Payload
+    // Audit-log payload aligned with the active backend contract.
     String json =
-        "{\"user_uid\": \"" + user + "\", \"item_uid\": \"" + item + "\"}";
+      "{\"actor_type\":\"user\",\"actor_id\":\"" + user +
+      "\",\"action\":\"scan\",\"target_type\":\"item\",\"target_id\":\"" +
+      item + "\",\"result\":\"success\",\"message\":\"kiosk scan\"}";
 
     int httpResponseCode = http.POST(json);
 

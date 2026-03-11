@@ -174,7 +174,7 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete endpoint details
 
 ### Image Upload Feature
 - **Admin capability**: Upload images for inventory items
-- **Endpoint**: `POST /api/items/{uid}/upload-image`
+- **Endpoint**: `POST /api/item-types/{uid}/upload-image`
 - **Supported formats**: JPG, JPEG, PNG, GIF, WEBP
 - **Storage**: Images saved to `uploads/items/` directory
 - **Serving**: Static files served at `/uploads/items/{filename}`
@@ -184,7 +184,7 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete endpoint details
 - **Endpoints**:
   - `GET /api/compartments/{locker_number}/items` - Items in specific compartment
   - `GET /api/compartments/floor/{floor}/items` - All items on a floor
-  - `GET /api/items/by-location/{location}` - Items at specific location
+  - `GET /api/item-types/by-location/{location}` - Items at specific location
 
 ### Database Changes
 - Added `image_url` field to Item model
@@ -197,7 +197,7 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete endpoint details
 ### Upload an Image (Admin)
 ```bash
 # First, create an item
-curl -X POST "http://localhost:3000/api/items" \
+curl -X POST "http://localhost:3000/api/item-types" \
   -H "Content-Type: application/json" \
   -d '{
     "uid": "TEST001",
@@ -207,7 +207,7 @@ curl -X POST "http://localhost:3000/api/items" \
   }'
 
 # Then upload an image
-curl -X POST "http://localhost:3000/api/items/TEST001/upload-image" \
+curl -X POST "http://localhost:3000/api/item-types/TEST001/upload-image" \
   -F "file=@path/to/image.jpg"
 ```
 
@@ -288,3 +288,4 @@ python -m app.main
 
 ## Full API Documentation
 See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete endpoint reference.
+

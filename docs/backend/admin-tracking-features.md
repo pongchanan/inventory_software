@@ -9,14 +9,14 @@ loan visibility and cabinet access visibility.
 ### Loan detail endpoints
 Source: `backend/app/routes/loans.py`
 
-- `GET /api/loans/details/all`
+- `GET /api/inventory/events/details/all`
   - Returns enriched loan rows with user/item fields
   - Supports `status_filter`, `skip`, and `limit`
-- `GET /api/loans/details/active`
+- `GET /api/inventory/events/details/active`
   - Returns active loan details
   - Supports `user_uid` and `item_type_id`
   - Marks overdue loans when `due_at < now`
-- `GET /api/loans/details/user/{user_uid}`
+- `GET /api/inventory/events/details/user/{user_uid}`
   - Returns detailed history for one user
   - Supports `include_returned`
 
@@ -55,4 +55,5 @@ Current UI is split by pages, not tab sections inside one page:
 - These backend handlers are not individually wrapped with `require_admin` in
   the route definitions above, so API-level role enforcement should be reviewed
   separately if strict server-side authorization is required.
+
 

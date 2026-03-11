@@ -6,7 +6,6 @@ from .access_sessions_api import router as access_sessions_router
 from .observations_api import router as observations_router
 from .inventory_api import router as inventory_router
 from .audit_logs_new import router as audit_logs_router
-from .legacy_compat import router as legacy_compat_router
 
 __all__ = [
     "users_router",
@@ -16,6 +15,5 @@ __all__ = [
     "access_sessions_router",
     "observations_router",
     "inventory_router",
-    "legacy_compat_router",
     "auth_router",
 ]

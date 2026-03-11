@@ -46,7 +46,7 @@ API Documentation: `http://localhost:3000/docs`
 
 #### Get All Items
 ```http
-GET /api/items
+GET /api/item-types
 ```
 
 **Query Parameters:**
@@ -75,7 +75,7 @@ GET /api/items
 
 #### Get Item by UID
 ```http
-GET /api/items/{uid}
+GET /api/item-types/{uid}
 ```
 
 **Parameters:**
@@ -83,7 +83,7 @@ GET /api/items/{uid}
 
 #### Create Item
 ```http
-POST /api/items
+POST /api/item-types
 ```
 
 **Request Body:**
@@ -102,19 +102,19 @@ POST /api/items
 
 #### Update Item
 ```http
-PUT /api/items/{uid}
+PUT /api/item-types/{uid}
 ```
 
 **Request Body:** Same as Create Item
 
 #### Delete Item
 ```http
-DELETE /api/items/{uid}
+DELETE /api/item-types/{uid}
 ```
 
 #### Upload Item Image (Admin)
 ```http
-POST /api/items/{uid}/upload-image
+POST /api/item-types/{uid}/upload-image
 ```
 
 **Request:**
@@ -136,14 +136,14 @@ POST /api/items/{uid}/upload-image
 
 **Example (curl):**
 ```bash
-curl -X POST "http://localhost:3000/api/items/RFID123456/upload-image" \
+curl -X POST "http://localhost:3000/api/item-types/RFID123456/upload-image" \
   -H "Content-Type: multipart/form-data" \
   -F "file=@laptop.jpg"
 ```
 
 #### Get Items by Location
 ```http
-GET /api/items/by-location/{location}
+GET /api/item-types/by-location/{location}
 ```
 
 **Query Parameters:**
@@ -151,7 +151,7 @@ GET /api/items/by-location/{location}
 
 **Example:**
 ```http
-GET /api/items/by-location/A1-001?available_only=true
+GET /api/item-types/by-location/A1-001?available_only=true
 ```
 
 ---
@@ -309,7 +309,7 @@ const formData = new FormData();
 formData.append('file', file);
 
 const response = await fetch(
-  `http://localhost:3000/api/items/${itemUid}/upload-image`,
+  `http://localhost:3000/api/item-types/${itemUid}/upload-image`,
   {
     method: 'POST',
     body: formData
@@ -332,7 +332,7 @@ const newItem = {
   location: 'A1-002'
 };
 
-const response = await fetch('http://localhost:3000/api/items', {
+const response = await fetch('http://localhost:3000/api/item-types', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(newItem)
@@ -345,7 +345,7 @@ const formData = new FormData();
 formData.append('file', imageFile);
 
 await fetch(
-  `http://localhost:3000/api/items/${createdItem.uid}/upload-image`,
+  `http://localhost:3000/api/item-types/${createdItem.uid}/upload-image`,
   {
     method: 'POST',
     body: formData
@@ -444,14 +444,14 @@ Visit `http://localhost:3000/docs` for Swagger UI to test all endpoints interact
 
 2. **Create an item in that compartment:**
    ```bash
-   curl -X POST "http://localhost:3000/api/items" \
+   curl -X POST "http://localhost:3000/api/item-types" \
      -H "Content-Type: application/json" \
      -d '{"uid": "RFID001", "name": "Test Item", "location": "A1-001", "available": true}'
    ```
 
 3. **Upload image for the item:**
    ```bash
-   curl -X POST "http://localhost:3000/api/items/RFID001/upload-image" \
+   curl -X POST "http://localhost:3000/api/item-types/RFID001/upload-image" \
      -F "file=@item.jpg"
    ```
 
@@ -467,3 +467,4 @@ Visit `http://localhost:3000/docs` for Swagger UI to test all endpoints interact
 For issues or questions, check:
 - API Docs: `http://localhost:3000/docs`
 - Health Check: `http://localhost:3000/health`
+
