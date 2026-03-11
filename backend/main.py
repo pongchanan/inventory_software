@@ -10,6 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from app.database import init_db
+import app.models  # noqa: F401 — ensures ALL models (old + new) are registered with
+                   # SQLAlchemy metadata before init_db() calls create_all()
 from app.routes import (
     users_router,
     items_router,
