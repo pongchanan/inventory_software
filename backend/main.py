@@ -20,6 +20,7 @@ from app.routes import (
     approvals_router,
     audit_logs_router,
     compartments_router,
+    drawers_router,
     stats_router,
     auth_router,
 )
@@ -82,6 +83,7 @@ app.include_router(loans_router)
 app.include_router(approvals_router)
 app.include_router(audit_logs_router)
 app.include_router(compartments_router)
+app.include_router(drawers_router)
 app.include_router(stats_router)
 
 
