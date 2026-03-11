@@ -19,6 +19,9 @@ import json
 import logging
 import os
 
+from app.database import SessionLocal
+from app.models.user import User
+
 logger = logging.getLogger(__name__)
 
 # Topic the backend publishes responses to (read from .env)
@@ -53,21 +56,70 @@ def publish_response(data: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
-def handle_scan(topic: str, payload: str) -> None:
+def open_cabinet(topic: str, payload: str) -> None:
     """Received when the kiosk scans an NFC + RFID tag."""
-    logger.info("🔍 handle_scan | topic=%s | payload=%s", topic, payload)
-    # TODO: add your logic here
-    # data = json.loads(payload)
-    # user_uid = data.get("user_uid")
-    # item_uid = data.get("item_uid")
-    # ... do work ...
-    # publish_response({"status": "ok", "message": "Processed"})
+    logger.info("🔍 open_cabinet | topic=%s | payload=%s", topic, payload)
+
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError:
+        logger.warning("open_cabinet: invalid JSON payload: %s", payload)
+        publish_response({"status": "error", "message": "Invalid payload format"})
+        return
+
+    rfid = data.get("rfid")
+
+    if not rfid:
+        publish_response({"status": "error", "message": "Missing rfid in payload"})
+        return
+
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.uid == rfid).first()
+
+        if user is None:
+            logger.warning("open_cabinet: unknown rfid=%s", rfid)
+            publish_response({"status": "error", "message": "User not found"})
+            return
+
+        if not user.authorized:
+            logger.warning(
+                "open_cabinet: unauthorized user rfid=%s name=%s", rfid, user.name
+            )
+            publish_response(
+                {
+                    "status": "error",
+                    "message": "User is not authorized to access the cabinet",
+                }
+            )
+            return
+
+        # User is valid and authorized — proceed
+        logger.info("open_cabinet: authorized user=%s rfid=%s", user.name, rfid)
+        publish_response(
+            {
+                "status": "ok",
+                "message": "Access granted",
+                "user_id": user.id,
+                "user_name": user.name,
+                "user_email": user.email,
+            }
+        )
+
+    finally:
+        db.close()
 
 
 def handle_heartbeat(topic: str, payload: str) -> None:
     """Received when the kiosk sends a heartbeat ping."""
     logger.info("💓 handle_heartbeat | topic=%s | payload=%s", topic, payload)
     # TODO: add your logic here
+
+
+def register_card(topic: str, payload: str) -> None:
+    """Received when the user wants to register to the system using their ID card to recognize."""
+    logger.info("🆕 register_card | topic=%s | payload=%s", topic, payload)
+    pass
 
 
 # ---------------------------------------------------------------------------
@@ -80,7 +132,8 @@ def handle_heartbeat(topic: str, payload: str) -> None:
 # ---------------------------------------------------------------------------
 
 TOPIC_HANDLERS = {
-    "scan": handle_scan,
+    "open_cabinet": open_cabinet,
+    "register_card": register_card,
     "heartbeat": handle_heartbeat,
 }
 
