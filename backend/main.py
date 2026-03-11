@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from app.database import init_db
+from app import mqtt
 from app.routes import (
     users_router,
     items_router,
@@ -30,8 +31,10 @@ async def lifespan(app: FastAPI):
     print("🚀 Initializing database...")
     init_db()
     print("✅ Database ready!")
+    mqtt.start()
     yield
-    # Shutdown (if needed)
+    # Shutdown
+    mqtt.stop()
     print("👋 Shutting down...")
 
 
