@@ -3,6 +3,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env from monorepo root (backend/app/../../ = root)
+# override=True ensures .env always wins over any system-level env vars
+load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=True)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./inventory.db")
 

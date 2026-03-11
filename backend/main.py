@@ -2,8 +2,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env from the same directory as main.py
-load_dotenv(Path(__file__).resolve().parent / ".env")
+# Load .env from the monorepo root (one level above backend/)
+# override=True ensures .env always wins over any system-level env vars
+load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=True)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -47,6 +48,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 # Legacy: serve old uploaded images that still live on local disk.

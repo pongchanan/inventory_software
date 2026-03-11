@@ -58,6 +58,7 @@ def get_item(uid: str, request: Request, db: Session = Depends(get_db)):
     return item
 
 
+@router.get("", response_model=List[ItemResponse], include_in_schema=False)
 @router.get("/", response_model=List[ItemResponse])
 def list_items(
     request: Request,
