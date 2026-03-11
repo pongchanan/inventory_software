@@ -1,28 +1,27 @@
 from .user import User
-from .item import Item
-from .transaction import Transaction
-from .loan import Loan
-from .approval import Approval
-from .audit_log import AuditLog
-from .compartment import Compartment
-
-# Vision-based tracking models
-from .item_type import ItemType
-from .item_type_image import ItemTypeImage
-from .drawer import Drawer
-from .drawer_slot import DrawerSlot
-from .drawer_session import DrawerSession
-from .drawer_snapshot import DrawerSnapshot
-from .slot_occupancy import SlotOccupancy
-from .detection_event import DetectionEvent
-from .inventory_event import InventoryEvent
-from .exception_case import ExceptionCase
+from .item_type_core import ItemType
+from .item_type_image_core import ItemTypeImage
+from .storage_unit_core import StorageUnit
+from .storage_location_core import StorageLocation
+from .access_session_core import AccessSession
+from .observation_core import Observation
+from .rfid_observation_detail_core import RfidObservationDetail
+from .vision_observation_detail_core import VisionObservationDetail
+from .inventory_event_core import InventoryEvent
+from .audit_log_core import AuditLog
+from .slot_occupancy_core import SlotOccupancy
 
 __all__ = [
-    # Legacy RFID-based models (kept for backward compatibility)
-    "User", "Item", "Transaction", "Loan", "Approval", "AuditLog", "Compartment",
-    # Vision-based tracking models
-    "ItemType", "ItemTypeImage",
-    "Drawer", "DrawerSlot", "DrawerSession", "DrawerSnapshot",
-    "SlotOccupancy", "DetectionEvent", "InventoryEvent", "ExceptionCase",
+    "User",
+    "ItemType",
+    "ItemTypeImage",
+    "StorageUnit",
+    "StorageLocation",
+    "AccessSession",
+    "Observation",
+    "RfidObservationDetail",
+    "VisionObservationDetail",
+    "InventoryEvent",
+    "AuditLog",
+    "SlotOccupancy",
 ]

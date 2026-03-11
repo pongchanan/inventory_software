@@ -1,25 +1,21 @@
-from .users import router as users_router
-from .items import router as items_router
-from .item_types import router as item_types_router
-from .transactions import router as transactions_router
-from .loans import router as loans_router
-from .approvals import router as approvals_router
-from .audit_logs import router as audit_logs_router
-from .compartments import router as compartments_router
-from .drawers import router as drawers_router
-from .stats import router as stats_router
 from .auth import router as auth_router
+from .users_api import router as users_router
+from .item_types_api import router as item_types_router
+from .storage_api import router as storage_router
+from .access_sessions_api import router as access_sessions_router
+from .observations_api import router as observations_router
+from .inventory_api import router as inventory_router
+from .audit_logs_new import router as audit_logs_router
+from .legacy_compat import router as legacy_compat_router
 
 __all__ = [
     "users_router",
-    "items_router",
     "item_types_router",
-    "transactions_router",
-    "loans_router",
-    "approvals_router",
     "audit_logs_router",
-    "compartments_router",
-    "drawers_router",
-    "stats_router",
+    "storage_router",
+    "access_sessions_router",
+    "observations_router",
+    "inventory_router",
+    "legacy_compat_router",
     "auth_router",
 ]

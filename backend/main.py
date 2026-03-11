@@ -16,15 +16,13 @@ import app.models  # noqa: F401 — ensures ALL models (old + new) are registere
 from app import mqtt
 from app.routes import (
     users_router,
-    items_router,
     item_types_router,
-    transactions_router,
-    loans_router,
-    approvals_router,
     audit_logs_router,
-    compartments_router,
-    drawers_router,
-    stats_router,
+    storage_router,
+    access_sessions_router,
+    observations_router,
+    inventory_router,
+    legacy_compat_router,
     auth_router,
 )
 
@@ -83,15 +81,13 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router)
 app.include_router(users_router)
-app.include_router(items_router)
 app.include_router(item_types_router)
-app.include_router(transactions_router)
-app.include_router(loans_router)
-app.include_router(approvals_router)
 app.include_router(audit_logs_router)
-app.include_router(compartments_router)
-app.include_router(drawers_router)
-app.include_router(stats_router)
+app.include_router(storage_router)
+app.include_router(access_sessions_router)
+app.include_router(observations_router)
+app.include_router(inventory_router)
+app.include_router(legacy_compat_router)
 
 
 @app.get("/")

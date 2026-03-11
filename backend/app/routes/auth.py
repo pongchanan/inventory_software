@@ -39,11 +39,11 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     ):
         mock_user = User(
             id=0,
-            uid=POWERUSER_UID,
+            nfc_card_uid=POWERUSER_UID,
             name="Power User",
             email=POWERUSER_EMAIL,
             role="admin",
-            authorized=True,
+            active=True,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )

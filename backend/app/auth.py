@@ -12,6 +12,8 @@ from app.models.user import User
 # Configuration
 SECRET_KEY = os.environ.get("JWT_SECRET", "your-secret-key")
 ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+if ALGORITHM == "your_jwt_algorithm":
+    ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
 # Hardcoded Poweruser (Bypasses Database)
@@ -67,11 +69,11 @@ def get_current_user(
     if uid == POWERUSER_UID:
         return User(
             id=0,
-            uid=POWERUSER_UID,
+            nfc_card_uid=POWERUSER_UID,
             name="Power User",
             email=POWERUSER_EMAIL,
             role="admin",
-            authorized=True,
+            active=True,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )

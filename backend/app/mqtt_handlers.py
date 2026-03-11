@@ -191,12 +191,12 @@ def register_card(topic: str, payload: str) -> None:
 
         # Create the user
         new_user = User(
-            uid=uid,
+            nfc_card_uid=uid,
             name=pending_data["name"],
             email=pending_data["email"],
             password_hash=pending_data["password_hash"],
             role="user",
-            authorized=True,
+            active=True,
         )
         db.add(new_user)
         db.commit()
