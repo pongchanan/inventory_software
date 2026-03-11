@@ -117,9 +117,104 @@ def handle_heartbeat(topic: str, payload: str) -> None:
 
 
 def register_card(topic: str, payload: str) -> None:
-    """Received when the user wants to register to the system using their ID card to recognize."""
+    """Received when the kiosk sends the scanned RFID UID to finalize a pending registration."""
     logger.info("🆕 register_card | topic=%s | payload=%s", topic, payload)
-    pass
+
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError:
+        logger.warning("register_card: invalid JSON payload: %s", payload)
+        publish_response({"status": "error", "message": "Invalid payload format"})
+        return
+
+    kiosk_id = data.get("kiosk_id")
+    uid = data.get("uid")
+
+    if not kiosk_id or not uid:
+        publish_response({"status": "error", "message": "Missing kiosk_id or uid"})
+        return
+
+    # Access the shared in-memory pending registration store from auth route
+    from app.routes.auth import pending_registrations
+    from app.auth import create_access_token
+    import time
+
+    pending_data = pending_registrations.get(kiosk_id)
+
+    if pending_data is None:
+        logger.warning(
+            "register_card: no pending registration for kiosk_id=%s", kiosk_id
+        )
+        publish_response(
+            {"status": "error", "message": "No pending registration for this kiosk"}
+        )
+        return
+
+    if pending_data["expires_at"] < time.time():
+        del pending_registrations[kiosk_id]
+        logger.warning("register_card: registration expired for kiosk_id=%s", kiosk_id)
+        publish_response({"status": "error", "message": "Registration session expired"})
+        return
+
+    if pending_data["status"] != "waiting":
+        logger.warning(
+            "register_card: registration not in waiting state for kiosk_id=%s", kiosk_id
+        )
+        publish_response(
+            {"status": "error", "message": "Registration is no longer waiting for scan"}
+        )
+        return
+
+    db = SessionLocal()
+    try:
+        # Check if UID is already registered
+        existing_user = db.query(User).filter(User.uid == uid).first()
+        if existing_user:
+            logger.warning("register_card: uid=%s already registered", uid)
+            publish_response(
+                {"status": "error", "message": "This card is already registered"}
+            )
+            return
+
+        # Check if email is already in use
+        existing_email = (
+            db.query(User).filter(User.email == pending_data["email"]).first()
+        )
+        if existing_email:
+            logger.warning(
+                "register_card: email=%s already in use", pending_data["email"]
+            )
+            publish_response(
+                {"status": "error", "message": "This email is already in use"}
+            )
+            return
+
+        # Create the user
+        new_user = User(
+            uid=uid,
+            name=pending_data["name"],
+            email=pending_data["email"],
+            password_hash=pending_data["password_hash"],
+            role="user",
+            authorized=True,
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+        # Generate token so the frontend polling /kiosk/status can log the user in
+        token = create_access_token(data={"sub": new_user.uid, "role": new_user.role})
+
+        # Update the in-memory store — the frontend polling /kiosk/status will pick this up
+        pending_registrations[kiosk_id]["status"] = "success"
+        pending_registrations[kiosk_id]["user"] = new_user
+        pending_registrations[kiosk_id]["token"] = token
+
+        logger.info("register_card: registered user=%s uid=%s", new_user.name, uid)
+        publish_response({"status": "ok", "message": "Registration complete"})
+
+    finally:
+        db.close()
 
 
 # ---------------------------------------------------------------------------
