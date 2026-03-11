@@ -2,11 +2,19 @@
 Create sample loan and audit log data to demonstrate the admin tracking features
 """
 from datetime import datetime, timedelta
+from pathlib import Path
+import sys
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+BACKEND_DIR = ROOT_DIR / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
 from app.database import SessionLocal, init_db
-from app.models.loan import Loan
 from app.models.audit_log import AuditLog
-from app.models.user import User
 from app.models.item import Item
+from app.models.loan import Loan
+from app.models.user import User
 
 def create_sample_data():
     init_db()

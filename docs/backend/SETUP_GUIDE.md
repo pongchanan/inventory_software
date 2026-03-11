@@ -43,12 +43,12 @@ MQTT_PUBLISH_TOPICS=kiosk/response
 
 ### 3. Run the Server
 ```bash
-python main.py
+python -m app.main
 ```
 
 Or with auto-reload during development:
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 3000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
 ```
 
 The server will start at `http://localhost:3000`.
@@ -62,10 +62,11 @@ Visit `http://localhost:3000/docs` for interactive Swagger documentation.
 
 ```
 backend/
-├── main.py                  # App entry point, router registration
+├── main.py                  # Compatibility entry point
 ├── requirements.txt
 ├── .env.example             # Template — copy to .env
 ├── app/
+│   ├── main.py              # FastAPI app setup and router registration
 │   ├── auth.py              # JWT helpers, password hashing, get_current_user
 │   ├── database.py          # SQLAlchemy engine + SessionLocal + Base
 │   ├── mqtt.py              # MQTT client (connects on startup, publishes/subscribes)
@@ -74,8 +75,18 @@ backend/
 │   ├── models/              # SQLAlchemy ORM models
 │   ├── schemas/             # Pydantic request/response schemas
 │   └── routes/              # FastAPI routers (one file per resource)
-├── seed_data.py             # Populate DB with sample data
-└── create_admin.py          # Create an admin user
+├── db/
+│   └── schema_v2.sql        # Shadow-schema SQL definition
+├── ../docs/backend/
+│   ├── API_DOCUMENTATION.md
+│   └── SETUP_GUIDE.md
+├── ../scripts/
+│   ├── admin/
+│   │   └── create_admin.py  # Create an admin user
+│   ├── migration/
+│   └── seed/
+│       └── seed_data.py     # Populate DB with sample data
+└── test/
 ```
 
 ---
@@ -115,13 +126,13 @@ Frontend                    Backend                      Kiosk
 ## Seeding Sample Data
 
 ```bash
-python seed_data.py
+python ../scripts/seed/seed_data.py
 ```
 
 ## Creating an Admin User
 
 ```bash
-python create_admin.py
+python ../scripts/admin/create_admin.py
 ```
 
 ---
@@ -138,7 +149,7 @@ pip install -r requirements.txt
 Delete the stale SQLite file and let the server recreate it:
 ```bash
 del inventory.db
-python main.py
+python -m app.main
 ```
 
 ### `No module named 'PIL'`
@@ -221,7 +232,8 @@ backend/
 │   └── routes/
 │       ├── items.py     # Added image upload endpoint
 │       └── compartments.py  # Added item listing endpoints
-├── main.py              # Updated with static file serving
+├── main.py              # Compatibility entry point
+├── app/main.py          # Updated with static file serving
 └── requirements.txt     # Added python-multipart & Pillow
 ```
 
@@ -269,7 +281,7 @@ mkdir -p uploads/items
 Delete and recreate the database:
 ```bash
 rm inventory.db
-python main.py
+python -m app.main
 ```
 
 ---

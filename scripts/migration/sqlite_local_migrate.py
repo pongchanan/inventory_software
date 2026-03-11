@@ -16,12 +16,14 @@ import os
 import sys
 from pathlib import Path
 
-# Allow imports from backend/
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+ROOT_DIR = Path(__file__).resolve().parents[2]
+BACKEND_DIR = ROOT_DIR / "backend"
+
+# Allow imports from backend/app.
+sys.path.insert(0, str(BACKEND_DIR))
 
 from dotenv import load_dotenv
 
-ROOT_DIR = Path(__file__).resolve().parents[3]
 load_dotenv(ROOT_DIR / ".env", override=True)
 os.environ["DATABASE_URL"] = "sqlite:///./inventory.db"
 

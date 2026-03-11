@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 ### 2. Run the Server
 ```bash
-python main.py
+python -m app.main
 ```
 
 The API will be available at `http://localhost:3000`
@@ -422,8 +422,8 @@ After adding the `image_url` field, the database will auto-update on restart.
 To manually reset the database:
 ```bash
 rm inventory.db  # Delete old database
-python main.py   # Recreate with new schema
-python seed_data.py  # Optional: Add sample data
+python -m app.main   # Recreate with new schema
+python ../scripts/seed/seed_data.py  # Optional: Add sample data
 ```
 
 ---

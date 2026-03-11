@@ -13,7 +13,10 @@ from sqlalchemy.orm import sessionmaker
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=True)
+ROOT_DIR = Path(__file__).resolve().parents[2]
+BACKEND_DIR = ROOT_DIR / "backend"
+
+load_dotenv(ROOT_DIR / ".env", override=True)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./inventory.db")
 
 if DATABASE_URL.startswith("postgres://"):
@@ -24,7 +27,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def apply_shadow_schema(dry_run: bool):
-    schema_sql = Path(__file__).with_name("schema_v2.sql").read_text(encoding="utf-8")
+    schema_sql = (BACKEND_DIR / "db" / "schema_v2.sql").read_text(encoding="utf-8")
     if dry_run:
         logger.info("[DRY RUN] Would apply schema_v2.sql into schema v2")
         return

@@ -1,6 +1,14 @@
+from pathlib import Path
+import sys
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+BACKEND_DIR = ROOT_DIR / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+from app.auth import hash_password
 from app.database import SessionLocal, init_db
 from app.models.user import User
-from app.auth import hash_password
 
 def create_admin():
     db = SessionLocal()

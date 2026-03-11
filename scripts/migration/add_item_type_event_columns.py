@@ -14,10 +14,12 @@ Usage (from backend/):
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+ROOT_DIR = Path(__file__).resolve().parents[2]
+BACKEND_DIR = ROOT_DIR / "backend"
+sys.path.insert(0, str(BACKEND_DIR))
 
 from dotenv import load_dotenv
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+load_dotenv(ROOT_DIR / ".env")
 
 from sqlalchemy import text
 from app.database import engine

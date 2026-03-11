@@ -18,11 +18,15 @@ import os
 import sys
 from pathlib import Path
 
-# Allow imports from the backend/ root even when run from scripts/
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+ROOT_DIR = Path(__file__).resolve().parents[2]
+BACKEND_DIR = ROOT_DIR / "backend"
+
+# Allow imports from backend/app and sibling packages.
+sys.path.insert(0, str(BACKEND_DIR))
+sys.path.insert(0, str(ROOT_DIR))
 
 from dotenv import load_dotenv
-load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+load_dotenv(ROOT_DIR / ".env")
 
 from app.database import Base, engine
 

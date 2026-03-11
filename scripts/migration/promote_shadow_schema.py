@@ -13,7 +13,9 @@ from sqlalchemy import create_engine, text
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=True)
+ROOT_DIR = Path(__file__).resolve().parents[2]
+
+load_dotenv(ROOT_DIR / ".env", override=True)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./inventory.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)

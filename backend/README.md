@@ -48,13 +48,13 @@ Key variables:
 
 ```bash
 # From backend directory
-python main.py
+python -m app.main
 ```
 
 Or with auto-reload:
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 3000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
 ```
 
 Server starts at **http://localhost:3000**
@@ -206,13 +206,13 @@ cp .env.example .env
 
 ```bash
 # From backend directory
-python main.py
+python -m app.main
 ```
 
 Or with uvicorn directly:
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 3000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 3000 --reload
 ```
 
 Server will start at: **http://localhost:3000**
@@ -421,7 +421,7 @@ The API supports both admin and user React dashboards:
 
 ## Next Steps
 
-1. ✅ Run `python seed_data.py` to add sample data
+1. ✅ Run `python ../scripts/seed/seed_data.py` to add sample data
 2. ✅ Test endpoints at http://localhost:3000/docs
 3. 🔧 Configure ESP32 kiosk with server IP
 4. 🎨 Connect React dashboards to API
