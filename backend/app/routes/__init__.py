@@ -1,5 +1,6 @@
 from .users import router as users_router
 from .items import router as items_router
+from .item_types import router as item_types_router
 from .transactions import router as transactions_router
 from .loans import router as loans_router
 from .approvals import router as approvals_router
@@ -12,6 +13,7 @@ from .auth import router as auth_router
 __all__ = [
     "users_router",
     "items_router",
+    "item_types_router",
     "transactions_router",
     "loans_router",
     "approvals_router",

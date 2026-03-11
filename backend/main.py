@@ -15,6 +15,7 @@ import app.models  # noqa: F401 — ensures ALL models (old + new) are registere
 from app.routes import (
     users_router,
     items_router,
+    item_types_router,
     transactions_router,
     loans_router,
     approvals_router,
@@ -78,6 +79,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(items_router)
+app.include_router(item_types_router)
 app.include_router(transactions_router)
 app.include_router(loans_router)
 app.include_router(approvals_router)
