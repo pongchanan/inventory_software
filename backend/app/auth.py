@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 import os
 from typing import Optional
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -62,7 +63,7 @@ def get_current_user(
         uid: str = payload.get("sub")
         if uid is None:
             raise credentials_exception
-    except JWTError:
+    except InvalidTokenError:
         raise credentials_exception
 
     # Check for hardcoded poweruser first

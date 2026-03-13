@@ -21,6 +21,7 @@ import os
 
 from app.database import SessionLocal
 from app.models.user import User
+from app.services.audit_logs_service import record_kiosk_heartbeat
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +117,18 @@ def open_cabinet(topic: str, payload: str) -> None:
 def handle_heartbeat(topic: str, payload: str) -> None:
     """Received when the kiosk sends a heartbeat ping."""
     logger.info("💓 handle_heartbeat | topic=%s | payload=%s", topic, payload)
-    # TODO: add your logic here
+    kiosk_id = "unknown"
+    try:
+        data = json.loads(payload)
+        kiosk_id = data.get("kiosk_id", "unknown")
+    except json.JSONDecodeError:
+        logger.warning("handle_heartbeat: invalid JSON payload")
+
+    db = SessionLocal()
+    try:
+        record_kiosk_heartbeat(db, kiosk_id=kiosk_id, payload=payload)
+    finally:
+        db.close()
 
 
 def handle_session_event(topic: str, payload: str) -> None:
@@ -162,7 +174,7 @@ def register_card(topic: str, payload: str) -> None:
         return
 
     # Access the shared in-memory pending registration store from auth route
-    from app.routes.auth import pending_registrations
+    from app.services.auth_service import pending_registrations
     from app.auth import create_access_token
     import time
 

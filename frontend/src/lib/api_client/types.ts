@@ -70,17 +70,6 @@ export interface Item {
   updated_at: string;
 }
 
-export interface Compartment {
-  id: number;
-  floor: number;
-  locker_number: string;
-  status: string;
-  item_uid: string | null;
-  user_uid: string | null;
-  occupied_at: string | null;
-  due_at: string | null;
-}
-
 export interface ItemCreate {
   uid: string;
   name: string;

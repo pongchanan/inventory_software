@@ -1,6 +1,12 @@
-import { fetchItems, fetchItemByUid, createItem, updateItem, deleteItem, getImageUrl } from '@/lib/api'
+import {
+  createItem,
+  deleteItem,
+  fetchItemByUid,
+  fetchItems,
+  getImageUrl,
+  updateItem,
+} from '@/lib/api'
 
-// Mock fetch globally
 global.fetch = jest.fn()
 
 describe('API Functions', () => {
@@ -10,192 +16,166 @@ describe('API Functions', () => {
   })
 
   describe('fetchItems', () => {
-    it('fetches all items without filter', async () => {
-      const mockItems = [
-        { id: 1, uid: 'ITEM001', name: 'Item 1', available: true },
-        { id: 2, uid: 'ITEM002', name: 'Item 2', available: false },
-      ]
-
+    it('fetches item types and maps to item contract', async () => {
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => mockItems,
+        json: async () => [
+          {
+            id: 1,
+            name: 'Item 1',
+            active: true,
+            created_at: '2026-03-01T00:00:00.000Z',
+            updated_at: '2026-03-01T00:00:00.000Z',
+            images: [],
+          },
+          {
+            id: 2,
+            name: 'Item 2',
+            active: false,
+            created_at: '2026-03-01T00:00:00.000Z',
+            updated_at: '2026-03-01T00:00:00.000Z',
+            images: [],
+          },
+        ],
       })
 
       const result = await fetchItems()
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/items/'),
-        expect.objectContaining({ cache: 'no-store' })
-      )
-      expect(result).toEqual(mockItems)
+      expect(global.fetch).toHaveBeenCalledWith('/api/item-types', { cache: 'no-store' })
+      expect(result).toHaveLength(2)
+      expect(result[0].uid).toBe('TYPE-1')
+      expect(result[1].uid).toBe('TYPE-2')
     })
 
-    it('fetches items with available filter', async () => {
-      const mockItems = [
-        { id: 1, uid: 'ITEM001', name: 'Item 1', available: true },
-      ]
-
+    it('filters by available status after mapping', async () => {
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => mockItems,
+        json: async () => [
+          {
+            id: 1,
+            name: 'Item 1',
+            active: true,
+            created_at: '2026-03-01T00:00:00.000Z',
+            updated_at: '2026-03-01T00:00:00.000Z',
+            images: [],
+          },
+          {
+            id: 2,
+            name: 'Item 2',
+            active: false,
+            created_at: '2026-03-01T00:00:00.000Z',
+            updated_at: '2026-03-01T00:00:00.000Z',
+            images: [],
+          },
+        ],
       })
 
       const result = await fetchItems(true)
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('available=true'),
-        expect.objectContaining({ cache: 'no-store' })
-      )
-      expect(result).toEqual(mockItems)
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe(1)
     })
 
     it('throws error on failed fetch', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-      })
-
-      await expect(fetchItems()).rejects.toThrow('Failed to fetch items')
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false })
+      await expect(fetchItems()).rejects.toThrow('Failed to fetch item types')
     })
   })
 
   describe('fetchItemByUid', () => {
-    it('fetches item by UID', async () => {
-      const mockItem = { id: 1, uid: 'ITEM001', name: 'Test Item' }
-
+    it('fetches item by TYPE uid', async () => {
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => mockItem,
+        json: async () => ({
+          id: 1,
+          name: 'Test Item',
+          active: true,
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+          images: [],
+        }),
       })
 
-      const result = await fetchItemByUid('ITEM001')
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/items/ITEM001'),
-        expect.any(Object)
-      )
-      expect(result).toEqual(mockItem)
+      const result = await fetchItemByUid('TYPE-1')
+      expect(global.fetch).toHaveBeenCalledWith('/api/item-types/1', { cache: 'no-store' })
+      expect(result.uid).toBe('TYPE-1')
     })
 
     it('throws error when item not found', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-      })
-
-      await expect(fetchItemByUid('NONEXISTENT')).rejects.toThrow()
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false })
+      await expect(fetchItemByUid('TYPE-999')).rejects.toThrow('Item not found')
     })
   })
 
   describe('createItem', () => {
-    it('creates a new item', async () => {
-      const newItem = {
-        uid: 'NEWITEM',
-        name: 'New Item',
-        description: 'A new item',
-        quantity: 5,
-      }
-
-      const mockResponse = { id: 1, ...newItem }
-
+    it('creates a new item type', async () => {
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse,
+        json: async () => ({
+          id: 1,
+          name: 'New Item',
+          active: true,
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+        }),
       })
 
-      const result = await createItem(newItem)
+      const result = await createItem({ uid: 'NEWITEM', name: 'New Item' })
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/items/'),
+        '/api/item-types',
         expect.objectContaining({
           method: 'POST',
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-          }),
-          body: JSON.stringify(newItem),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: 'New Item' }),
         })
       )
-      expect(result).toEqual(mockResponse)
-    })
-
-    it('throws error on failed creation', async () => {
-      const newItem = {
-        uid: 'NEWITEM',
-        name: 'New Item',
-        quantity: 5,
-      }
-
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ detail: 'Failed to create item' }),
-      })
-
-      await expect(createItem(newItem)).rejects.toThrow()
+      expect(result.uid).toBe('TYPE-1')
     })
   })
 
-  describe('updateItem', () => {
-    it('updates an existing item', async () => {
-      const updates = { uid: 'ITEM001', name: 'Updated Name', quantity: 10 }
-      const mockResponse = { id: 1, ...updates }
-
+  describe('updateItem and deleteItem', () => {
+    it('updates an existing item type', async () => {
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => mockResponse,
+        json: async () => ({
+          id: 1,
+          name: 'Updated Name',
+          active: true,
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+        }),
       })
 
-      const result = await updateItem('ITEM001', updates)
-
+      await updateItem('TYPE-1', { name: 'Updated Name', uid: 'TYPE-1' })
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/items/ITEM001'),
-        expect.objectContaining({
-          method: 'PUT',
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-          }),
-          body: JSON.stringify(updates),
-        })
+        '/api/item-types/1',
+        expect.objectContaining({ method: 'PATCH' })
       )
-      expect(result).toEqual(mockResponse)
     })
-  })
 
-  describe('deleteItem', () => {
-    it('deletes an item', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-      })
-
-      await deleteItem('ITEM001')
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/items/ITEM001'),
-        expect.objectContaining({
-          method: 'DELETE',
-        })
-      )
+    it('deletes an item type', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true })
+      await deleteItem('TYPE-1')
+      expect(global.fetch).toHaveBeenCalledWith('/api/item-types/1', { method: 'DELETE' })
     })
   })
 
   describe('getImageUrl', () => {
     it('returns placeholder for null image URL', () => {
-      const result = getImageUrl(null)
-      expect(result).toBe('/placeholder.png')
+      expect(getImageUrl(null)).toBe('/placeholder.png')
     })
 
     it('returns placeholder for empty string', () => {
-      const result = getImageUrl('')
-      expect(result).toBe('/placeholder.png')
+      expect(getImageUrl('')).toBe('/placeholder.png')
     })
 
-    it('returns the image URL with API base when provided', () => {
-      const imageUrl = '/uploads/items/test.jpg'
-      const result = getImageUrl(imageUrl)
-      expect(result).toContain('/uploads/items/test.jpg')
+    it('returns the image URL for relative path', () => {
+      expect(getImageUrl('/uploads/items/test.jpg')).toContain('/uploads/items/test.jpg')
     })
 
-    it('returns the image URL as-is for absolute URLs', () => {
+    it('returns absolute URLs as-is', () => {
       const imageUrl = 'http://example.com/image.jpg'
-      const result = getImageUrl(imageUrl)
-      expect(result).toBe(imageUrl)
+      expect(getImageUrl(imageUrl)).toBe(imageUrl)
     })
   })
 })

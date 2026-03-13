@@ -3,26 +3,31 @@
  * All requests go through the Next.js proxy route at /api/[...path].
  */
 
-export { API_BASE, authHeaders } from "./api_client/core";
+export {
+  API_BASE,
+  authHeaders,
+  fetchLocationsByUnit,
+  fetchOccupancyByLocation,
+  fetchOccupancyByUnit,
+  fetchStorageUnits,
+} from "./api_client/core";
 export type {
   AuditLogDetail,
   AuthUser,
-  Compartment,
   Item,
   ItemCreate,
+  ItemTypeApi,
   Loan,
   LoanCreate,
   LoanDetail,
   LoginResponse,
+  SlotOccupancyApi,
+  StorageLocationApi,
+  StorageUnitApi,
 } from "./api_client/types";
 
 export { fetchCabinetAccessLogs } from "./api_client/audit";
 export { fetchMe, fetchUsers, login } from "./api_client/auth";
-export {
-  fetchCompartmentItems,
-  fetchCompartments,
-  fetchFloorItems,
-} from "./api_client/compartments";
 export {
   createItem,
   createItemAuth,

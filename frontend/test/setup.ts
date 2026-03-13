@@ -17,7 +17,8 @@ jest.mock('next/navigation', () => ({
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
-    return React.createElement('img', props)
+    const { fill, ...rest } = props
+    return React.createElement('img', rest)
   },
 }))
 

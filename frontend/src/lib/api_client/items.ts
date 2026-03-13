@@ -18,9 +18,12 @@ export async function fetchItems(available?: boolean): Promise<Item[]> {
 
 export async function fetchItemByUid(uid: string): Promise<Item> {
   const itemTypeId = parseItemTypeId(uid);
-  const itemType = await fetchItemTypeById(itemTypeId);
-  if (!itemType) throw new Error("Item not found");
-  return mapItemTypeToItem(itemType);
+  try {
+    const itemType = await fetchItemTypeById(itemTypeId);
+    return mapItemTypeToItem(itemType);
+  } catch {
+    throw new Error("Item not found");
+  }
 }
 
 export async function createItem(item: ItemCreate): Promise<Item> {
@@ -66,16 +69,27 @@ export async function deleteItem(uid: string): Promise<void> {
 }
 
 export async function uploadItemImage(uid: string, file: File): Promise<Item> {
-  void uid;
-  void file;
-  throw new Error("Image gallery endpoints are not implemented yet in backend contract");
+  const itemTypeId = parseItemTypeId(uid);
+  const formData = new FormData();
+  formData.append("image_file", file);
+
+  const res = await fetch(`${API_BASE}/api/item-types/${itemTypeId}/images`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to upload item image" }));
+    throw new Error(err.detail || "Failed to upload item image");
+  }
+
+  const updated: ItemTypeApi = await res.json();
+  return mapItemTypeToItem(updated);
 }
 
 export async function fetchImageUrl(uid: string): Promise<string> {
   try {
     const itemTypeId = parseItemTypeId(uid);
     const data = await fetchItemTypeById(itemTypeId);
-    if (!data) return "/placeholder.png";
     return pickPrimaryImage(data.images) || "/placeholder.png";
   } catch {
     return "/placeholder.png";
@@ -121,7 +135,20 @@ export async function deleteItemAuth(uid: string): Promise<void> {
 }
 
 export async function uploadItemImageAuth(uid: string, file: File): Promise<Item> {
-  void uid;
-  void file;
-  throw new Error("Image gallery endpoints are not implemented yet in backend contract");
+  const itemTypeId = parseItemTypeId(uid);
+  const formData = new FormData();
+  formData.append("image_file", file);
+
+  const res = await fetch(`${API_BASE}/api/item-types/${itemTypeId}/images`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to upload item image" }));
+    throw new Error(err.detail || "Failed to upload item image");
+  }
+
+  const updated: ItemTypeApi = await res.json();
+  return mapItemTypeToItem(updated);
 }

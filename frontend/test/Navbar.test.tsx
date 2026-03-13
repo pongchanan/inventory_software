@@ -7,10 +7,6 @@ jest.mock('@/context/AuthContext', () => ({
   useAuth: jest.fn(),
 }))
 
- 
-function MockNavbar() { return <div data-testid="navbar">Navbar</div>; }
-jest.mock('@/components/Navbar', () => MockNavbar);
-
 // Mock next/link
 jest.mock('next/link', () => {
   const MockLink = ({ children, href }: any) => {
@@ -36,11 +32,19 @@ jest.mock('next/navigation', () => ({
 }))
 
 jest.mock('lucide-react', () => {
+  const Icon = ({ className }: { className?: string }) => <svg className={className} />
   return {
-    Menu: function MockMenu() { return <div data-testid="icon-menu" />; },
-    X: function MockX() { return <div data-testid="icon-x" />; },
-  };
-});
+    Menu: Icon,
+    X: Icon,
+    Package: Icon,
+    LayoutGrid: Icon,
+    ShieldCheck: Icon,
+    ClipboardList: Icon,
+    LogIn: Icon,
+    LogOut: Icon,
+    User: Icon,
+  }
+})
 
 describe('Navbar', () => {
   beforeEach(() => {
@@ -215,19 +219,13 @@ describe('Navbar', () => {
     it('shows mobile menu when menu button is clicked', () => {
       render(<Navbar />)
 
-      // Click the mobile menu button
-      const menuButtons = screen.getAllByRole('button')
-      const mobileMenuButton = menuButtons.find(button =>
-        button.querySelector('svg') || button.textContent === ''
-      )
+      // In logged-out state the only button before opening mobile nav is the menu toggle.
+      const mobileMenuButton = screen.getByRole('button')
+      fireEvent.click(mobileMenuButton)
 
-      if (mobileMenuButton) {
-        fireEvent.click(mobileMenuButton)
-
-        // Now there should be multiple Items links visible
-        const itemsLinks = screen.getAllByText('Items')
-        expect(itemsLinks.length).toBeGreaterThan(1)
-      }
+      // Now there should be multiple Items links visible (desktop + mobile).
+      const itemsLinks = screen.getAllByText('Items')
+      expect(itemsLinks.length).toBeGreaterThan(1)
     })
   })
 })

@@ -44,12 +44,6 @@ export function mapItemTypeToItem(itemType: ItemTypeApi): Item {
   };
 }
 
-export function parseLocationIdFromCompartment(lockerNumber: string): number | null {
-  const match = /^LOC-(\d+)$/i.exec(lockerNumber.trim());
-  if (!match) return null;
-  return Number(match[1]);
-}
-
 export function authHeaders(): Record<string, string> {
   if (typeof window === "undefined") return {};
   const token = localStorage.getItem("token");
@@ -63,9 +57,9 @@ export async function fetchItemTypes(): Promise<ItemTypeApi[]> {
   return res.json();
 }
 
-export async function fetchItemTypeById(itemTypeId: number): Promise<ItemTypeApi | null> {
+export async function fetchItemTypeById(itemTypeId: number): Promise<ItemTypeApi> {
   const res = await fetch(`${API_BASE}/api/item-types/${itemTypeId}`, { cache: "no-store" });
-  if (!res.ok) return null;
+  if (!res.ok) throw new Error("Item type not found");
   return res.json();
 }
 
@@ -79,7 +73,7 @@ export async function fetchLocationsByUnit(unitId: number): Promise<StorageLocat
   const res = await fetch(`${API_BASE}/api/storage/units/${unitId}/locations`, {
     cache: "no-store",
   });
-  if (!res.ok) return [];
+  if (!res.ok) throw new Error("Storage unit not found");
   return res.json();
 }
 
@@ -97,14 +91,15 @@ export async function fetchOccupancyByLocation(locationId: number): Promise<Slot
     cache: "no-store",
     headers: authHeaders(),
   });
-  if (!res.ok) {
-    return {
-      location_id: locationId,
-      state: "unknown",
-      item_type_id: null,
-      confidence: null,
-      last_event_id: null,
-    };
-  }
+  if (!res.ok) throw new Error("Storage location not found");
+  return res.json();
+}
+
+export async function fetchOccupancyByUnit(unitId: number): Promise<SlotOccupancyApi[]> {
+  const res = await fetch(`${API_BASE}/api/inventory/occupancy/unit/${unitId}`, {
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Storage unit not found");
   return res.json();
 }
