@@ -85,6 +85,7 @@ This is a monorepo with two independent Railway services:
 ## 📖 Documentation
 
 - [Backend README](backend/README.md) — API endpoints, MQTT topics, database schema
+- [Backend API Contract](docs/backend/API_CONTRACT.md) — canonical endpoint/payload/state-machine contract
 - [Backend Setup Guide](docs/backend/SETUP_GUIDE.md) — Step-by-step setup and troubleshooting
 - [Backend API Docs](docs/backend/API_DOCUMENTATION.md) — Full endpoint reference
 - [Kiosk README](kiosk/kiosk_main/README.md) — Wiring, MQTT usage, library list

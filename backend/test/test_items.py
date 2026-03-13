@@ -1,198 +1,110 @@
-"""
-Tests for item management functionality
-"""
+"""Tests for item type model and API contract."""
+
 import pytest
-from app.models.item import Item
+
+from app.models.item_type_core import ItemType
 
 
-class TestItemModel:
-    """Test Item model"""
-    
-    def test_create_item(self, db_session):
-        """Test creating an item"""
-        item = Item(
-            uid="TEST001",
-            name="Test Item",
-            description="Test Description",
-            category="Test Category",
-            quantity=10,
-            available=True,
-            location="Shelf A1"
-        )
-        db_session.add(item)
+class TestItemTypeModel:
+    def test_create_item_type(self, db_session):
+        item_type = ItemType(name="NodeMCU", active=True)
+        db_session.add(item_type)
         db_session.commit()
-        
-        assert item.id is not None
-        assert item.uid == "TEST001"
-        assert item.name == "Test Item"
-        assert item.quantity == 10
-        assert item.available is True
-    
-    def test_item_defaults(self, db_session):
-        """Test item default values"""
-        item = Item(uid="TEST002", name="Minimal Item")
-        db_session.add(item)
+
+        assert item_type.id is not None
+        assert item_type.name == "NodeMCU"
+        assert item_type.active is True
+
+    def test_item_type_defaults(self, db_session):
+        item_type = ItemType(name="Arduino Nano")
+        db_session.add(item_type)
         db_session.commit()
-        
-        assert item.quantity == 1
-        assert item.available is True
-        assert item.created_at is not None
-        assert item.updated_at is not None
-    
-    def test_item_unique_uid(self, db_session):
-        """Test that UID must be unique"""
-        item1 = Item(uid="DUPLICATE", name="Item 1")
-        db_session.add(item1)
-        db_session.commit()
-        
-        item2 = Item(uid="DUPLICATE", name="Item 2")
-        db_session.add(item2)
-        
-        with pytest.raises(Exception):  # SQLAlchemy IntegrityError
-            db_session.commit()
+
+        assert item_type.active is True
+        assert item_type.created_at is not None
+        assert item_type.updated_at is not None
 
 
-class TestItemEndpoints:
-    """Test item API endpoints"""
-    
-    def test_create_item_as_admin(self, client, admin_token):
-        """Test creating an item as admin"""
-        response = client.post(
-            "/api/item-types/",
-            headers={"Authorization": f"Bearer {admin_token}"},
-            json={
-                "uid": "NEW001",
-                "name": "New Test Item",
-                "description": "A new test item",
-                "category": "Electronics",
-                "quantity": 5,
-                "location": "Shelf B2"
-            }
-        )
+class TestItemTypeEndpoints:
+    def test_create_item_type(self, client):
+        response = client.post("/api/item-types", json={"name": "ESP32-S3"})
         assert response.status_code == 201
         data = response.json()
-        assert data["uid"] == "NEW001"
-        assert data["name"] == "New Test Item"
-        assert data["quantity"] == 5
-    
-    def test_create_item_duplicate_uid(self, client, admin_token, sample_item):
-        """Test creating item with duplicate UID"""
-        response = client.post(
-            "/api/item-types/",
-            headers={"Authorization": f"Bearer {admin_token}"},
-            json={
-                "uid": sample_item.uid,
-                "name": "Duplicate Item",
-                "quantity": 1
-            }
-        )
-        assert response.status_code == 400
-        assert "already exists" in response.json()["detail"]
-    
-    def test_get_item_by_uid(self, client, sample_item):
-        """Test retrieving an item by UID"""
-        response = client.get(f"/api/item-types/{sample_item.uid}")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["uid"] == sample_item.uid
-        assert data["name"] == sample_item.name
-    
-    def test_get_item_not_found(self, client):
-        """Test retrieving non-existent item"""
-        response = client.get("/api/item-types/NONEXISTENT")
-        assert response.status_code == 404
-    
-    def test_list_items(self, client, db_session):
-        """Test listing all items"""
-        # Create multiple items
-        items = [
-            Item(uid=f"ITEM{i:03d}", name=f"Item {i}", quantity=i)
-            for i in range(1, 6)
-        ]
-        for item in items:
-            db_session.add(item)
-        db_session.commit()
-        
-        response = client.get("/api/item-types/")
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data) == 5
-        assert all(item["uid"] in [f"ITEM{i:03d}" for i in range(1, 6)] for item in data)
-    
-    def test_list_items_with_filter(self, client, db_session):
-        """Test listing items with availability filter"""
-        # Create items with different availability
-        available_item = Item(uid="AVAIL001", name="Available", available=True)
-        unavailable_item = Item(uid="UNAVAIL001", name="Unavailable", available=False)
-        db_session.add(available_item)
-        db_session.add(unavailable_item)
-        db_session.commit()
-        
-        # Filter for available items
-        response = client.get("/api/item-types/?available=true")
-        assert response.status_code == 200
-        data = response.json()
-        assert all(item["available"] is True for item in data)
-        assert any(item["uid"] == "AVAIL001" for item in data)
-        assert not any(item["uid"] == "UNAVAIL001" for item in data)
-    
-    def test_list_items_pagination(self, client, db_session):
-        """Test listing items with pagination"""
-        # Create 10 items
-        for i in range(10):
-            item = Item(uid=f"PAGE{i:03d}", name=f"Item {i}")
-            db_session.add(item)
-        db_session.commit()
-        
-        # Get first 5
-        response = client.get("/api/item-types/?skip=0&limit=5")
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data) == 5
-        
-        # Get next 5
-        response = client.get("/api/item-types/?skip=5&limit=5")
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data) == 5
-    
-    def test_update_item_as_admin(self, client, admin_token, sample_item):
-        """Test updating an item as admin"""
-        response = client.put(
-            f"/api/item-types/{sample_item.uid}",
-            headers={"Authorization": f"Bearer {admin_token}"},
-            json={
-                "name": "Updated Item Name",
-                "quantity": 10
-            }
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["name"] == "Updated Item Name"
-        assert data["quantity"] == 10
-    
-    def test_delete_item_as_admin(self, client, admin_token, sample_item):
-        """Test deleting an item as admin"""
-        response = client.delete(
-            f"/api/item-types/{sample_item.uid}",
-            headers={"Authorization": f"Bearer {admin_token}"}
-        )
-        assert response.status_code == 200
-        
-        # Verify item is deleted
-        response = client.get(f"/api/item-types/{sample_item.uid}")
-        assert response.status_code == 404
-    
-    def test_create_item_as_user_forbidden(self, client, user_token):
-        """Test that regular users cannot create items"""
-        response = client.post(
-            "/api/item-types/",
-            headers={"Authorization": f"Bearer {user_token}"},
-            json={
-                "uid": "FORBIDDEN001",
-                "name": "Forbidden Item",
-                "quantity": 1
-            }
-        )
-        assert response.status_code == 403
+        assert data["name"] == "ESP32-S3"
+        assert data["active"] is True
 
+    def test_get_item_type_by_id(self, client, sample_item_type):
+        response = client.get(f"/api/item-types/{sample_item_type.id}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == sample_item_type.id
+        assert data["name"] == sample_item_type.name
+
+    def test_get_item_type_not_found(self, client):
+        response = client.get("/api/item-types/99999")
+        assert response.status_code == 404
+
+    def test_list_item_types(self, client, db_session):
+        db_session.add_all([
+            ItemType(name="Type A"),
+            ItemType(name="Type B"),
+            ItemType(name="Type C"),
+        ])
+        db_session.commit()
+
+        response = client.get("/api/item-types")
+        assert response.status_code == 200
+        data = response.json()
+        names = [row["name"] for row in data]
+        assert "Type A" in names
+        assert "Type B" in names
+        assert "Type C" in names
+
+    def test_update_item_type(self, client, sample_item_type):
+        response = client.patch(
+            f"/api/item-types/{sample_item_type.id}",
+            json={"name": "Updated Name", "active": False},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Updated Name"
+        assert data["active"] is False
+
+    def test_delete_item_type(self, client, sample_item_type):
+        response = client.delete(f"/api/item-types/{sample_item_type.id}")
+        assert response.status_code == 204
+
+        response = client.get(f"/api/item-types/{sample_item_type.id}")
+        assert response.status_code == 404
+
+    def test_pagination(self, client, db_session):
+        for i in range(8):
+            db_session.add(ItemType(name=f"Type {i}"))
+        db_session.commit()
+
+        first = client.get("/api/item-types?skip=0&limit=3")
+        second = client.get("/api/item-types?skip=3&limit=3")
+
+        assert first.status_code == 200
+        assert second.status_code == 200
+        assert len(first.json()) == 3
+        assert len(second.json()) == 3
+
+    def test_create_item_type_invalid_payload(self, client):
+        response = client.post("/api/item-types", json={})
+        assert response.status_code == 422
+
+    def test_unique_name_not_enforced_by_db(self, client):
+        # Current schema allows same names; this test documents current behavior.
+        r1 = client.post("/api/item-types", json={"name": "Duplicated"})
+        r2 = client.post("/api/item-types", json={"name": "Duplicated"})
+
+        assert r1.status_code == 201
+        assert r2.status_code == 201
+
+
+@pytest.mark.unit
+class TestInventoryContractSurface:
+    def test_create_inventory_event_requires_required_fields(self, client):
+        response = client.post("/api/inventory/events", json={"event_type": "borrow"})
+        assert response.status_code == 422

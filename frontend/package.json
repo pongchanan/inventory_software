@@ -8,6 +8,7 @@
     "start": "next start -p 3001",
     "lint": "eslint .",
     "test": "jest",
+    "test:tdd": "jest --watch --runInBand",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },

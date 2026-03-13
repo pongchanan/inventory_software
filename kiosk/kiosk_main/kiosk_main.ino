@@ -2,9 +2,11 @@
 #include <WiFi.h>
 #include <Wire.h>
 #include <vector>
+#include <ArduinoJson.h>
 
 // --- Configuration ---
 #include "kiosk_config.h"
+#include "kiosk_mqtt.h"
 
 // --- Pins Definition ---
 
@@ -51,10 +53,14 @@ enum State {
 State currentState = IDLE;
 String currentUserId = "";
 std::vector<String> scannedItems; // Uses standard library vector
+const char* KIOSK_ID = "kiosk_main_01";
+int gAuthResult = 0; // 0 pending, 1 success, -1 failed
+String gAuthMessage = "";
 
 // Forward Declarations
 void checkUserScan();
 bool checkUserAuthorization(String uid);
+void onMqttResponse(const String& payload);
 void unlockCabinet();
 void lockCabinet();
 void checkItemScan();
@@ -89,6 +95,8 @@ void setup() {
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("\nWiFi Connected. IP: ");
     Serial.println(WiFi.localIP());
+    mqtt_set_response_callback(onMqttResponse);
+    mqtt_connect();
   } else {
     Serial.println("\nWiFi Failed (Offline Mode).");
   }
@@ -124,6 +132,14 @@ void setup() {
 }
 
 void loop() {
+  mqtt_loop();
+
+  static unsigned long lastHeartbeat = 0;
+  if (millis() - lastHeartbeat > 30000) {
+    lastHeartbeat = millis();
+    mqtt_publish_heartbeat();
+  }
+
   switch (currentState) {
   case IDLE:
     checkUserScan();
@@ -228,71 +244,57 @@ void checkUserScan() {
 }
 
 bool checkUserAuthorization(String uid) {
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-
-    // --- STEP 1: Check existing user authorization ---
-    // Construct API URL
-    // e.g., http://192.168.1.100:3000/api/users/UID1234
-    String url = String(serverUrl) + "/api/users/" + uid;
-
-    Serial.print("Checking API: ");
-    Serial.println(url);
-
-    http.begin(url);
-    int httpCode = http.GET();
-
-    if (httpCode > 0) {
-      Serial.printf("API Response Code: %d\n", httpCode);
-      // Assume 200 OK means authorized.
-      if (httpCode == 200) {
-        http.end();
-        return true;
-      }
-    } else {
-      Serial.printf("API Error: %s\n", http.errorToString(httpCode).c_str());
-    }
-    http.end();
-
-    // --- STEP 2: Registration Fallback ---
-    // If not 200 OK (e.g., 404 Not Found), try the Registration flow.
-    if (httpCode != 200) {
-      Serial.println(
-          "Card not authorized or not found. Trying Registration Flow...");
-
-      String regUrl = String(serverUrl) + "/api/auth/kiosk/scan";
-      http.begin(regUrl);
-      http.addHeader("Content-Type", "application/json");
-
-      // Hardware encoded Kiosk ID. This must match the Web frontend.
-      String jsonPayload =
-          "{\"kiosk_id\":\"kiosk_demo_01\",\"uid\":\"" + uid + "\"}";
-
-      Serial.print("Sending Registration Payload: ");
-      Serial.println(jsonPayload);
-
-      int regCode = http.POST(jsonPayload);
-
-      if (regCode == 200) {
-        Serial.println("Registration Successful! Backend matched Mobile Form.");
-        http.end();
-
-        // Grant access on first registration (optional, can be false if you
-        // just want them to register and not open yet).
-        return true;
-      } else {
-        Serial.printf("Registration Failed: Code %d\n", regCode);
-      }
-      http.end();
-    }
-
-    return false; // Deny if all flows fail
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Offline Mode: Mock Authorization Allowed.");
+    delay(500);
+    return true;
   }
 
-  // Fallback for offline testing - Allow specific mock UID or Always Allow
-  Serial.println("Offline Mode: Mock Authorization Allowed.");
-  delay(500);
-  return true;
+  gAuthResult = 0;
+  gAuthMessage = "";
+  mqtt_publish_open_cabinet(String(KIOSK_ID), uid);
+
+  unsigned long start = millis();
+  while (millis() - start < 6000) {
+    mqtt_loop();
+    if (gAuthResult != 0) {
+      break;
+    }
+    delay(20);
+  }
+
+  if (gAuthResult == 1) {
+    Serial.println("MQTT authorization succeeded");
+    return true;
+  }
+
+  if (gAuthResult == 0) {
+    Serial.println("MQTT authorization timed out");
+  } else {
+    Serial.print("MQTT authorization failed: ");
+    Serial.println(gAuthMessage);
+  }
+  return false;
+}
+
+void onMqttResponse(const String& payload) {
+  JsonDocument doc;
+  DeserializationError err = deserializeJson(doc, payload);
+  if (err) {
+    Serial.print("[MQTT] Invalid response JSON: ");
+    Serial.println(payload);
+    return;
+  }
+
+  const char* status = doc["status"] | "";
+  const char* message = doc["message"] | "";
+
+  gAuthMessage = String(message);
+  if (strcmp(status, "ok") == 0) {
+    gAuthResult = 1;
+  } else if (strcmp(status, "error") == 0) {
+    gAuthResult = -1;
+  }
 }
 
 void unlockCabinet() {
@@ -357,34 +359,21 @@ void checkCabinetClose() {
 }
 
 void sendTransactionData(String user, String item) {
-  Serial.println("--- Reporting Transaction ---");
+  Serial.println("--- Reporting Session Event ---");
   Serial.print("User: ");
   Serial.println(user);
   Serial.print("Item: ");
   Serial.println(item.length() > 0 ? item : "None");
 
   if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-    http.begin(String(serverUrl) + "/api/audit-logs");
-    http.addHeader("Content-Type", "application/json");
-
-    // Audit-log payload aligned with the active backend contract.
-    String json =
-      "{\"actor_type\":\"user\",\"actor_id\":\"" + user +
-      "\",\"action\":\"scan\",\"target_type\":\"item\",\"target_id\":\"" +
-      item + "\",\"result\":\"success\",\"message\":\"kiosk scan\"}";
-
-    int httpResponseCode = http.POST(json);
-
-    if (httpResponseCode > 0) {
-      Serial.print("Server Response: ");
-      Serial.println(httpResponseCode);
-    } else {
-      Serial.print("Error sending: ");
-      Serial.println(httpResponseCode);
-    }
-    http.end();
+    mqtt_publish_session_event(
+      String(KIOSK_ID),
+      "item_scanned",
+      user,
+      item,
+      "kiosk report"
+    );
   } else {
-    Serial.println("(Offline Mode: Data not sent)");
+    Serial.println("(Offline Mode: Event not sent)");
   }
 }

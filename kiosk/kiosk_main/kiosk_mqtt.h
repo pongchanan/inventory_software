@@ -54,6 +54,9 @@
 /** Kiosk → Backend: heartbeat ping to confirm the kiosk is online */
 #define TOPIC_PUB_HEARTBEAT     "kiosk/heartbeat"
 
+/** Kiosk → Backend: session lifecycle and telemetry events */
+#define TOPIC_PUB_SESSION_EVENT "kiosk/session_event"
+
 /** Backend → Kiosk: JSON response for every action above */
 #define TOPIC_SUB_RESPONSE      "kiosk/response"
 
@@ -148,13 +151,15 @@ inline void mqtt_loop() {
 
 /**
  * Publish kiosk/open_cabinet
- * Payload: { "rfid": "<NFC UID>" }
+ * Payload: { "kiosk_id": "...", "nfc_card_uid": "<NFC UID>" }
  *
+ * @param kioskId  Kiosk identifier (e.g. "kiosk_main_01")
  * @param rfid  NFC UID string read from the PN532 (e.g. "A1B2C3D4")
  */
-inline void mqtt_publish_open_cabinet(const String &rfid) {
+inline void mqtt_publish_open_cabinet(const String &kioskId, const String &rfid) {
     JsonDocument doc;
-    doc["rfid"] = rfid;
+    doc["kiosk_id"] = kioskId;
+    doc["nfc_card_uid"] = rfid;
 
     char buf[128];
     serializeJson(doc, buf);
@@ -166,12 +171,14 @@ inline void mqtt_publish_open_cabinet(const String &rfid) {
 
 /**
  * Publish kiosk/register_card
- * Payload: { "uid": "<RFID UID>" }
+ * Payload: { "kiosk_id": "...", "uid": "<RFID UID>" }
  *
+ * @param kioskId  Kiosk identifier
  * @param uid  RFID UID string read from the MFRC522 (e.g. "1A2B3C4D")
  */
-inline void mqtt_publish_register_card(const String &uid) {
+inline void mqtt_publish_register_card(const String &kioskId, const String &uid) {
     JsonDocument doc;
+    doc["kiosk_id"] = kioskId;
     doc["uid"] = uid;
 
     char buf[128];
@@ -196,6 +203,37 @@ inline void mqtt_publish_heartbeat() {
 
     _mqttClient.publish(TOPIC_PUB_HEARTBEAT, buf);
     Serial.print("[MQTT] → " TOPIC_PUB_HEARTBEAT " | ");
+    Serial.println(buf);
+}
+
+/**
+ * Publish kiosk/session_event
+ * Payload: {
+ *   "kiosk_id": "...",
+ *   "event_type": "...",
+ *   "user_uid": "...",
+ *   "item_uid": "...",
+ *   "note": "..."
+ * }
+ */
+inline void mqtt_publish_session_event(
+    const String &kioskId,
+    const String &eventType,
+    const String &userUid,
+    const String &itemUid,
+    const String &note = "") {
+    JsonDocument doc;
+    doc["kiosk_id"] = kioskId;
+    doc["event_type"] = eventType;
+    if (userUid.length() > 0) doc["user_uid"] = userUid;
+    if (itemUid.length() > 0) doc["item_uid"] = itemUid;
+    if (note.length() > 0) doc["note"] = note;
+
+    char buf[256];
+    serializeJson(doc, buf);
+
+    _mqttClient.publish(TOPIC_PUB_SESSION_EVENT, buf);
+    Serial.print("[MQTT] → " TOPIC_PUB_SESSION_EVENT " | ");
     Serial.println(buf);
 }
 

@@ -2,6 +2,15 @@
 
 This directory contains unit tests for the FastAPI backend application.
 
+## TDD Workflow (Default)
+
+Use Red-Green-Refactor for every change:
+1. Red: write or extend a failing test first.
+2. Green: implement the smallest change to make it pass.
+3. Refactor: clean up code while keeping tests green.
+
+Manual tests under `test/manual/` are excluded by default so local TDD loops stay fast and deterministic.
+
 ## Setup
 
 1. Install testing dependencies:
@@ -19,6 +28,21 @@ cd backend
 ### Run all tests:
 ```bash
 pytest
+```
+
+### Fast TDD loop (recommended):
+```bash
+pytest -x
+```
+
+### Contract-only loop:
+```bash
+pytest -m contract
+```
+
+### Include manual tests explicitly:
+```bash
+pytest test/manual
 ```
 
 ### Run tests with coverage:
@@ -73,9 +97,9 @@ Current test coverage includes:
 
 1. Create a new test file following the naming convention `test_*.py`
 2. Import necessary fixtures from `conftest.py`
-3. Organize tests into classes for better structure
-4. Use descriptive test names that explain what is being tested
-5. Follow the Arrange-Act-Assert pattern
+3. Use descriptive test names that explain behavior and expected outcome
+4. Follow the Arrange-Act-Assert pattern
+5. Add marker where appropriate (`@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.contract`)
 
 Example:
 ```python

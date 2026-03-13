@@ -57,7 +57,7 @@ def publish_response(data: dict) -> None:
 
 
 def open_cabinet(topic: str, payload: str) -> None:
-    """Received when the kiosk scans an NFC + RFID tag."""
+    """Authorize kiosk access request from NFC card scan."""
     logger.info("🔍 open_cabinet | topic=%s | payload=%s", topic, payload)
 
     try:
@@ -67,24 +67,25 @@ def open_cabinet(topic: str, payload: str) -> None:
         publish_response({"status": "error", "message": "Invalid payload format"})
         return
 
-    rfid = data.get("rfid")
+    kiosk_id = data.get("kiosk_id")
+    card_uid = data.get("nfc_card_uid") or data.get("rfid")
 
-    if not rfid:
-        publish_response({"status": "error", "message": "Missing rfid in payload"})
+    if not card_uid:
+        publish_response({"status": "error", "message": "Missing nfc_card_uid in payload"})
         return
 
     db = SessionLocal()
     try:
-        user = db.query(User).filter(User.uid == rfid).first()
+        user = db.query(User).filter(User.uid == card_uid).first()
 
         if user is None:
-            logger.warning("open_cabinet: unknown rfid=%s", rfid)
+            logger.warning("open_cabinet: unknown card_uid=%s", card_uid)
             publish_response({"status": "error", "message": "User not found"})
             return
 
         if not user.authorized:
             logger.warning(
-                "open_cabinet: unauthorized user rfid=%s name=%s", rfid, user.name
+                "open_cabinet: unauthorized user card_uid=%s name=%s", card_uid, user.name
             )
             publish_response(
                 {
@@ -95,12 +96,14 @@ def open_cabinet(topic: str, payload: str) -> None:
             return
 
         # User is valid and authorized — proceed
-        logger.info("open_cabinet: authorized user=%s rfid=%s", user.name, rfid)
+        logger.info("open_cabinet: authorized user=%s card_uid=%s kiosk_id=%s", user.name, card_uid, kiosk_id)
         publish_response(
             {
                 "status": "ok",
                 "message": "Access granted",
+                "kiosk_id": kiosk_id,
                 "user_id": user.id,
+                "nfc_card_uid": user.uid,
                 "user_name": user.name,
                 "user_email": user.email,
             }
@@ -114,6 +117,30 @@ def handle_heartbeat(topic: str, payload: str) -> None:
     """Received when the kiosk sends a heartbeat ping."""
     logger.info("💓 handle_heartbeat | topic=%s | payload=%s", topic, payload)
     # TODO: add your logic here
+
+
+def handle_session_event(topic: str, payload: str) -> None:
+    """Handle firmware lifecycle events for diagnostics and audit traces."""
+    logger.info("📋 handle_session_event | topic=%s | payload=%s", topic, payload)
+
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError:
+        publish_response({"status": "error", "message": "Invalid payload format"})
+        return
+
+    kiosk_id = data.get("kiosk_id")
+    event_type = data.get("event_type")
+    if not kiosk_id or not event_type:
+        publish_response({"status": "error", "message": "Missing kiosk_id or event_type"})
+        return
+
+    publish_response({
+        "status": "ok",
+        "message": "Session event accepted",
+        "kiosk_id": kiosk_id,
+        "event_type": event_type,
+    })
 
 
 def register_card(topic: str, payload: str) -> None:
@@ -230,6 +257,7 @@ TOPIC_HANDLERS = {
     "open_cabinet": open_cabinet,
     "register_card": register_card,
     "heartbeat": handle_heartbeat,
+    "session_event": handle_session_event,
 }
 
 

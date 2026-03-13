@@ -1,206 +1,101 @@
-"""
-Tests for user management functionality
-"""
-import pytest
+"""Tests for canonical users API."""
+
 from app.models.user import User
-from app.auth import hash_password
 
 
 class TestUserModel:
-    """Test User model"""
-    
     def test_create_user(self, db_session):
-        """Test creating a user"""
         user = User(
-            uid="USER001",
-            email="test@example.com",
-            hashed_password=hash_password("password"),
+            nfc_card_uid="CARD100",
+            name="Model User",
+            email="model.user@test.com",
             role="user",
-            name="Test User"
+            active=True,
         )
         db_session.add(user)
         db_session.commit()
-        
+
         assert user.id is not None
-        assert user.uid == "USER001"
-        assert user.email == "test@example.com"
-        assert user.role == "user"
-        assert user.name == "Test User"
-    
-    def test_user_defaults(self, db_session):
-        """Test user default values"""
-        user = User(
-            uid="USER002",
-            email="test2@example.com",
-            hashed_password=hash_password("password")
-        )
-        db_session.add(user)
-        db_session.commit()
-        
-        assert user.role == "user"
+        assert user.nfc_card_uid == "CARD100"
         assert user.active is True
-        assert user.created_at is not None
-    
-    def test_user_unique_uid(self, db_session):
-        """Test that UID must be unique"""
-        user1 = User(
-            uid="DUPLICATE",
-            email="user1@example.com",
-            hashed_password=hash_password("password")
-        )
-        db_session.add(user1)
-        db_session.commit()
-        
-        user2 = User(
-            uid="DUPLICATE",
-            email="user2@example.com",
-            hashed_password=hash_password("password")
-        )
-        db_session.add(user2)
-        
-        with pytest.raises(Exception):
-            db_session.commit()
-    
-    def test_user_unique_email(self, db_session):
-        """Test that email must be unique"""
-        user1 = User(
-            uid="USER003",
-            email="duplicate@example.com",
-            hashed_password=hash_password("password")
-        )
-        db_session.add(user1)
-        db_session.commit()
-        
-        user2 = User(
-            uid="USER004",
-            email="duplicate@example.com",
-            hashed_password=hash_password("password")
-        )
-        db_session.add(user2)
-        
-        with pytest.raises(Exception):
-            db_session.commit()
 
 
-class TestUserEndpoints:
-    """Test user API endpoints"""
-    
-    def test_get_current_user(self, client, user_token, regular_user):
-        """Test getting current user info"""
-        response = client.get(
-            "/api/users/me",
-            headers={"Authorization": f"Bearer {user_token}"}
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert data["uid"] == regular_user.uid
-        assert data["email"] == regular_user.email
-        assert data["name"] == regular_user.name
-    
-    def test_create_user_as_admin(self, client, admin_token):
-        """Test creating a user as admin"""
+class TestUsersEndpoints:
+    def test_create_user(self, client):
         response = client.post(
-            "/api/users/",
-            headers={"Authorization": f"Bearer {admin_token}"},
+            "/api/users",
             json={
-                "uid": "NEWUSER001",
-                "email": "newuser@example.com",
-                "password": "password123",
-                "name": "New User",
-                "role": "user"
-            }
+                "nfc_card_uid": "CARD200",
+                "name": "Alice",
+                "email": "alice@test.com",
+                "password": "secret123",
+                "role": "user",
+            },
         )
         assert response.status_code == 201
         data = response.json()
-        assert data["uid"] == "NEWUSER001"
-        assert data["email"] == "newuser@example.com"
-        assert "hashed_password" not in data  # Password should not be returned
-    
-    def test_create_user_duplicate_uid(self, client, admin_token, regular_user):
-        """Test creating user with duplicate UID"""
-        response = client.post(
-            "/api/users/",
-            headers={"Authorization": f"Bearer {admin_token}"},
-            json={
-                "uid": regular_user.uid,
-                "email": "different@example.com",
-                "password": "password123",
-                "name": "Different User"
-            }
-        )
-        assert response.status_code == 400
-        assert "already exists" in response.json()["detail"]
-    
-    def test_list_users_as_admin(self, client, admin_token, db_session):
-        """Test listing all users as admin"""
-        response = client.get(
-            "/api/users/",
-            headers={"Authorization": f"Bearer {admin_token}"}
-        )
+        assert data["nfc_card_uid"] == "CARD200"
+        assert data["name"] == "Alice"
+
+    def test_create_user_duplicate_card_uid(self, client):
+        payload = {
+            "nfc_card_uid": "CARD201",
+            "name": "Bob",
+            "email": "bob@test.com",
+            "password": "secret123",
+            "role": "user",
+        }
+        first = client.post("/api/users", json=payload)
+        second = client.post("/api/users", json={**payload, "email": "bob2@test.com"})
+
+        assert first.status_code == 201
+        assert second.status_code == 400
+
+    def test_list_users(self, client, regular_user):
+        response = client.get("/api/users")
         assert response.status_code == 200
         data = response.json()
-        assert len(data) >= 1  # At least the admin user
-        assert all("hashed_password" not in user for user in data)
-    
-    def test_list_users_as_regular_user(self, client, user_token):
-        """Test that regular users cannot list all users"""
-        response = client.get(
-            "/api/users/",
-            headers={"Authorization": f"Bearer {user_token}"}
-        )
-        assert response.status_code == 403
-    
-    def test_get_user_by_uid(self, client, admin_token, regular_user):
-        """Test getting a specific user by UID"""
-        response = client.get(
-            f"/api/users/{regular_user.uid}",
-            headers={"Authorization": f"Bearer {admin_token}"}
-        )
+        assert any(row["id"] == regular_user.id for row in data)
+
+    def test_get_user_by_id(self, client, regular_user):
+        response = client.get(f"/api/users/{regular_user.id}")
         assert response.status_code == 200
         data = response.json()
-        assert data["uid"] == regular_user.uid
-        assert data["email"] == regular_user.email
-    
-    def test_update_user_as_admin(self, client, admin_token, regular_user):
-        """Test updating a user as admin"""
-        response = client.put(
-            f"/api/users/{regular_user.uid}",
-            headers={"Authorization": f"Bearer {admin_token}"},
-            json={
-                "name": "Updated Name",
-                "email": "updated@example.com"
-            }
+        assert data["id"] == regular_user.id
+        assert data["nfc_card_uid"] == regular_user.nfc_card_uid
+
+    def test_get_user_by_nfc(self, client, regular_user):
+        response = client.get(f"/api/users/by-nfc/{regular_user.nfc_card_uid}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == regular_user.id
+
+    def test_patch_user(self, client, regular_user):
+        response = client.patch(
+            f"/api/users/{regular_user.id}",
+            json={"name": "Updated Name", "active": False},
         )
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == "Updated Name"
-        assert data["email"] == "updated@example.com"
-    
-    def test_delete_user_as_admin(self, client, admin_token, regular_user):
-        """Test deleting a user as admin"""
-        response = client.delete(
-            f"/api/users/{regular_user.uid}",
-            headers={"Authorization": f"Bearer {admin_token}"}
-        )
-        assert response.status_code == 200
-        
-        # Verify user is deleted
-        response = client.get(
-            f"/api/users/{regular_user.uid}",
-            headers={"Authorization": f"Bearer {admin_token}"}
-        )
-        assert response.status_code == 404
-    
-    def test_create_user_as_regular_user_forbidden(self, client, user_token):
-        """Test that regular users cannot create users"""
-        response = client.post(
-            "/api/users/",
-            headers={"Authorization": f"Bearer {user_token}"},
+        assert data["active"] is False
+
+    def test_delete_user(self, client):
+        created = client.post(
+            "/api/users",
             json={
-                "uid": "FORBIDDEN001",
-                "email": "forbidden@example.com",
-                "password": "password123",
-                "name": "Forbidden User"
-            }
+                "nfc_card_uid": "CARD_DELETE",
+                "name": "To Delete",
+                "email": "delete@test.com",
+                "password": "secret123",
+                "role": "user",
+            },
         )
-        assert response.status_code == 403
+        assert created.status_code == 201
+        user_id = created.json()["id"]
+
+        deleted = client.delete(f"/api/users/{user_id}")
+        assert deleted.status_code == 204
+
+        check = client.get(f"/api/users/{user_id}")
+        assert check.status_code == 404

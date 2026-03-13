@@ -42,6 +42,22 @@ All route groups are organizational only and do not appear in URLs.
 ## Supporting Routes
 - `/api/*` proxy route -> `frontend/src/app/api/[...path]/route.ts`
 
+## Backend Contract Notes
+
+Frontend must call canonical backend routes only via `/api/*` proxy.
+
+Canonical groups:
+- `/api/auth/*`
+- `/api/users/*`
+- `/api/item-types/*`
+- `/api/storage/*`
+- `/api/sessions/*`
+- `/api/observations/*`
+- `/api/inventory/*`
+- `/api/audit-logs/*`
+
+Do not add new calls to removed legacy groups such as `/api/compartments/*`, `/api/items/*`, or `/api/loans/*`.
+
 ## Layout Binding
 - Root layout (global providers/styles): `frontend/src/app/layout.tsx`
 - Protected app shell layout: `frontend/src/app/(protected)/layout.tsx`
