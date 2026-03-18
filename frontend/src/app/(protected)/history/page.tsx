@@ -1,0 +1,173 @@
+"use client";
+
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useHistory } from '@/services/hooks/useHistory';
+import { Search, Filter, History, Clock, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { HistoryDesktopShell } from './_components/HistoryDesktopShell';
+import { HistoryMobileShell } from './_components/HistoryMobileShell';
+
+export default function HistoryPage() {
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
+    const {
+        historyItems,
+        loading: historyLoading,
+        error,
+        searchQuery,
+        setSearchQuery,
+        statusFilter,
+        setStatusFilter,
+        stats
+    } = useHistory();
+
+    useEffect(() => {
+        if (!authLoading && !user) {
+            router.push('/login');
+        }
+    }, [user, authLoading, router]);
+
+    if (authLoading || !user) {
+        return null; // Or a fancy skeleton loader
+    }
+
+    const formatDate = (date: Date) => {
+        return new Intl.DateTimeFormat('th-TH', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(date);
+    };
+
+    const StatusBadge = ({ status }: { status: string }) => {
+        switch (status) {
+            case 'returned':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-100 uppercase tracking-wider">
+                        <CheckCircle2 size={12} /> ยืนยันการคืนสำเร็จ
+                    </span>
+                );
+            case 'overdue':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-100 uppercase tracking-wider">
+                        <XCircle size={12} /> เลยกำหนดคืน
+                    </span>
+                );
+            case 'active':
+            default:
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wider">
+                        <Clock size={12} /> กำลังยืมอยู่
+                    </span>
+                );
+        }
+    };
+
+    return (
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">
+            <h2 className="text-3xl font-black mb-2">ประวัติการใช้งาน</h2>
+            <p className="text-gray-500 font-medium mb-8">ภาพรวมสถิติและประวัติการยืม-คืนอุปกรณ์ของคุณทั้งหมด</p>
+
+            {/* QUICK STATS DASHBOARD */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-gray-500 font-bold text-sm">การยืมทั้งหมด</span>
+                        <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500"><History size={16} /></div>
+                    </div>
+                    <div>
+                        <span className="text-2xl font-black text-gray-900">{stats.total}</span> <span className="text-gray-400 text-sm font-medium">ครั้ง</span>
+                    </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-blue-500 font-bold text-sm">กำลังยืมอยู่</span>
+                        <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><Clock size={16} /></div>
+                    </div>
+                    <div>
+                        <span className="text-2xl font-black text-blue-600">{stats.active}</span> <span className="text-blue-300 text-sm font-medium">รายการ</span>
+                    </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-green-500 font-bold text-sm">คืนเสร็จสิ้น</span>
+                        <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500"><CheckCircle2 size={16} /></div>
+                    </div>
+                    <div>
+                        <span className="text-2xl font-black text-green-600">{stats.returned}</span> <span className="text-green-300 text-sm font-medium">รายการ</span>
+                    </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-red-500 font-bold text-sm">เลยกำหนดคืน</span>
+                        <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500"><AlertCircle size={16} /></div>
+                    </div>
+                    <div>
+                        <span className="text-2xl font-black text-red-600">{stats.overdue}</span> <span className="text-red-300 text-sm font-medium">รายการ</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* SEARCH & FILTERS */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <div className="relative flex-grow">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                        <Search size={18} />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="ค้นหาตามชื่ออุปกรณ์..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium outline-none focus:border-[#ee4d2d] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm"
+                    />
+                </div>
+
+                <div className="relative min-w-[160px]">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                        <Filter size={18} />
+                    </div>
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="w-full pl-11 pr-8 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 outline-none focus:border-[#ee4d2d] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm appearance-none cursor-pointer"
+                    >
+                        <option value="all">สถานะทั้งหมด</option>
+                        <option value="active">กำลังยืมอยู่</option>
+                        <option value="returned">คืนสำเร็จ</option>
+                        <option value="overdue">เลยกำหนดคืน</option>
+                    </select>
+                </div>
+            </div>
+
+            {/* DATA VIEW */}
+            {historyLoading ? (
+                <div className="py-20 text-center flex flex-col items-center justify-center bg-white rounded-3xl shadow-sm border border-gray-50">
+                    <div className="w-10 h-10 border-4 border-gray-200 border-t-[#ee4d2d] rounded-full animate-spin mb-4"></div>
+                    <p className="text-gray-500 font-bold">กำลังโหลดประวัติการใช้งาน...</p>
+                </div>
+            ) : error ? (
+                <div className="py-6 px-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 text-center font-bold">
+                    {error}
+                </div>
+            ) : historyItems.length === 0 ? (
+                <div className="py-24 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
+                    <History size={48} className="mx-auto mb-4 text-gray-200" />
+                    <p className="text-gray-400 font-bold text-lg mb-1">ไม่พบประวัติการใช้งาน</p>
+                    <p className="text-gray-400 text-sm">ลองเปลี่ยนเงื่อนไขการค้นหาดูอีกครั้ง</p>
+                </div>
+            ) : (
+                <>
+                    <HistoryDesktopShell historyItems={historyItems} formatDate={formatDate} StatusBadge={StatusBadge} />
+                    <HistoryMobileShell historyItems={historyItems} formatDate={formatDate} StatusBadge={StatusBadge} />
+                </>
+            )}
+        </div>
+    );
+}

@@ -1,271 +1,178 @@
-# Smart Kiosk Controller (ESP32)
+# Kiosk Controller — ESP32
 
-An MQTT-enabled smart inventory kiosk system with dual NFC/RFID readers for automated item tracking.
+Arduino firmware for the smart inventory kiosk. Uses two RFID readers (PN532 for user NFC cards, MFRC522 for item tags), a solenoid lock, and a door sensor. Communicates with the backend exclusively over **MQTT**.
 
-## 🚀 Quick Start
+## 🔌 Hardware Connections
 
-1. **[Hardware Wiring](HARDWARE_WIRING.md)** - Connect all components
-2. **[Testing](TESTING.md)** - Test each component separately
-3. **[Setup & Installation](SETUP.md)** - Install software and libraries
-4. **[MQTT Integration](MQTT_INTEGRATION.md)** - Configure server and broker
-5. **[Troubleshooting](TROUBLESHOOTING.md)** - Fix common issues
+### 1. PN532 NFC Module (User Card) — I2C
+| PN532 Pin | ESP32 Pin |
+|---|---|
+| SDA | GPIO 21 |
+| SCL | GPIO 22 |
+| VCC | 3.3V or 5V |
+| GND | GND |
+| IRQ / RST | Not connected |
 
-## 📋 System Overview
+### 2. MFRC522 RFID Module (Item Tag) — SPI
+| MFRC522 Pin | ESP32 Pin |
+|---|---|
+| SDA (SS) | GPIO 5 |
+| SCK | GPIO 18 |
+| MOSI | GPIO 23 |
+| MISO | GPIO 19 |
+| RST | GPIO 27 |
+| VCC | 3.3V |
+| GND | GND |
 
-### Hardware
-- **ESP32** - Main controller with WiFi
-- **PN532 (I2C)** - User NFC card reader for authentication
-- **MFRC522 (SPI)** - Item RFID tag scanner  
-- **Solenoid Lock** - Electronic cabinet lock
-- **Door Sensor** - Detects cabinet open/close
+### 3. Solenoid Lock
+| Signal | ESP32 Pin |
+|---|---|
+| Control | GPIO 26 (HIGH = unlock, LOW = lock) |
 
-### Communication
-- **Protocol:** MQTT over WiFi
-- **Real-time:** Bi-directional messaging
-- **Features:** Remote control, live monitoring, emergency broadcasts
-- **Fallback:** Offline mode if MQTT unavailable
+> ⚠️ Drive the solenoid via a relay module or MOSFET (e.g. TIP120). Do **not** connect it directly to the ESP32 pin.
 
-### Communication
-- **Protocol:** MQTT over WiFi
-- **Real-time:** Bi-directional messaging
-- **Features:** Remote control, live monitoring, emergency broadcasts
-- **Fallback:** Offline mode if MQTT unavailable
-
-## 🔌 Pin Connections (Quick Reference)
-
-| Component | ESP32 Pins | Mode |
-|-----------|------------|------|
-| PN532 (User NFC) | GPIO 21 (SDA), 22 (SCL) | I2C |
-| MFRC522 (Item RFID) | GPIO 5 (SS), 18 (SCK), 19 (MISO), 23 (MOSI), 27 (RST) | SPI |
-| Solenoid Lock | GPIO 26 (via relay) | Output |
-| Door Sensor | GPIO 4 | Input w/ Pullup |
-
-**⚠️ Important:** 
-- MFRC522 uses 3.3V only (5V will damage it)
-- Solenoid must use relay/MOSFET (never direct to ESP32)
-
-📖 **Full wiring guide:** [HARDWARE_WIRING.md](HARDWARE_WIRING.md)
-
-## ⚙️ Configuration
-
-Edit `kiosk_config.h`:
-
-```cpp
-// WiFi (2.4GHz only)
-const char *ssid = "YOUR_WIFI_SSID";
-const char *password = "YOUR_WIFI_PASSWORD";
-
-// MQTT Broker
-const char *mqttBroker = "192.168.1.100";  // Your server IP
-const int mqttPort = 1883;
-const char *kioskId = "kiosk_demo_01";     // Unique per kiosk
-```
-
-📖 **Full setup guide:** [SETUP.md](SETUP.md)
-
-## 📡 How It Works
-
-### User Workflow
-```
-1. User taps NFC card → PN532 reads UID
-2. Kiosk publishes to MQTT → Server validates user
-3. Server responds with auth → Kiosk unlocks if approved
-4. Door opens → User scans items with MFRC522
-5. Door closes → Kiosk publishes transactions to MQTT
-6. Cabinet locks → Ready for next user
-```
-
-### MQTT Topics
-
-**Kiosk Publishes:**
-- `kiosk/{id}/user/scan` - User card scanned
-- `kiosk/{id}/item/scan` - Item tag scanned
-- `kiosk/{id}/transaction` - Transaction record
-- `kiosk/{id}/status` - Kiosk state changes
-- `kiosk/{id}/door` - Door open/close
-
-**Kiosk Subscribes:**
-- `kiosk/{id}/command` - Remote lock/unlock
-- `kiosk/{id}/auth/response` - User authorization
-- `kiosk/all/broadcast` - Emergency commands
-
-📖 **Full MQTT reference:** [MQTT_INTEGRATION.md](MQTT_INTEGRATION.md)
-
-## 📁 Code Structure
-
-```
-kiosk_main/
-├── kiosk_main.ino          # Main state machine & logic
-├── kiosk_config.h          # Configuration (EDIT THIS)
-├── nfc_reader.h            # PN532 module
-├── rfid_reader.h           # MFRC522 module
-├── mqtt_client.h           # MQTT communication
-├── test_nfc_pn532.ino      # PN532 test (standalone)
-├── test_rfid_mfrc522.ino   # MFRC522 test (standalone)
-├── README.md               # This file
-├── HARDWARE_WIRING.md      # Wiring guide
-├── TESTING.md              # Component testing guide
-├── SETUP.md                # Setup instructions
-├── MQTT_INTEGRATION.md     # Server/broker setup
-└── TROUBLESHOOTING.md      # Common issues
-```
-
-### Module Overview
-
-**`nfc_reader.h`** - User authentication reader
-- Handles PN532 I2C communication
-- Method: `readCard()` returns user UID
-
-**`rfid_reader.h`** - Item tag scanner  
-- Handles MFRC522 SPI communication
-- Method: `readCard()` returns item UID
-
-**`mqtt_client.h`** - MQTT communication
-- Manages broker connection
-- Publishing: events, status, transactions
-- Subscribing: commands, auth responses
-- Auto-reconnection on disconnect
-
-**`kiosk_main.ino`** - Main controller
-- State machine orchestration
-- Door monitoring
-- Session management
-- Integrates all modules
-
-## 📊 State Machine
-
-```
-IDLE → User scans NFC card
-  ↓
-VERIFYING_USER → Waiting for MQTT auth response
-  ↓ (authorized)
-WAITING_FOR_DOOR_OPEN → Monitoring door sensor
-  ↓ (door opens)
-WAITING_FOR_ACTION → Scanning items, monitoring door
-  ↓ (door closes)
-REPORTING → Publishing transactions via MQTT
-  ↓
-IDLE → Ready for next user
-```
-
-## 🧪 Testing
-
-### Quick Component Tests
-
-Before running the full system, test each component separately:
-
-1. **PN532 NFC Reader:** Upload `test_nfc_pn532.ino`
-   - Verifies PN532 detection and card reading
-   
-2. **MFRC522 RFID Reader:** Upload `test_rfid_mfrc522.ino`
-   - Verifies MFRC522 detection and tag reading
-
-📖 **Complete testing guide:** [TESTING.md](TESTING.md)
-
-### Expected Serial Output (Full System)
-
-```
---- Smart Kiosk System Starting ---
-Connecting to WiFi: YourSSID
-WiFi Connected. IP: 192.168.1.50
-
---- Initializing MQTT ---
-Connecting to MQTT broker... Connected!
-✓ MQTT Connected!
-
-✓ PN532 Found! Firmware: 0x32
-✓ PN532 Ready.
-✓ MFRC522 Found! Version: 0x92
-✓ MFRC522 Ready.
-
-System Ready! Place a user NFC card...
-```
-
-### Test Sequence
-
-1. **User Scan:** Tap NFC card on PN532
-   - Should see: "User Card Detected! UID: ..."
-2. **Authorization:** Wait for MQTT response
-   - Should see: "User Authorized! Access Granted."
-3. **Door Open:** Disconnect GPIO 4 from GND
-   - Should see: "Door Opened. Ready for item scan."
-4. **Item Scan:** Tap RFID tags on MFRC522
-   - Should see: "Item Added: ... Total Items: X"
-5. **Door Close:** Connect GPIO 4 to GND
-   - Should see: "Door Closed. Locking..."
-6. **Reporting:** Transactions published
-   - Should see: "Session Complete"
-
-## 🚀 Deployment Checklist
-
-- [ ] Hardware assembled per [HARDWARE_WIRING.md](HARDWARE_WIRING.md)
-- [ ] Software installed per [SETUP.md](SETUP.md)
-- [ ] MQTT broker running per [MQTT_INTEGRATION.md](MQTT_INTEGRATION.md)
-- [ ] WiFi credentials configured
-- [ ] MQTT broker IP configured
-- [ ] Unique kiosk ID set
-- [ ] All readers detected successfully
-- [ ] Door sensor responding
-- [ ] Solenoid lock activating
-- [ ] MQTT connection established
-- [ ] User auth flow tested
-- [ ] Item scanning tested
-- [ ] Transactions saving to backend
-- [ ] Remote lock command tested
-
-## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
-| **[HARDWARE_WIRING.md](HARDWARE_WIRING.md)** | Complete wiring guide, pin connections, safety notes |
-| **[TESTING.md](TESTING.md)** | Test individual components before full integration |
-| **[SETUP.md](SETUP.md)** | Software installation, library setup, configuration |
-| **[MQTT_INTEGRATION.md](MQTT_INTEGRATION.md)** | MQTT broker setup, backend integration, topics reference |
-| **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** | Common issues, debugging, solutions |
-
-## ⚠️ Common Issues
-
-| Problem | Quick Fix | Full Guide |
-|---------|-----------|------------|
-| WiFi won't connect | Check SSID/password, use 2.4GHz | [TROUBLESHOOTING.md](TROUBLESHOOTING.md#-wifi-issues) |
-| MQTT connection fails | Verify broker IP, check firewall | [TROUBLESHOOTING.md](TROUBLESHOOTING.md#-mqtt-issues) |
-| PN532 not found | Check I2C wiring, verify mode switches | [TROUBLESHOOTING.md](TROUBLESHOOTING.md#-nfcrfid-reader-issues) |
-| MFRC522 not found | Check SPI wiring, ensure 3.3V power | [TROUBLESHOOTING.md](TROUBLESHOOTING.md#-nfcrfid-reader-issues) |
-| Cards not detected | Bring closer, check card compatibility | [TROUBLESHOOTING.md](TROUBLESHOOTING.md#-nfcrfid-reader-issues) |
-
-## 🔧 Advanced Features
-
-### Remote Control
-
-Lock kiosk from server:
-```javascript
-mqtt.publish('kiosk/demo_01/command', '{"command":"lock"}');
-```
-
-### Emergency Lockdown
-
-Lock all kiosks:
-```javascript
-mqtt.publish('kiosk/all/broadcast', '{"emergency_lock":true}');
-```
-
-### Real-Time Monitoring
-
-Subscribe to all kiosk events:
-```bash
-mosquitto_sub -h YOUR_SERVER -t "kiosk/#" -v
-```
-
-## 📝 License & Credits
-
-Part of the Inventory Management Software project.
-
-**Libraries:**
-- Adafruit PN532 Library
-- MFRC522 by GithubCommunity  
-- PubSubClient (MQTT) by Nick O'Leary
-- ESP32 Arduino Core
+### 4. Door Sensor
+| State | GPIO 4 |
+|---|---|
+| Closed | Connected to GND (reads LOW) |
+| Open | Disconnected (reads HIGH via INPUT\_PULLUP) |
 
 ---
 
-**Need Help?** Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md) or review the [API Documentation](../../backend/API_DOCUMENTATION.md)
+## ⚙️ Configuration
+
+`kiosk_config.h` is **auto-generated** — do not edit it by hand.
+
+1. Set values in the **root `.env`** file:
+   ```dotenv
+   WIFI_SSID=YourNetwork
+   WIFI_PASSWORD=YourPassword
+   NEXT_PUBLIC_API_URL=http://192.168.1.100:3000
+
+   MOSQUITTO_TCP_HOST=your.mqtt.broker
+   MOSQUITTO_TCP_PORT=1883
+   MOSQUITTO_USER=your_mqtt_user
+   JWT_SECRET=your_jwt_secret   # used as MQTT password
+   ```
+2. Run the generator from the repo root:
+   ```bash
+   npm run kiosk:config
+   ```
+   This writes `kiosk/kiosk_main/kiosk_config.h` with all credentials.
+
+> `kiosk_config.h` is gitignored so credentials are never committed.
+
+---
+
+## 📡 MQTT Communication
+
+All backend communication goes through MQTT via the helper header `kiosk_mqtt.h`.
+
+### Topics the kiosk **publishes**
+| Topic | Payload | When |
+|---|---|---|
+| `kiosk/open_cabinet` | `{"rfid": "<NFC UID>"}` | User taps NFC card |
+| `kiosk/register_card` | `{"uid": "<RFID UID>"}` | Card scanned during registration |
+| `kiosk/heartbeat` | `{"status": "alive", "uptime_ms": ...}` | Periodic liveness ping |
+
+### Topics the kiosk **subscribes**
+| Topic | Payload | What to do |
+|---|---|---|
+| `kiosk/response` | `{"status": "ok|error", "message": "..."}` | Unlock cabinet on `ok`, show error otherwise |
+
+### Using `kiosk_mqtt.h`
+
+```cpp
+#include "kiosk_config.h"
+#include "kiosk_mqtt.h"
+
+void onResponse(const String& payload) {
+    JsonDocument doc;
+    deserializeJson(doc, payload);
+    if (strcmp(doc["status"], "ok") == 0) {
+        unlockCabinet();
+    }
+}
+
+void setup() {
+    // ... WiFi setup ...
+    mqtt_set_response_callback(onResponse);
+    mqtt_connect();
+}
+
+void loop() {
+    mqtt_loop();  // must be called every iteration
+    // on NFC scan:
+    // mqtt_publish_open_cabinet(rfidUid);
+}
+```
+
+---
+
+## 🛠 Required Libraries
+
+Install via **Arduino Library Manager**:
+
+| Library | Author |
+|---|---|
+| Adafruit PN532 | Adafruit |
+| MFRC522 | GithubCommunity |
+| PubSubClient | Nick O'Leary |
+| ArduinoJson | Benoit Blanchon |
+| WiFi / HTTPClient | Built-in (ESP32) |
+
+---
+
+## 📁 Files
+
+| File | Description |
+|---|---|
+| `kiosk_main.ino` | Main sketch — state machine, hardware reads |
+| `kiosk_mqtt.h` | MQTT pub/sub helper (topics, connect, loop, publish functions) |
+| `kiosk_config.h` | Auto-generated credentials (gitignored) |
+
+
+## 🔌 Hardware Connections
+
+### 1. PN532 NFC Module (User Card Reader) - **I2C Mode**
+*   **SDA**: `GPIO 21`
+*   **SCL**: `GPIO 22`
+*   **VCC**: 3.3V or 5V (Check module capability)
+*   **GND**: GND
+*   **IRQ / RST**: Not used in this sketch. Left unconnected.
+
+### 2. MFRC522 RFID Module (Item Tag Reader) - **SPI Mode**
+*   **SDA (SS)**: `GPIO 5`
+*   **SCK**: `GPIO 18`
+*   **MOSI**: `GPIO 23`
+*   **MISO**: `GPIO 19`
+*   **RST**: `GPIO 27` (Note: Changed from 22 to avoid I2C conflict)
+*   **VCC**: 3.3V
+*   **GND**: GND
+
+### 3. Solenoid Lock
+*   **Control Pin**: `GPIO 26`
+    *   **High (3.3V)**: Unlocks (Power ON)
+    *   **Low (0V)**: Locks (Power OFF)
+*   *Note: Use a Relay Module or MOSFET (e.g., TIP120) to drive the solenoid. Do NOT connect solenoid directly to ESP32 pin!*
+
+### 4. Door Sensor (Simulated with Wire)
+*   **Pin**: `GPIO 4`
+    *   **Method**: Digital Input with Internal Pullup.
+    *   **Closed**: Connect Pin 4 to GND (Simulates door closed/touched).
+    *   **Open**: Disconnect Pin 4 (Simulates door open).
+    *   *Note: Using digitalRead logic avoids ADC2 conflicts with WiFi.*
+
+## 🛠 Libraries Required
+Ensure these are installed in Arduino IDE:
+1.  **Adafruit PN532** (by Adafruit)
+2.  **MFRC522** (by GithubCommunity/others)
+3.  **WiFi** & **HTTPClient** (Built-in for ESP32)
+
+## ⚙️ Configuration
+In `kiosk_main.ino`, update:
+```cpp
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+const char* serverUrl = "http://YOUR_SERVER_IP:3000";
+```

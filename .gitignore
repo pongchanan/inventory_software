@@ -1,5 +1,6 @@
 node_modules/
 dist/
+kiosk/kiosk_main/kiosk_config.h
 
 # Backend
 __pycache__/
@@ -53,6 +54,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+backend/backend_run.log
 
 # vercel
 .vercel

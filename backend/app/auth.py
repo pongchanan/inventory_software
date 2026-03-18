@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import os
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -9,8 +10,10 @@ from app.database import get_db
 from app.models.user import User
 
 # Configuration
-SECRET_KEY = "inventory-secret-key-change-in-production"
-ALGORITHM = "HS256"
+SECRET_KEY = os.environ.get("JWT_SECRET", "your-secret-key")
+ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+if ALGORITHM == "your_jwt_algorithm":
+    ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
 # Hardcoded Poweruser (Bypasses Database)
@@ -29,15 +32,17 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def hash_password(password: str) -> str:
     # bcrypt has a 72 byte limit. If longer, we truncate or pre-hash.
     # We will truncate to 72 bytes for safety before hashing.
-    password_bytes = password.encode('utf-8')
+    password_bytes = password.encode("utf-8")
     if len(password_bytes) > 72:
-        password = password_bytes[:72].decode('utf-8', 'ignore')
+        password = password_bytes[:72].decode("utf-8", "ignore")
     return pwd_context.hash(password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.utcnow() + (
+        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -64,13 +69,13 @@ def get_current_user(
     if uid == POWERUSER_UID:
         return User(
             id=0,
-            uid=POWERUSER_UID,
+            nfc_card_uid=POWERUSER_UID,
             name="Power User",
             email=POWERUSER_EMAIL,
             role="admin",
-            authorized=True,
+            active=True,
             created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            updated_at=datetime.utcnow(),
         )
 
     user = db.query(User).filter(User.uid == uid).first()

@@ -58,7 +58,7 @@ class TestItemEndpoints:
     def test_create_item_as_admin(self, client, admin_token):
         """Test creating an item as admin"""
         response = client.post(
-            "/api/items/",
+            "/api/item-types/",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={
                 "uid": "NEW001",
@@ -78,7 +78,7 @@ class TestItemEndpoints:
     def test_create_item_duplicate_uid(self, client, admin_token, sample_item):
         """Test creating item with duplicate UID"""
         response = client.post(
-            "/api/items/",
+            "/api/item-types/",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={
                 "uid": sample_item.uid,
@@ -91,7 +91,7 @@ class TestItemEndpoints:
     
     def test_get_item_by_uid(self, client, sample_item):
         """Test retrieving an item by UID"""
-        response = client.get(f"/api/items/{sample_item.uid}")
+        response = client.get(f"/api/item-types/{sample_item.uid}")
         assert response.status_code == 200
         data = response.json()
         assert data["uid"] == sample_item.uid
@@ -99,7 +99,7 @@ class TestItemEndpoints:
     
     def test_get_item_not_found(self, client):
         """Test retrieving non-existent item"""
-        response = client.get("/api/items/NONEXISTENT")
+        response = client.get("/api/item-types/NONEXISTENT")
         assert response.status_code == 404
     
     def test_list_items(self, client, db_session):
@@ -113,7 +113,7 @@ class TestItemEndpoints:
             db_session.add(item)
         db_session.commit()
         
-        response = client.get("/api/items/")
+        response = client.get("/api/item-types/")
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 5
@@ -129,7 +129,7 @@ class TestItemEndpoints:
         db_session.commit()
         
         # Filter for available items
-        response = client.get("/api/items/?available=true")
+        response = client.get("/api/item-types/?available=true")
         assert response.status_code == 200
         data = response.json()
         assert all(item["available"] is True for item in data)
@@ -145,13 +145,13 @@ class TestItemEndpoints:
         db_session.commit()
         
         # Get first 5
-        response = client.get("/api/items/?skip=0&limit=5")
+        response = client.get("/api/item-types/?skip=0&limit=5")
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 5
         
         # Get next 5
-        response = client.get("/api/items/?skip=5&limit=5")
+        response = client.get("/api/item-types/?skip=5&limit=5")
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 5
@@ -159,7 +159,7 @@ class TestItemEndpoints:
     def test_update_item_as_admin(self, client, admin_token, sample_item):
         """Test updating an item as admin"""
         response = client.put(
-            f"/api/items/{sample_item.uid}",
+            f"/api/item-types/{sample_item.uid}",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={
                 "name": "Updated Item Name",
@@ -174,19 +174,19 @@ class TestItemEndpoints:
     def test_delete_item_as_admin(self, client, admin_token, sample_item):
         """Test deleting an item as admin"""
         response = client.delete(
-            f"/api/items/{sample_item.uid}",
+            f"/api/item-types/{sample_item.uid}",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 200
         
         # Verify item is deleted
-        response = client.get(f"/api/items/{sample_item.uid}")
+        response = client.get(f"/api/item-types/{sample_item.uid}")
         assert response.status_code == 404
     
     def test_create_item_as_user_forbidden(self, client, user_token):
         """Test that regular users cannot create items"""
         response = client.post(
-            "/api/items/",
+            "/api/item-types/",
             headers={"Authorization": f"Bearer {user_token}"},
             json={
                 "uid": "FORBIDDEN001",
@@ -195,3 +195,4 @@ class TestItemEndpoints:
             }
         )
         assert response.status_code == 403
+

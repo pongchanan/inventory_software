@@ -146,7 +146,7 @@ class TestAuthenticationEndpoints:
     def test_admin_only_endpoint_as_user(self, client, user_token):
         """Test accessing admin-only endpoint as regular user"""
         response = client.post(
-            "/api/items/",
+            "/api/item-types/",
             headers={"Authorization": f"Bearer {user_token}"},
             json={
                 "uid": "ITEM001",
@@ -159,7 +159,7 @@ class TestAuthenticationEndpoints:
     def test_admin_only_endpoint_as_admin(self, client, admin_token):
         """Test accessing admin-only endpoint as admin"""
         response = client.post(
-            "/api/items/",
+            "/api/item-types/",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={
                 "uid": "ITEM001",
@@ -168,3 +168,4 @@ class TestAuthenticationEndpoints:
             }
         )
         assert response.status_code == 201
+

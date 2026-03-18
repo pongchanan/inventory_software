@@ -4,11 +4,16 @@
     "description": "Monorepo for Smart Inventory Management System",
     "scripts": {
         "dev": "dotenv -e .env -- concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run backend\" \"npm run frontend\"",
-        "backend": "cd backend && (ls venv/bin/python3 >/dev/null 2>&1 && ./venv/bin/python3 main.py || python3 main.py)",
+        "backend": "cd backend && (if exist venv\\Scripts\\python.exe (venv\\Scripts\\python.exe -m app.main) else (py -3 -m app.main))",
         "frontend": "cd frontend && npm run dev",
         "install-all": "npm install && cd frontend && npm install && cd ../backend && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt",
         "build": "cd frontend && npm run build",
-        "kiosk:config": "python3 scripts/generate_kiosk_config.py"
+        "kiosk:config": "python3 scripts/generate_kiosk_config.py",
+        "db:migrate": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Set-Location backend; if (Test-Path .\\venv\\Scripts\\python.exe) { .\\venv\\Scripts\\python.exe ..\\scripts\\migration\\drop_legacy_tables_now.py } elseif (Get-Command py -ErrorAction SilentlyContinue) { py -3 ..\\scripts\\migration\\drop_legacy_tables_now.py } elseif (Get-Command python -ErrorAction SilentlyContinue) { $pyPath = (Get-Command python).Source; if ($pyPath -like '*WindowsApps*') { Write-Error 'Detected Windows Store python stub. Install Python 3.10+ or create backend\\venv first.'; exit 1 }; python ..\\scripts\\migration\\drop_legacy_tables_now.py } else { Write-Error 'Python not found. Install Python 3.10+ or create backend\\venv first.'; exit 1 }\"",
+        "db:seed": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Set-Location backend; if (Test-Path .\\venv\\Scripts\\python.exe) { .\\venv\\Scripts\\python.exe ..\\scripts\\admin\\create_admin.py } elseif (Get-Command py -ErrorAction SilentlyContinue) { py -3 ..\\scripts\\admin\\create_admin.py } elseif (Get-Command python -ErrorAction SilentlyContinue) { $pyPath = (Get-Command python).Source; if ($pyPath -like '*WindowsApps*') { Write-Error 'Detected Windows Store python stub. Install Python 3.10+ or create backend\\venv first.'; exit 1 }; python ..\\scripts\\admin\\create_admin.py } else { Write-Error 'Python not found. Install Python 3.10+ or create backend\\venv first.'; exit 1 }\"",
+        "db:migrate:sqlite": "npm run db:migrate",
+        "db:seed:sqlite": "npm run db:seed",
+        "db:setup:sqlite": "npm run db:migrate:sqlite && npm run db:seed:sqlite"
     },
     "devDependencies": {
         "concurrently": "^8.2.2"

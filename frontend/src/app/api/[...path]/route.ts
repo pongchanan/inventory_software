@@ -13,10 +13,13 @@ function getBackendUrl(): string {
   return url.replace(/\/+$/, "");
 }
 
-async function proxyRequest(req: NextRequest, path: string) {
+async function proxyRequest(req: NextRequest, _path: string) {
   try {
     const base = getBackendUrl();
-    const targetUrl = `${base}/api/${path}`;
+    // Use the original pathname to preserve trailing slashes
+    // (Next.js [..path] segments strip trailing slashes)
+    const apiPath = req.nextUrl.pathname.replace(/^\/api\//, "");
+    const targetUrl = `${base}/api/${apiPath}`;
     const url = new URL(targetUrl);
 
     // Forward query params
