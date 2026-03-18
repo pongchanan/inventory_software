@@ -4,11 +4,11 @@ from typing import Optional
 
 
 class UserBase(BaseModel):
-    uid: str
+    nfc_card_uid: str
     name: str
     email: Optional[str] = None
     role: str = "user"
-    authorized: bool = True
+    active: bool = True
 
 
 class UserCreate(UserBase):
@@ -44,7 +44,7 @@ class KioskPrepareRequest(BaseModel):
 
 class KioskScanRequest(BaseModel):
     kiosk_id: str
-    uid: str
+    nfc_card_uid: str
 
 
 class KioskStatusResponse(BaseModel):

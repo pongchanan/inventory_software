@@ -69,7 +69,7 @@ def open_cabinet(topic: str, payload: str) -> None:
         return
 
     kiosk_id = data.get("kiosk_id")
-    card_uid = data.get("nfc_card_uid") or data.get("rfid")
+    card_uid = data.get("nfc_card_uid") or data.get("uid") or data.get("rfid")
 
     if not card_uid:
         publish_response({"status": "error", "message": "Missing nfc_card_uid in payload"})
@@ -77,7 +77,7 @@ def open_cabinet(topic: str, payload: str) -> None:
 
     db = SessionLocal()
     try:
-        user = db.query(User).filter(User.uid == card_uid).first()
+        user = db.query(User).filter(User.nfc_card_uid == card_uid).first()
 
         if user is None:
             logger.warning("open_cabinet: unknown card_uid=%s", card_uid)
@@ -104,7 +104,7 @@ def open_cabinet(topic: str, payload: str) -> None:
                 "message": "Access granted",
                 "kiosk_id": kiosk_id,
                 "user_id": user.id,
-                "nfc_card_uid": user.uid,
+                "nfc_card_uid": user.nfc_card_uid,
                 "user_name": user.name,
                 "user_email": user.email,
             }
@@ -167,10 +167,10 @@ def register_card(topic: str, payload: str) -> None:
         return
 
     kiosk_id = data.get("kiosk_id")
-    uid = data.get("uid")
+    nfc_card_uid = data.get("nfc_card_uid") or data.get("uid")
 
-    if not kiosk_id or not uid:
-        publish_response({"status": "error", "message": "Missing kiosk_id or uid"})
+    if not kiosk_id or not nfc_card_uid:
+        publish_response({"status": "error", "message": "Missing kiosk_id or nfc_card_uid"})
         return
 
     # Access the shared in-memory pending registration store from auth route
@@ -207,9 +207,9 @@ def register_card(topic: str, payload: str) -> None:
     db = SessionLocal()
     try:
         # Check if UID is already registered
-        existing_user = db.query(User).filter(User.uid == uid).first()
+        existing_user = db.query(User).filter(User.nfc_card_uid == nfc_card_uid).first()
         if existing_user:
-            logger.warning("register_card: uid=%s already registered", uid)
+            logger.warning("register_card: nfc_card_uid=%s already registered", nfc_card_uid)
             publish_response(
                 {"status": "error", "message": "This card is already registered"}
             )
@@ -230,7 +230,7 @@ def register_card(topic: str, payload: str) -> None:
 
         # Create the user
         new_user = User(
-            nfc_card_uid=uid,
+            nfc_card_uid=nfc_card_uid,
             name=pending_data["name"],
             email=pending_data["email"],
             password_hash=pending_data["password_hash"],
@@ -249,7 +249,7 @@ def register_card(topic: str, payload: str) -> None:
         pending_registrations[kiosk_id]["user"] = new_user
         pending_registrations[kiosk_id]["token"] = token
 
-        logger.info("register_card: registered user=%s uid=%s", new_user.name, uid)
+        logger.info("register_card: registered user=%s nfc_card_uid=%s", new_user.name, nfc_card_uid)
         publish_response({"status": "ok", "message": "Registration complete"})
 
     finally:

@@ -8,7 +8,6 @@ All route groups are organizational only and do not appear in URLs.
 - `(protected)`: Main in-app experience after entering the app shell.
 - `(auth)`: Login and registration experience.
 - `(external)`: External flows launched outside normal app navigation (e.g., kiosk QR flow).
-- `(legacy)`: Backward-compatibility routes and redirects.
 
 ## URL Map
 
@@ -35,10 +34,6 @@ All route groups are organizational only and do not appear in URLs.
 ### External/Kiosk Flow
 - `/kiosk/register` -> `frontend/src/app/(external)/kiosk/register/page.tsx`
 
-### Legacy
-- `/loans` -> redirect to `/admin/loans`
-  - Source: `frontend/src/app/(legacy)/loans/page.tsx`
-
 ## Supporting Routes
 - `/api/*` proxy route -> `frontend/src/app/api/[...path]/route.ts`
 
@@ -57,7 +52,7 @@ Canonical groups:
 - `/api/audit-logs/*`
 - `/api/kiosk/*`
 
-Do not add new calls to removed legacy groups such as `/api/compartments/*`, `/api/items/*`, or `/api/loans/*`.
+Do not add new calls to removed non-canonical endpoint groups.
 
 ## Layout Binding
 - Root layout (global providers/styles): `frontend/src/app/layout.tsx`
@@ -67,4 +62,4 @@ Do not add new calls to removed legacy groups such as `/api/compartments/*`, `/a
 - Rename route groups freely for clarity; URLs remain unchanged.
 - Prefer adding new authenticated pages under `(protected)`.
 - Use `(external)` for flows entered by QR, hardware, or third-party callbacks.
-- Keep old paths in `(legacy)` with explicit redirects when needed.
+- Keep docs limited to canonical routes that are part of current product navigation.

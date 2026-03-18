@@ -1,6 +1,6 @@
 # API Contract (Canonical)
 
-Last updated: 2026-03-13
+Last updated: 2026-03-18
 
 This document is the single contract source for Backend, Frontend, Kiosk, and Vision integrations.
 
@@ -161,11 +161,11 @@ Response:
   "token_type": "bearer",
   "user": {
     "id": 1,
-    "uid": "CARD_UID",
+    "nfc_card_uid": "CARD_UID",
     "name": "Admin",
     "email": "admin@example.com",
     "role": "admin",
-    "authorized": true,
+    "active": true,
     "created_at": "...",
     "updated_at": "..."
   }
@@ -279,9 +279,9 @@ Behavior constraints:
 - Session close is valid only after backend decision.
 - If confidence is low, state goes to `resolved_error` and recovery flow is required.
 
-## 6) Legacy-to-Canonical Mapping
+## 6) Terminology Mapping
 
-| Legacy Term | Canonical Term |
+| Prior Term | Canonical Term |
 |---|---|
 | drawer | storage_unit (unit_type=`drawer`) |
 | drawer_slot | storage_location (grid row/col) |
@@ -297,3 +297,5 @@ Behavior constraints:
 1. Frontend and kiosk clients must call canonical endpoints only.
 2. Any old endpoint references in docs/tests are a bug.
 3. Compatibility shims are temporary and must not be used in new code.
+4. Canonical auth user fields are `nfc_card_uid` and `active`; legacy `uid` and `authorized` are removed from API responses.
+5. MQTT kiosk card payload canonical field is `nfc_card_uid`; legacy `uid`/`rfid` are transition aliases and must be removed from clients.

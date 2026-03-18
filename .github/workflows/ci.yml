@@ -8,8 +8,12 @@ on:
 
 jobs:
   backend-tests:
-    name: Backend Tests
-    runs-on: ubuntu-latest
+    name: Backend Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
     - uses: actions/checkout@v4
@@ -40,8 +44,12 @@ jobs:
         pytest --cov=app --cov-report=term-missing
     
   frontend-tests:
-    name: Frontend Tests
-    runs-on: ubuntu-latest
+    name: Frontend Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     
     steps:
     - uses: actions/checkout@v4

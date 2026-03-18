@@ -29,6 +29,9 @@ IoT-based inventory management with NFC/RFID tracking, MQTT kiosk communication,
 
 ## 🛠️ Local Development
 
+For verified cross-platform steps (Windows/Linux/macOS), use:
+- [docs/operations/run-guide.md](docs/operations/run-guide.md)
+
 ### 1. Install all dependencies
 
 ```bash
@@ -37,11 +40,8 @@ npm run install-all
 
 ### 2. Configure environment
 
-```bash
-# Root .env — used by the kiosk config generator
-cp backend/.env.example backend/.env
-# Fill in your values
-```
+Create root `.env` and copy values from `backend/.env.example`.
+Fill in values required by your local setup.
 
 ### 3. Start backend + frontend
 
@@ -92,6 +92,8 @@ This is a monorepo with two independent Railway services:
 
 
 ## 🛠️ Local Development
+
+Canonical guide: [docs/operations/run-guide.md](docs/operations/run-guide.md)
 
 1. **Setup**: Install all dependencies (Node + Python venv)
    ```bash

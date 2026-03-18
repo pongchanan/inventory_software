@@ -1,88 +1,161 @@
-# Smart Inventory Management System - Unified Run & Deploy Guide
+# Smart Inventory Management System - Cross-Platform Run Guide (M1-10)
 
-This guide explains how to run the entire system locally with one command and how to deploy it to Railway.
+Owner: F + A  
+Depends on: M1-01 endpoint matrix alignment
 
-## 🚀 Local Development
+This guide is the single source of truth for running and testing the monorepo on Windows, Linux, and macOS.
 
-The project is configured as a monorepo. You can run both the **FastAPI Backend** and **Next.js Frontend** simultaneously.
+## 1. Supported Profiles
 
-### 1. Prerequisites
-- **Node.js** (v18+)
-- **Python** (v3.8+)
-- **npm** (comes with Node.js)
+| Profile | Shell examples | Status target |
+|---|---|---|
+| Windows 11/10 | PowerShell 5+ / PowerShell 7+ | run + test pass |
+| Ubuntu 22.04+ | bash | run + test pass |
+| macOS 13+ | zsh / bash | run + test pass |
 
-### 2. Initial Setup
-Run the following command from the root directory to install all dependencies. This will automatically create a Python virtual environment in the `backend/venv` folder:
+## 2. Prerequisites
+
+- Node.js 22 LTS (minimum 18)
+- npm (bundled with Node.js)
+- Python 3.10+
+
+Quick checks:
+
+```bash
+node -v
+npm -v
+python --version
+```
+
+On Windows, if `python` is not available, install Python and ensure either `py -3` or `python` works from terminal.
+
+## 3. One-Time Setup (All OS)
+
+From repository root:
 
 ```bash
 npm run install-all
 ```
 
-Note: the current `install-all` script uses a Unix-style pip path. On Windows,
-if that step fails, create/activate `backend/venv` manually and run:
+What this does:
+- installs root npm packages
+- installs frontend npm packages
+- creates `backend/venv`
+- installs backend runtime and test requirements into `backend/venv`
 
-```bash
-pip install -r backend/requirements.txt
-```
+## 4. Run the System
 
-### 3. Running the System
-Start both servers with a single command:
+From repository root:
 
 ```bash
 npm run dev
 ```
 
-- **Backend**: http://localhost:3000 (Uses `backend/venv`)
-- **Frontend**: http://localhost:3001
+Expected endpoints:
+- Backend API: http://localhost:3000
+- Backend Swagger: http://localhost:3000/docs
+- Frontend: http://localhost:3001
 
-### 4. Backend Test Commands (Standard)
-Run these commands from `backend/`.
+## 5. Test Commands
 
-Automated tests (default, manual excluded):
-
-```bash
-pytest
-```
-
-Automated tests with coverage (used in CI):
+### 5.1 Backend automated tests (manual excluded by default)
 
 ```bash
-pytest --cov=app --cov-report=term-missing
+npm run test:backend
 ```
 
-Manual tests (run only when explicitly requested):
+### 5.2 Backend coverage (CI-compatible)
 
 ```bash
-pytest test/manual -v
+npm run test:backend:cov
 ```
 
-Notes:
-- `pytest` default uses `backend/pytest.ini` and does not collect manual tests.
-- Manual tests under `backend/test/manual/` require running services and are intended for explicit local verification.
+### 5.3 Frontend tests
 
----
+```bash
+cd frontend
+npm test -- --coverage
+```
 
-## ☁️ Deployment to Railway
+### 5.4 Manual backend tests (explicit only)
 
-The project is ready for one-click deployment to Railway using the provided `railway.json` monorepo configuration.
+```bash
+cd backend
+venv/bin/python -m pytest test/manual -v
+```
 
-### Deployment Steps:
-1. **GitHub Sync**: Push your code to a GitHub repository.
-2. **Railway Project**: Create a new project on [Railway](https://railway.app/).
-3. **Add Services**: Add **two** services from the same GitHub repo.
-4. **Configure Monorepo**: In the settings for each service:
-   - For the first service, set **Root Directory** to `backend`. Rename it to `backend`.
-   - For the second service, set **Root Directory** to `frontend`. Rename it to `frontend`.
-5. **Automatic Detection**: Railway will read the `railway.json` inside each directory and deploy correctly.
-6. **Environment Variables**:
-   - For `frontend`, add `BACKEND_URL` pointing to your Railway backend URL.
-   - For `backend`, ensure `PORT` is set to 3000 (standard for this app).
+Windows equivalent:
 
----
+```powershell
+cd backend
+venv\Scripts\python.exe -m pytest test/manual -v
+```
 
-## 🏗️ Project Structure
-- `/backend`: FastAPI Python server.
-- `/frontend`: Next.js React application.
-- `/kiosk`: ESP32 Hardware firmware.
-- `/package.json`: Root orchestration.
-- `/railway.json`: Railway monorepo config.
+## 6. OS-Specific Quick Paths
+
+### Windows (PowerShell)
+
+```powershell
+npm run install-all
+npm run dev
+```
+
+In a second terminal:
+
+```powershell
+npm run test:backend:cov
+cd frontend
+npm test -- --coverage
+```
+
+### Linux (bash)
+
+```bash
+npm run install-all
+npm run dev
+```
+
+In a second terminal:
+
+```bash
+npm run test:backend:cov
+cd frontend
+npm test -- --coverage
+```
+
+### macOS (zsh/bash)
+
+```bash
+npm run install-all
+npm run dev
+```
+
+In a second terminal:
+
+```bash
+npm run test:backend:cov
+cd frontend
+npm test -- --coverage
+```
+
+## 7. DoD Verification Checklist (M1-10)
+
+Use this checklist for each OS profile.
+
+- `npm run install-all` exits with code 0
+- `npm run dev` starts backend on 3000 and frontend on 3001
+- `npm run test:backend:cov` exits with code 0
+- `cd frontend && npm test -- --coverage` exits with code 0
+
+Repository CI also enforces this using a 3-OS matrix workflow.
+
+## 8. Related Commands
+
+From repository root:
+
+```bash
+npm run dev:backend
+npm run dev:frontend
+npm run db:setup:sqlite
+npm run kiosk:config
+```

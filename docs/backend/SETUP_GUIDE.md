@@ -125,8 +125,23 @@ Frontend                    Backend                      Kiosk
 
 ## Seeding Sample Data
 
+Canonical seed now writes directly to database tables (not via HTTP API) and
+covers all v2 canonical tables.
+
 ```bash
 python ../scripts/seed/seed_data.py
+```
+
+If canonical tables already contain data, clear and reseed:
+
+```bash
+python ../scripts/seed/seed_data.py --reset
+```
+
+Seed against a specific database target:
+
+```bash
+python ../scripts/seed/seed_data.py --database-url "postgresql://user:pass@host:5432/dbname"
 ```
 
 ## Creating an Admin User

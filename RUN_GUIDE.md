@@ -1,6 +1,6 @@
 # Run Guide
 
-The detailed run/deploy guide has moved to:
+The detailed cross-platform run/deploy guide has moved to:
 
 - [docs/operations/run-guide.md](docs/operations/run-guide.md)
 

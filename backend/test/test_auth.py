@@ -76,5 +76,5 @@ class TestAuthenticationEndpoints:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["uid"] == "USER001"
-        assert data["authorized"] is True
+        assert data["nfc_card_uid"] == "USER001"
+        assert data["active"] is True

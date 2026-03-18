@@ -31,8 +31,30 @@ Request:
 }
 ```
 
+Response:
+```json
+{
+  "access_token": "<jwt>",
+  "token_type": "bearer",
+  "user": {
+    "id": 1,
+    "nfc_card_uid": "CARD_UID",
+    "name": "Admin",
+    "email": "admin@example.com",
+    "role": "admin",
+    "active": true,
+    "created_at": "...",
+    "updated_at": "..."
+  }
+}
+```
+
 ### GET /api/auth/me
 Get current user from bearer token.
+
+Response fields follow canonical user naming:
+- `nfc_card_uid`
+- `active`
 
 ### POST /api/auth/kiosk/prepare_registration
 Prepare kiosk registration flow for a card tap.
@@ -254,8 +276,5 @@ Get one kiosk status snapshot by kiosk ID.
 
 ## Deprecated Contracts
 
-The following legacy contracts are removed from documentation and must not be used in new code:
-- /api/compartments/*
-- /api/items/*
-- /api/loans/*
-- Drawer* parallel entity contracts
+Removed non-canonical contracts are intentionally not listed in this document.
+New code must use only the canonical endpoint groups documented above.

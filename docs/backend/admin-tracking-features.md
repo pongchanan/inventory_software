@@ -33,9 +33,9 @@ Implemented API functions:
 
 ### Admin UI placement
 Current UI is split by pages, not tab sections inside one page:
-- `frontend/src/app/(app)/admin/page.tsx` (dashboard summary)
-- `frontend/src/app/(app)/admin/loans/page.tsx` (loan tracking)
-- `frontend/src/app/(app)/admin/logs/page.tsx` (cabinet access logs)
+- `frontend/src/app/(protected)/admin/page.tsx` (dashboard summary)
+- `frontend/src/app/(protected)/admin/loans/page.tsx` (loan tracking)
+- `frontend/src/app/(protected)/admin/logs/page.tsx` (cabinet access logs)
 
 ## Important Note on Access Control
 
