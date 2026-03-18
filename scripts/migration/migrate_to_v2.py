@@ -7,6 +7,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
 from dry_run_report import DryRunReport, OperationType, create_migration_operation
@@ -54,12 +55,27 @@ def apply_shadow_schema(dry_run: bool):
                 conn.execute(text(statement))
 
 
-def count_rows(db, table_name: str) -> int:
-    return db.execute(text(f"SELECT COUNT(*) FROM public.{table_name}")).scalar() or 0
+def _qualified_table(table_name: str) -> str:
+    if engine.dialect.name == "postgresql":
+        return f"public.{table_name}"
+    return table_name
+
+
+def count_rows(db, table_name: str) -> tuple[int, bool]:
+    try:
+        table_ref = _qualified_table(table_name)
+        count = db.execute(text(f"SELECT COUNT(*) FROM {table_ref}")).scalar() or 0
+        return int(count), True
+    except SQLAlchemyError as exc:
+        msg = f"Source table '{table_name}' not found or inaccessible; skipping this operation"
+        logger.warning("%s (%s)", msg, exc.__class__.__name__)
+        if report:
+            report.add_warning(msg)
+        return 0, False
 
 
 def migrate_users(db, dry_run: bool):
-    count = count_rows(db, "users")
+    count, available = count_rows(db, "users")
     logger.info("users -> v2.users: %s rows", count)
     
     if report:
@@ -68,11 +84,11 @@ def migrate_users(db, dry_run: bool):
             source_table="users",
             target_table="v2.users",
             source_row_count=count,
-            status="would_execute" if dry_run else "pending",
-            description=f"Migrating {count} user records",
+            status="would_execute" if (dry_run and available) else ("pending" if available else "skipped"),
+            description=(f"Migrating {count} user records" if available else "Skipped: source table missing"),
         ))
     
-    if dry_run:
+    if dry_run or not available:
         return
     db.execute(text("DELETE FROM v2.users"))
     db.execute(text(
@@ -85,8 +101,8 @@ def migrate_users(db, dry_run: bool):
 
 
 def migrate_item_types(db, dry_run: bool):
-    type_count = count_rows(db, "item_types")
-    image_count = count_rows(db, "item_type_images")
+    type_count, types_available = count_rows(db, "item_types")
+    image_count, images_available = count_rows(db, "item_type_images")
     logger.info("item_types -> v2.item_types: %s rows", type_count)
     logger.info("item_type_images -> v2.item_type_images: %s rows", image_count)
     
@@ -96,41 +112,43 @@ def migrate_item_types(db, dry_run: bool):
             source_table="item_types",
             target_table="v2.item_types",
             source_row_count=type_count,
-            status="would_execute" if dry_run else "pending",
-            description=f"Migrating {type_count} item types",
+            status="would_execute" if (dry_run and types_available) else ("pending" if types_available else "skipped"),
+            description=(f"Migrating {type_count} item types" if types_available else "Skipped: source table missing"),
         ))
         report.add_operation(create_migration_operation(
             OperationType.TABLE_MIGRATE,
             source_table="item_type_images",
             target_table="v2.item_type_images",
             source_row_count=image_count,
-            status="would_execute" if dry_run else "pending",
-            description=f"Migrating {image_count} item type images",
+            status="would_execute" if (dry_run and images_available) else ("pending" if images_available else "skipped"),
+            description=(f"Migrating {image_count} item type images" if images_available else "Skipped: source table missing"),
         ))
     
     if dry_run:
         return
-    db.execute(text("DELETE FROM v2.item_type_images"))
-    db.execute(text("DELETE FROM v2.item_types"))
-    db.execute(text(
-        """
-        INSERT INTO v2.item_types (id, name, active, created_at, updated_at)
-        SELECT id, name, COALESCE(is_active, TRUE), created_at, updated_at
-        FROM public.item_types
-        """
-    ))
-    db.execute(text(
-        """
-        INSERT INTO v2.item_type_images (id, item_type_id, image_url, is_primary, created_at)
-        SELECT id, item_type_id, image_url, COALESCE(is_primary, FALSE), created_at
-        FROM public.item_type_images
-        """
-    ))
+    if types_available:
+        db.execute(text("DELETE FROM v2.item_types"))
+        db.execute(text(
+            """
+            INSERT INTO v2.item_types (id, name, active, created_at, updated_at)
+            SELECT id, name, COALESCE(is_active, TRUE), created_at, updated_at
+            FROM public.item_types
+            """
+        ))
+    if images_available:
+        db.execute(text("DELETE FROM v2.item_type_images"))
+        db.execute(text(
+            """
+            INSERT INTO v2.item_type_images (id, item_type_id, image_url, is_primary, created_at)
+            SELECT id, item_type_id, image_url, COALESCE(is_primary, FALSE), created_at
+            FROM public.item_type_images
+            """
+        ))
 
 
 def migrate_storage(db, dry_run: bool):
-    unit_count = count_rows(db, "drawers")
-    location_count = count_rows(db, "drawer_slots")
+    unit_count, units_available = count_rows(db, "drawers")
+    location_count, locations_available = count_rows(db, "drawer_slots")
     logger.info("drawers -> v2.storage_units: %s rows", unit_count)
     logger.info("drawer_slots -> v2.storage_locations: %s rows", location_count)
     
@@ -140,41 +158,42 @@ def migrate_storage(db, dry_run: bool):
             source_table="drawers",
             target_table="v2.storage_units",
             source_row_count=unit_count,
-            status="would_execute" if dry_run else "pending",
-            description=f"Migrating {unit_count} storage units",
+            status="would_execute" if (dry_run and units_available) else ("pending" if units_available else "skipped"),
+            description=(f"Migrating {unit_count} storage units" if units_available else "Skipped: source table missing"),
         ))
         report.add_operation(create_migration_operation(
             OperationType.TABLE_MIGRATE,
             source_table="drawer_slots",
             target_table="v2.storage_locations",
             source_row_count=location_count,
-            status="would_execute" if dry_run else "pending",
-            description=f"Migrating {location_count} storage locations",
+            status="would_execute" if (dry_run and locations_available) else ("pending" if locations_available else "skipped"),
+            description=(f"Migrating {location_count} storage locations" if locations_available else "Skipped: source table missing"),
         ))
     
     if dry_run:
         return
-    db.execute(text("DELETE FROM v2.slot_occupancies"))
-    db.execute(text("DELETE FROM v2.storage_locations"))
-    db.execute(text("DELETE FROM v2.storage_units"))
-    db.execute(text(
-        """
-        INSERT INTO v2.storage_units (id, unit_type, layout_type, active, created_at, updated_at)
-        SELECT id, 'drawer', 'grid', COALESCE(is_active, TRUE), created_at, updated_at
-        FROM public.drawers
-        """
-    ))
-    db.execute(text(
-        """
-        INSERT INTO v2.storage_locations (id, unit_id, level_no, row_no, col_no, zone_code, active, created_at)
-        SELECT id, drawer_id, 0, row_index, col_index, NULL, COALESCE(is_active, TRUE), created_at
-        FROM public.drawer_slots
-        """
-    ))
+    if units_available:
+        db.execute(text("DELETE FROM v2.storage_units"))
+        db.execute(text(
+            """
+            INSERT INTO v2.storage_units (id, unit_type, layout_type, active, created_at, updated_at)
+            SELECT id, 'drawer', 'grid', COALESCE(is_active, TRUE), created_at, updated_at
+            FROM public.drawers
+            """
+        ))
+    if locations_available:
+        db.execute(text("DELETE FROM v2.storage_locations"))
+        db.execute(text(
+            """
+            INSERT INTO v2.storage_locations (id, unit_id, level_no, row_no, col_no, zone_code, active, created_at)
+            SELECT id, drawer_id, 0, row_index, col_index, NULL, COALESCE(is_active, TRUE), created_at
+            FROM public.drawer_slots
+            """
+        ))
 
 
 def migrate_sessions(db, dry_run: bool):
-    count = count_rows(db, "drawer_sessions")
+    count, available = count_rows(db, "drawer_sessions")
     logger.info("drawer_sessions -> v2.access_sessions: %s rows", count)
     
     if report:
@@ -183,11 +202,11 @@ def migrate_sessions(db, dry_run: bool):
             source_table="drawer_sessions",
             target_table="v2.access_sessions",
             source_row_count=count,
-            status="would_execute" if dry_run else "pending",
-            description=f"Migrating {count} access sessions",
+            status="would_execute" if (dry_run and available) else ("pending" if available else "skipped"),
+            description=(f"Migrating {count} access sessions" if available else "Skipped: source table missing"),
         ))
     
-    if dry_run:
+    if dry_run or not available:
         return
     db.execute(text("DELETE FROM v2.access_sessions"))
     db.execute(text(
@@ -208,7 +227,7 @@ def migrate_sessions(db, dry_run: bool):
 
 
 def migrate_observations(db, dry_run: bool):
-    count = count_rows(db, "detection_events")
+    count, available = count_rows(db, "detection_events")
     logger.info("detection_events -> v2.observations/v2.vision_observation_details: %s rows", count)
     
     if report:
@@ -217,11 +236,11 @@ def migrate_observations(db, dry_run: bool):
             source_table="detection_events",
             target_table="v2.observations + v2.vision_observation_details",
             source_row_count=count,
-            status="would_execute" if dry_run else "pending",
-            description=f"Migrating {count} observation records",
+            status="would_execute" if (dry_run and available) else ("pending" if available else "skipped"),
+            description=(f"Migrating {count} observation records" if available else "Skipped: source table missing"),
         ))
     
-    if dry_run:
+    if dry_run or not available:
         return
     db.execute(text("DELETE FROM v2.vision_observation_details"))
     db.execute(text("DELETE FROM v2.rfid_observation_details"))
@@ -267,7 +286,7 @@ def migrate_observations(db, dry_run: bool):
 
 
 def migrate_inventory_events(db, dry_run: bool):
-    count = count_rows(db, "inventory_events")
+    count, available = count_rows(db, "inventory_events")
     logger.info("inventory_events -> v2.inventory_events: %s rows", count)
     
     if report:
@@ -276,11 +295,11 @@ def migrate_inventory_events(db, dry_run: bool):
             source_table="inventory_events",
             target_table="v2.inventory_events",
             source_row_count=count,
-            status="would_execute" if dry_run else "pending",
-            description=f"Migrating {count} inventory events",
+            status="would_execute" if (dry_run and available) else ("pending" if available else "skipped"),
+            description=(f"Migrating {count} inventory events" if available else "Skipped: source table missing"),
         ))
     
-    if dry_run:
+    if dry_run or not available:
         return
     db.execute(text("DELETE FROM v2.inventory_events"))
     db.execute(text(
@@ -305,7 +324,7 @@ def migrate_inventory_events(db, dry_run: bool):
 
 
 def migrate_audit_logs(db, dry_run: bool):
-    count = count_rows(db, "audit_logs")
+    count, available = count_rows(db, "audit_logs")
     logger.info("audit_logs -> v2.audit_logs: %s rows", count)
     
     if report:
@@ -314,11 +333,11 @@ def migrate_audit_logs(db, dry_run: bool):
             source_table="audit_logs",
             target_table="v2.audit_logs",
             source_row_count=count,
-            status="would_execute" if dry_run else "pending",
-            description=f"Migrating {count} audit log entries",
+            status="would_execute" if (dry_run and available) else ("pending" if available else "skipped"),
+            description=(f"Migrating {count} audit log entries" if available else "Skipped: source table missing"),
         ))
     
-    if dry_run:
+    if dry_run or not available:
         return
     db.execute(text("DELETE FROM v2.audit_logs"))
     db.execute(text(
@@ -341,7 +360,7 @@ def migrate_audit_logs(db, dry_run: bool):
 
 
 def migrate_slot_occupancies(db, dry_run: bool):
-    count = count_rows(db, "slot_occupancies")
+    count, available = count_rows(db, "slot_occupancies")
     logger.info("slot_occupancies -> v2.slot_occupancies: %s rows", count)
     
     if report:
@@ -350,11 +369,11 @@ def migrate_slot_occupancies(db, dry_run: bool):
             source_table="slot_occupancies",
             target_table="v2.slot_occupancies",
             source_row_count=count,
-            status="would_execute" if dry_run else "pending",
-            description=f"Migrating {count} slot occupancy records",
+            status="would_execute" if (dry_run and available) else ("pending" if available else "skipped"),
+            description=(f"Migrating {count} slot occupancy records" if available else "Skipped: source table missing"),
         ))
     
-    if dry_run:
+    if dry_run or not available:
         return
     db.execute(text("DELETE FROM v2.slot_occupancies"))
     db.execute(text(
@@ -431,8 +450,20 @@ def main():
                         break
                 report.save_report(args.report, format=fmt)
                 
-    except Exception:
+    except Exception as exc:
         db.rollback()
+        if report:
+            report.add_error(str(exc))
+            if args.dry_run:
+                report.print_ascii()
+                if args.report:
+                    format_map = {"json": "json", "md": "markdown", "txt": "ascii"}
+                    fmt = "ascii"
+                    for ext, fmt_type in format_map.items():
+                        if args.report.endswith(f".{ext}"):
+                            fmt = fmt_type
+                            break
+                    report.save_report(args.report, format=fmt)
         logger.exception("Shadow migration failed")
         raise
     finally:

@@ -1,0 +1,123 @@
+{
+  "script_name": "migrate_to_v2.py",
+  "timestamp": "2026-03-18T09:51:22.412883",
+  "database_url": "postgresql://postgres:***@metro.proxy.rlwy.net:37753/railway",
+  "statistics": {
+    "total_operations": 11,
+    "would_execute": 4,
+    "skipped": 7,
+    "total_source_rows": 30,
+    "total_target_rows": 0
+  },
+  "operations": [
+    {
+      "operation_type": "schema_create",
+      "source_table": null,
+      "target_table": null,
+      "source_row_count": 0,
+      "target_row_count": 0,
+      "description": "Apply schema_v2.sql (51 statements)",
+      "status": "would_execute"
+    },
+    {
+      "operation_type": "table_migrate",
+      "source_table": "users",
+      "target_table": "v2.users",
+      "source_row_count": 3,
+      "target_row_count": 0,
+      "description": "Migrating 3 user records",
+      "status": "would_execute"
+    },
+    {
+      "operation_type": "table_migrate",
+      "source_table": "item_types",
+      "target_table": "v2.item_types",
+      "source_row_count": 27,
+      "target_row_count": 0,
+      "description": "Migrating 27 item types",
+      "status": "would_execute"
+    },
+    {
+      "operation_type": "table_migrate",
+      "source_table": "item_type_images",
+      "target_table": "v2.item_type_images",
+      "source_row_count": 0,
+      "target_row_count": 0,
+      "description": "Migrating 0 item type images",
+      "status": "would_execute"
+    },
+    {
+      "operation_type": "table_migrate",
+      "source_table": "drawers",
+      "target_table": "v2.storage_units",
+      "source_row_count": 0,
+      "target_row_count": 0,
+      "description": "Skipped: source table missing",
+      "status": "skipped"
+    },
+    {
+      "operation_type": "table_migrate",
+      "source_table": "drawer_slots",
+      "target_table": "v2.storage_locations",
+      "source_row_count": 0,
+      "target_row_count": 0,
+      "description": "Skipped: source table missing",
+      "status": "skipped"
+    },
+    {
+      "operation_type": "table_migrate",
+      "source_table": "drawer_sessions",
+      "target_table": "v2.access_sessions",
+      "source_row_count": 0,
+      "target_row_count": 0,
+      "description": "Skipped: source table missing",
+      "status": "skipped"
+    },
+    {
+      "operation_type": "table_migrate",
+      "source_table": "detection_events",
+      "target_table": "v2.observations + v2.vision_observation_details",
+      "source_row_count": 0,
+      "target_row_count": 0,
+      "description": "Skipped: source table missing",
+      "status": "skipped"
+    },
+    {
+      "operation_type": "table_migrate",
+      "source_table": "inventory_events",
+      "target_table": "v2.inventory_events",
+      "source_row_count": 0,
+      "target_row_count": 0,
+      "description": "Skipped: source table missing",
+      "status": "skipped"
+    },
+    {
+      "operation_type": "table_migrate",
+      "source_table": "audit_logs",
+      "target_table": "v2.audit_logs",
+      "source_row_count": 0,
+      "target_row_count": 0,
+      "description": "Skipped: source table missing",
+      "status": "skipped"
+    },
+    {
+      "operation_type": "table_migrate",
+      "source_table": "slot_occupancies",
+      "target_table": "v2.slot_occupancies",
+      "source_row_count": 0,
+      "target_row_count": 0,
+      "description": "Skipped: source table missing",
+      "status": "skipped"
+    }
+  ],
+  "warnings": [
+    "Source table 'drawers' not found or inaccessible; skipping this operation",
+    "Source table 'drawer_slots' not found or inaccessible; skipping this operation",
+    "Source table 'drawer_sessions' not found or inaccessible; skipping this operation",
+    "Source table 'detection_events' not found or inaccessible; skipping this operation",
+    "Source table 'inventory_events' not found or inaccessible; skipping this operation",
+    "Source table 'audit_logs' not found or inaccessible; skipping this operation",
+    "Source table 'slot_occupancies' not found or inaccessible; skipping this operation"
+  ],
+  "errors": []
+}

@@ -35,6 +35,31 @@ npm run dev
 - **Backend**: http://localhost:3000 (Uses `backend/venv`)
 - **Frontend**: http://localhost:3001
 
+### 4. Backend Test Commands (Standard)
+Run these commands from `backend/`.
+
+Automated tests (default, manual excluded):
+
+```bash
+pytest
+```
+
+Automated tests with coverage (used in CI):
+
+```bash
+pytest --cov=app --cov-report=term-missing
+```
+
+Manual tests (run only when explicitly requested):
+
+```bash
+pytest test/manual -v
+```
+
+Notes:
+- `pytest` default uses `backend/pytest.ini` and does not collect manual tests.
+- Manual tests under `backend/test/manual/` require running services and are intended for explicit local verification.
+
 ---
 
 ## ☁️ Deployment to Railway

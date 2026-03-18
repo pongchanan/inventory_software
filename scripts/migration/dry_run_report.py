@@ -4,10 +4,33 @@ Provides structured, human-readable reporting for migration dry-runs.
 """
 
 import json
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional
+from urllib.parse import urlsplit, urlunsplit
+
+
+def _trim(value: str, width: int) -> str:
+    if len(value) <= width:
+        return value.ljust(width)
+    if width <= 3:
+        return value[:width]
+    return (value[: width - 3] + "...")
+
+
+def _redact_database_url(database_url: str) -> str:
+    parts = urlsplit(database_url)
+    if not parts.username and not parts.password:
+        return database_url
+
+    host = parts.hostname or ""
+    if parts.port:
+        host = f"{host}:{parts.port}"
+
+    user = parts.username or "user"
+    redacted_netloc = f"{user}:***@{host}"
+    return urlunsplit((parts.scheme, redacted_netloc, parts.path, parts.query, parts.fragment))
 
 
 class OperationType(Enum):
@@ -80,33 +103,34 @@ class DryRunReport:
         
         lines = []
         lines.append("")
-        lines.append("=" * 120)
+        table_width = 88
+        lines.append("=" * table_width)
         lines.append(f"DRY-RUN MIGRATION REPORT: {self.script_name}")
         lines.append(f"Generated: {self.timestamp}")
-        lines.append("=" * 120)
+        lines.append("=" * table_width)
         lines.append("")
         
         # Headers
         headers = [
-            "Source → Target",
-            "Source Count",
-            "Target Count",
+            "Source -> Target",
+            "Src",
+            "Tgt",
             "Status",
             "Description"
         ]
-        col_widths = [35, 15, 15, 15, 40]
+        col_widths = [28, 6, 6, 12, 24]
         
         # Header row
         header_line = " | ".join(
             h.ljust(w) for h, w in zip(headers, col_widths)
         )
         lines.append(header_line)
-        lines.append("-" * 120)
+        lines.append("-" * table_width)
         
         # Data rows
         for op in self.operations:
             if op.operation_type == OperationType.TABLE_MIGRATE:
-                source_target = f"{op.source_table or ''} → {op.target_table or ''}"
+                source_target = f"{op.source_table or ''} -> {op.target_table or ''}"
             elif op.operation_type == OperationType.TABLE_DROP:
                 source_target = f"DROP: {op.source_table or ''}"
             elif op.operation_type == OperationType.COLUMN_ADD:
@@ -115,15 +139,15 @@ class DryRunReport:
                 source_target = op.description
             
             row = [
-                source_target[:col_widths[0]].ljust(col_widths[0]),
-                str(op.source_row_count).ljust(col_widths[1]),
-                str(op.target_row_count).ljust(col_widths[2]),
-                op.status.ljust(col_widths[3]),
-                op.description[:col_widths[4]].ljust(col_widths[4]),
+                _trim(source_target, col_widths[0]),
+                _trim(str(op.source_row_count), col_widths[1]),
+                _trim(str(op.target_row_count), col_widths[2]),
+                _trim(op.status, col_widths[3]),
+                _trim(op.description, col_widths[4]),
             ]
             lines.append(" | ".join(row))
         
-        lines.append("-" * 120)
+        lines.append("-" * table_width)
         lines.append("")
         
         # Summary statistics
@@ -133,7 +157,7 @@ class DryRunReport:
                           if op.status != "skipped")
         
         lines.append("SUMMARY")
-        lines.append("-" * 120)
+        lines.append("-" * table_width)
         lines.append(f"Total Operations:      {len(self.operations)}")
         lines.append(f"Would-Execute:         {len([op for op in self.operations if op.status == 'would_execute'])}")
         lines.append(f"Skipped:               {len([op for op in self.operations if op.status == 'skipped'])}")
@@ -144,20 +168,20 @@ class DryRunReport:
         # Warnings
         if self.warnings:
             lines.append("WARNINGS")
-            lines.append("-" * 120)
+            lines.append("-" * table_width)
             for warning in self.warnings:
-                lines.append(f"  ⚠️  {warning}")
+                lines.append(f"  WARN: {warning}")
             lines.append("")
         
         # Errors
         if self.errors:
             lines.append("ERRORS")
-            lines.append("-" * 120)
+            lines.append("-" * table_width)
             for error in self.errors:
-                lines.append(f"  ❌ {error}")
+                lines.append(f"  ERROR: {error}")
             lines.append("")
         
-        lines.append("=" * 120)
+        lines.append("=" * table_width)
         lines.append("")
         
         return "\n".join(lines)
@@ -167,7 +191,7 @@ class DryRunReport:
         data = {
             "script_name": self.script_name,
             "timestamp": self.timestamp,
-            "database_url": self.database_url,
+            "database_url": _redact_database_url(self.database_url),
             "statistics": {
                 "total_operations": len(self.operations),
                 "would_execute": len([op for op in self.operations if op.status == "would_execute"]),
