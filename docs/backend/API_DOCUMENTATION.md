@@ -2,10 +2,15 @@
 
 This document describes the active backend API routes implemented in:
 - backend/app/main.py
+- backend/app/routes/auth.py
+- backend/app/routes/users_api.py
 - backend/app/routes/storage_api.py
 - backend/app/routes/access_sessions_api.py
 - backend/app/routes/inventory_api.py
 - backend/app/routes/item_types_api.py
+- backend/app/routes/observations_api.py
+- backend/app/routes/audit_logs.py
+- backend/app/routes/kiosk_api.py
 
 For strict integration rules and naming policy, see API_CONTRACT.md.
 
@@ -28,6 +33,12 @@ Request:
 
 ### GET /api/auth/me
 Get current user from bearer token.
+
+### POST /api/auth/kiosk/prepare_registration
+Prepare kiosk registration flow for a card tap.
+
+### GET /api/auth/kiosk/status/{kiosk_id}
+Get auth registration status for a kiosk.
 
 ## Users
 
@@ -83,6 +94,12 @@ Update item type fields.
 
 ### DELETE /api/item-types/{item_type_id}
 Delete item type.
+
+### POST /api/item-types/{item_type_id}/images
+Upload image for item type.
+Form fields:
+- `image_file` (file, required)
+- `is_primary` (boolean query param, optional)
 
 ## Storage
 
@@ -221,14 +238,19 @@ Create audit log.
 ### GET /api/audit-logs
 List audit logs.
 
-### GET /api/audit-logs/{log_id}
-Get audit log by ID.
-
 ### GET /api/audit-logs/recent
 Get recent audit logs.
 
 ### GET /api/audit-logs/cabinet-access/recent
 Get recent unlock/lock/scan logs.
+
+## Kiosk Status
+
+### GET /api/kiosk/status
+List kiosk status snapshots.
+
+### GET /api/kiosk/status/{kiosk_id}
+Get one kiosk status snapshot by kiosk ID.
 
 ## Deprecated Contracts
 

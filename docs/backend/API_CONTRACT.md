@@ -16,6 +16,65 @@ This document is the single contract source for Backend, Frontend, Kiosk, and Vi
 
 ## 2) Canonical Endpoints
 
+### 2.1) Endpoint Matrix (Audited 2026-03-18)
+
+Legend:
+- Backend: route exists in `backend/app/routes/*`
+- Frontend: route is called by current frontend client/pages
+- Docs: documented in this contract and `API_DOCUMENTATION.md`
+
+| Method | Path | Backend | Frontend | Docs |
+|---|---|---|---|---|
+| POST | `/api/auth/login` | yes | yes | yes |
+| GET | `/api/auth/me` | yes | yes | yes |
+| POST | `/api/auth/kiosk/prepare_registration` | yes | yes | yes |
+| GET | `/api/auth/kiosk/status/{kiosk_id}` | yes | yes | yes |
+| POST | `/api/users` | yes | no | yes |
+| GET | `/api/users` | yes | yes | yes |
+| GET | `/api/users/{user_id}` | yes | no | yes |
+| GET | `/api/users/by-nfc/{nfc_card_uid}` | yes | no | yes |
+| PATCH | `/api/users/{user_id}` | yes | no | yes |
+| DELETE | `/api/users/{user_id}` | yes | no | yes |
+| POST | `/api/item-types` | yes | yes | yes |
+| GET | `/api/item-types` | yes | yes | yes |
+| GET | `/api/item-types/{item_type_id}` | yes | yes | yes |
+| PATCH | `/api/item-types/{item_type_id}` | yes | yes | yes |
+| DELETE | `/api/item-types/{item_type_id}` | yes | yes | yes |
+| POST | `/api/item-types/{item_type_id}/images` | yes | yes | yes |
+| POST | `/api/storage/units` | yes | no | yes |
+| GET | `/api/storage/units` | yes | yes | yes |
+| GET | `/api/storage/units/{unit_id}` | yes | no | yes |
+| PATCH | `/api/storage/units/{unit_id}` | yes | no | yes |
+| POST | `/api/storage/locations` | yes | no | yes |
+| GET | `/api/storage/units/{unit_id}/locations` | yes | yes | yes |
+| GET | `/api/storage/locations/{location_id}` | yes | no | yes |
+| DELETE | `/api/storage/locations/{location_id}` | yes | no | yes |
+| POST | `/api/sessions` | yes | no | yes |
+| GET | `/api/sessions` | yes | no | yes |
+| GET | `/api/sessions/{session_id}` | yes | no | yes |
+| POST | `/api/sessions/{session_id}/close` | yes | no | yes |
+| GET | `/api/sessions/user/{user_id}/active` | yes | no | yes |
+| POST | `/api/observations` | yes | no | yes |
+| GET | `/api/observations` | yes | no | yes |
+| GET | `/api/observations/{observation_id}` | yes | no | yes |
+| PATCH | `/api/observations/{observation_id}` | yes | no | yes |
+| POST | `/api/observations/rfid-details` | yes | no | yes |
+| GET | `/api/observations/rfid-details/{observation_id}` | yes | no | yes |
+| POST | `/api/observations/vision-details` | yes | no | yes |
+| GET | `/api/observations/vision-details/{observation_id}` | yes | no | yes |
+| GET | `/api/observations/session/{session_id}/needs-review` | yes | no | yes |
+| POST | `/api/inventory/events` | yes | no | yes |
+| GET | `/api/inventory/events` | yes | yes | yes |
+| GET | `/api/inventory/events/{event_id}` | yes | no | yes |
+| GET | `/api/inventory/occupancy/location/{location_id}` | yes | yes | yes |
+| GET | `/api/inventory/occupancy/unit/{unit_id}` | yes | yes | yes |
+| POST | `/api/audit-logs` | yes | no | yes |
+| GET | `/api/audit-logs` | yes | no | yes |
+| GET | `/api/audit-logs/recent` | yes | no | yes |
+| GET | `/api/audit-logs/cabinet-access/recent` | yes | yes | yes |
+| GET | `/api/kiosk/status` | yes | no | yes |
+| GET | `/api/kiosk/status/{kiosk_id}` | yes | no | yes |
+
 ### Auth
 - `POST /api/auth/login`
 - `GET /api/auth/me`
@@ -36,6 +95,7 @@ This document is the single contract source for Backend, Frontend, Kiosk, and Vi
 - `GET /api/item-types/{item_type_id}`
 - `PATCH /api/item-types/{item_type_id}`
 - `DELETE /api/item-types/{item_type_id}`
+- `POST /api/item-types/{item_type_id}/images`
 
 ### Storage
 - `POST /api/storage/units`
@@ -75,9 +135,12 @@ This document is the single contract source for Backend, Frontend, Kiosk, and Vi
 ### Audit Logs
 - `POST /api/audit-logs`
 - `GET /api/audit-logs`
-- `GET /api/audit-logs/{log_id}`
 - `GET /api/audit-logs/recent`
 - `GET /api/audit-logs/cabinet-access/recent`
+
+### Kiosk
+- `GET /api/kiosk/status`
+- `GET /api/kiosk/status/{kiosk_id}`
 
 ## 3) Canonical Request/Response Schemas
 

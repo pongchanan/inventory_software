@@ -12,7 +12,7 @@ from app.models.storage_unit_core import StorageUnit
 from app.models.user import User
 from app.routes import auth as auth_routes
 from app.routes import users_api as users_routes
-from main import app
+from app.main import app
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"

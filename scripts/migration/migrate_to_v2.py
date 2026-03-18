@@ -9,6 +9,8 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+from dry_run_report import DryRunReport, OperationType, create_migration_operation
+
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -25,11 +27,22 @@ if DATABASE_URL.startswith("postgres://"):
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Global report instance
+report = None
+
 
 def apply_shadow_schema(dry_run: bool):
     schema_sql = (BACKEND_DIR / "db" / "schema_v2.sql").read_text(encoding="utf-8")
+    statement_count = len([s for s in schema_sql.split(";") if s.strip()])
+    
     if dry_run:
-        logger.info("[DRY RUN] Would apply schema_v2.sql into schema v2")
+        logger.info("[DRY RUN] Would apply schema_v2.sql into schema v2 (%d statements)", statement_count)
+        if report:
+            report.add_operation(create_migration_operation(
+                OperationType.SCHEMA_CREATE,
+                description=f"Apply schema_v2.sql ({statement_count} statements)",
+                status="would_execute",
+            ))
         return
 
     logger.info("Applying schema_v2.sql into schema v2")
@@ -48,6 +61,17 @@ def count_rows(db, table_name: str) -> int:
 def migrate_users(db, dry_run: bool):
     count = count_rows(db, "users")
     logger.info("users -> v2.users: %s rows", count)
+    
+    if report:
+        report.add_operation(create_migration_operation(
+            OperationType.TABLE_MIGRATE,
+            source_table="users",
+            target_table="v2.users",
+            source_row_count=count,
+            status="would_execute" if dry_run else "pending",
+            description=f"Migrating {count} user records",
+        ))
+    
     if dry_run:
         return
     db.execute(text("DELETE FROM v2.users"))
@@ -65,6 +89,25 @@ def migrate_item_types(db, dry_run: bool):
     image_count = count_rows(db, "item_type_images")
     logger.info("item_types -> v2.item_types: %s rows", type_count)
     logger.info("item_type_images -> v2.item_type_images: %s rows", image_count)
+    
+    if report:
+        report.add_operation(create_migration_operation(
+            OperationType.TABLE_MIGRATE,
+            source_table="item_types",
+            target_table="v2.item_types",
+            source_row_count=type_count,
+            status="would_execute" if dry_run else "pending",
+            description=f"Migrating {type_count} item types",
+        ))
+        report.add_operation(create_migration_operation(
+            OperationType.TABLE_MIGRATE,
+            source_table="item_type_images",
+            target_table="v2.item_type_images",
+            source_row_count=image_count,
+            status="would_execute" if dry_run else "pending",
+            description=f"Migrating {image_count} item type images",
+        ))
+    
     if dry_run:
         return
     db.execute(text("DELETE FROM v2.item_type_images"))
@@ -90,6 +133,25 @@ def migrate_storage(db, dry_run: bool):
     location_count = count_rows(db, "drawer_slots")
     logger.info("drawers -> v2.storage_units: %s rows", unit_count)
     logger.info("drawer_slots -> v2.storage_locations: %s rows", location_count)
+    
+    if report:
+        report.add_operation(create_migration_operation(
+            OperationType.TABLE_MIGRATE,
+            source_table="drawers",
+            target_table="v2.storage_units",
+            source_row_count=unit_count,
+            status="would_execute" if dry_run else "pending",
+            description=f"Migrating {unit_count} storage units",
+        ))
+        report.add_operation(create_migration_operation(
+            OperationType.TABLE_MIGRATE,
+            source_table="drawer_slots",
+            target_table="v2.storage_locations",
+            source_row_count=location_count,
+            status="would_execute" if dry_run else "pending",
+            description=f"Migrating {location_count} storage locations",
+        ))
+    
     if dry_run:
         return
     db.execute(text("DELETE FROM v2.slot_occupancies"))
@@ -114,6 +176,17 @@ def migrate_storage(db, dry_run: bool):
 def migrate_sessions(db, dry_run: bool):
     count = count_rows(db, "drawer_sessions")
     logger.info("drawer_sessions -> v2.access_sessions: %s rows", count)
+    
+    if report:
+        report.add_operation(create_migration_operation(
+            OperationType.TABLE_MIGRATE,
+            source_table="drawer_sessions",
+            target_table="v2.access_sessions",
+            source_row_count=count,
+            status="would_execute" if dry_run else "pending",
+            description=f"Migrating {count} access sessions",
+        ))
+    
     if dry_run:
         return
     db.execute(text("DELETE FROM v2.access_sessions"))
@@ -137,6 +210,17 @@ def migrate_sessions(db, dry_run: bool):
 def migrate_observations(db, dry_run: bool):
     count = count_rows(db, "detection_events")
     logger.info("detection_events -> v2.observations/v2.vision_observation_details: %s rows", count)
+    
+    if report:
+        report.add_operation(create_migration_operation(
+            OperationType.TABLE_MIGRATE,
+            source_table="detection_events",
+            target_table="v2.observations + v2.vision_observation_details",
+            source_row_count=count,
+            status="would_execute" if dry_run else "pending",
+            description=f"Migrating {count} observation records",
+        ))
+    
     if dry_run:
         return
     db.execute(text("DELETE FROM v2.vision_observation_details"))
@@ -185,6 +269,17 @@ def migrate_observations(db, dry_run: bool):
 def migrate_inventory_events(db, dry_run: bool):
     count = count_rows(db, "inventory_events")
     logger.info("inventory_events -> v2.inventory_events: %s rows", count)
+    
+    if report:
+        report.add_operation(create_migration_operation(
+            OperationType.TABLE_MIGRATE,
+            source_table="inventory_events",
+            target_table="v2.inventory_events",
+            source_row_count=count,
+            status="would_execute" if dry_run else "pending",
+            description=f"Migrating {count} inventory events",
+        ))
+    
     if dry_run:
         return
     db.execute(text("DELETE FROM v2.inventory_events"))
@@ -212,6 +307,17 @@ def migrate_inventory_events(db, dry_run: bool):
 def migrate_audit_logs(db, dry_run: bool):
     count = count_rows(db, "audit_logs")
     logger.info("audit_logs -> v2.audit_logs: %s rows", count)
+    
+    if report:
+        report.add_operation(create_migration_operation(
+            OperationType.TABLE_MIGRATE,
+            source_table="audit_logs",
+            target_table="v2.audit_logs",
+            source_row_count=count,
+            status="would_execute" if dry_run else "pending",
+            description=f"Migrating {count} audit log entries",
+        ))
+    
     if dry_run:
         return
     db.execute(text("DELETE FROM v2.audit_logs"))
@@ -237,6 +343,17 @@ def migrate_audit_logs(db, dry_run: bool):
 def migrate_slot_occupancies(db, dry_run: bool):
     count = count_rows(db, "slot_occupancies")
     logger.info("slot_occupancies -> v2.slot_occupancies: %s rows", count)
+    
+    if report:
+        report.add_operation(create_migration_operation(
+            OperationType.TABLE_MIGRATE,
+            source_table="slot_occupancies",
+            target_table="v2.slot_occupancies",
+            source_row_count=count,
+            status="would_execute" if dry_run else "pending",
+            description=f"Migrating {count} slot occupancy records",
+        ))
+    
     if dry_run:
         return
     db.execute(text("DELETE FROM v2.slot_occupancies"))
@@ -267,13 +384,22 @@ def sync_sequences(db):
 
 
 def main():
+    global report
+    
     parser = argparse.ArgumentParser(description="Shadow migrate public schema into v2 schema")
     parser.add_argument("--dry-run", action="store_true", help="Preview row counts only")
     parser.add_argument("--execute", action="store_true", help="Create v2 schema and migrate data")
+    parser.add_argument("--report", type=str, default="", help="Save dry-run report to file (format: ascii, json, markdown)")
     args = parser.parse_args()
 
     if not args.dry_run and not args.execute:
         parser.error("Choose either --dry-run or --execute")
+
+    # Initialize report
+    report = DryRunReport(
+        script_name="migrate_to_v2.py",
+        database_url=DATABASE_URL,
+    )
 
     db = SessionLocal()
     try:
@@ -291,6 +417,20 @@ def main():
             sync_sequences(db)
             db.commit()
         logger.info("Shadow migration completed successfully")
+        
+        # Print and save report if dry-run
+        if args.dry_run:
+            report.print_ascii()
+            if args.report:
+                # Parse format from filename or use default
+                format_map = {"json": "json", "md": "markdown", "txt": "ascii"}
+                fmt = "ascii"
+                for ext, fmt_type in format_map.items():
+                    if args.report.endswith(f".{ext}"):
+                        fmt = fmt_type
+                        break
+                report.save_report(args.report, format=fmt)
+                
     except Exception:
         db.rollback()
         logger.exception("Shadow migration failed")

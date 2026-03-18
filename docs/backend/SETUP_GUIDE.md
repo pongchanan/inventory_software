@@ -174,17 +174,17 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete endpoint details
 
 ### Image Upload Feature
 - **Admin capability**: Upload images for inventory items
-- **Endpoint**: `POST /api/item-types/{uid}/upload-image`
+- **Endpoint**: `POST /api/item-types/{item_type_id}/images`
 - **Supported formats**: JPG, JPEG, PNG, GIF, WEBP
 - **Storage**: Images saved to `uploads/items/` directory
 - **Serving**: Static files served at `/uploads/items/{filename}`
 
-### Compartment-Based Item Listing
-- **User view**: See items by compartment with availability filter
+### Inventory and Occupancy Listing
+- **User view**: Read event history and occupancy from canonical inventory APIs
 - **Endpoints**:
-  - `GET /api/compartments/{locker_number}/items` - Items in specific compartment
-  - `GET /api/compartments/floor/{floor}/items` - All items on a floor
-  - `GET /api/item-types/by-location/{location}` - Items at specific location
+  - `GET /api/inventory/events`
+  - `GET /api/inventory/occupancy/location/{location_id}`
+  - `GET /api/inventory/occupancy/unit/{unit_id}`
 
 ### Database Changes
 - Added `image_url` field to Item model
@@ -207,14 +207,17 @@ curl -X POST "http://localhost:3000/api/item-types" \
   }'
 
 # Then upload an image
-curl -X POST "http://localhost:3000/api/item-types/TEST001/upload-image" \
-  -F "file=@path/to/image.jpg"
+curl -X POST "http://localhost:3000/api/item-types/1/images" \
+  -F "image_file=@path/to/image.jpg"
 ```
 
-### View Items by Compartment (User)
+### View Inventory and Occupancy (User)
 ```bash
-# See all available items in compartment A1-001
-curl "http://localhost:3000/api/compartments/A1-001/items?available_only=true"
+# List inventory events
+curl "http://localhost:3000/api/inventory/events"
+
+# Check occupancy in one storage location
+curl "http://localhost:3000/api/inventory/occupancy/location/1"
 ```
 
 ---
@@ -225,13 +228,9 @@ backend/
 ├── uploads/              # Auto-created on first run
 │   └── items/           # Item images stored here
 ├── app/
-│   ├── models/
-│   │   └── item.py      # Updated with image_url field
-│   ├── schemas/
-│   │   └── item.py      # Updated with image_url field
 │   └── routes/
-│       ├── items.py     # Added image upload endpoint
-│       └── compartments.py  # Added item listing endpoints
+│       ├── item_types_api.py   # Item type CRUD + image upload endpoint
+│       └── inventory_api.py    # Canonical event and occupancy endpoints
 ├── main.py              # Compatibility entry point
 ├── app/main.py          # Updated with static file serving
 └── requirements.txt     # Added python-multipart & Pillow
@@ -244,11 +243,11 @@ backend/
 ### Frontend Integration
 The frontend can now:
 1. Display item images using the `image_url` field
-2. Filter items by compartment and availability
+2. Read inventory history and occupancy from canonical inventory endpoints
 3. Allow admins to upload images via file upload form
 
 ### Recommended Frontend Changes
-- **User Dashboard**: Add compartment selector and item grid with images
+- **User Dashboard**: Add storage location selector and occupancy-aware item grid
 - **Admin Dashboard**: Add image upload form to item management page
 
 ---

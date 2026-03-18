@@ -55,6 +55,7 @@ Canonical groups:
 - `/api/observations/*`
 - `/api/inventory/*`
 - `/api/audit-logs/*`
+- `/api/kiosk/*`
 
 Do not add new calls to removed legacy groups such as `/api/compartments/*`, `/api/items/*`, or `/api/loans/*`.
 

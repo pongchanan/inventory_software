@@ -1,3 +1,6 @@
+"""Manual end-to-end flow test for kiosk registration - requires running backend server and frontend."""
+
+import pytest
 import requests
 import time
 import random
@@ -5,8 +8,20 @@ import random
 BASE_URL = "http://localhost:3000"
 KIOSK_ID = "kiosk_demo_01"
 
-def simulate_flow():
-    print("--- 📱 Mobile Web: Student fills out form ---")
+
+@pytest.mark.manual
+@pytest.mark.integration
+def test_kiosk_full_registration_flow():
+    """
+    Manual test simulating the complete kiosk registration flow:
+    1. Student fills form on mobile
+    2. Student waits at kiosk
+    3. Student taps RFID card
+    4. System completes registration
+    
+    REQUIRES: Backend running at http://localhost:3000
+    """
+    print("\n--- 📱 Mobile Web: Student fills out form ---")
     student_data = {
         "kiosk_id": KIOSK_ID,
         "name": f"Test Student {random.randint(100, 999)}",
@@ -19,9 +34,10 @@ def simulate_flow():
         res = requests.post(f"{BASE_URL}/api/auth/kiosk/prepare_registration", json=student_data)
         print("Response:", res.json())
         res.raise_for_status()
-    except Exception as e:
-        print("Failed to connect to backend. Is the server running? Error:", e)
-        return
+    except requests.exceptions.ConnectionError as e:
+        pytest.skip("Backend server not running at http://localhost:3000")
+    except requests.exceptions.HTTPError as e:
+        pytest.fail(f"HTTP error: {e}")
 
     print("\n--- ⏳ Mobile Web: Polling for status (Simulating waiting at Kiosk) ---")
     for i in range(3):
@@ -46,8 +62,6 @@ def simulate_flow():
     if final_status.get("status") == "success":
         print("\n✅ Success! User was created and JWT Token was received.")
         print(f"Token: {final_status['access_token'][:20]}...")
+        assert final_status["status"] == "success"
     else:
-        print("\n❌ Something went wrong in the flow.")
-
-if __name__ == "__main__":
-    simulate_flow()
+        pytest.fail("❌ Something went wrong in the flow.")

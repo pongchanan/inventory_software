@@ -6,24 +6,12 @@ loan visibility and cabinet access visibility.
 
 ## Backend (Fact-Checked)
 
-### Loan detail endpoints
-Source: `backend/app/routes/loans.py`
+### Inventory event source (loan-tracking basis)
+Source: `backend/app/routes/inventory_api.py`
 
-- `GET /api/inventory/events/details/all`
-  - Returns enriched loan rows with user/item fields
-  - Supports `status_filter`, `skip`, and `limit`
-- `GET /api/inventory/events/details/active`
-  - Returns active loan details
-  - Supports `user_uid` and `item_type_id`
-  - Marks overdue loans when `due_at < now`
-- `GET /api/inventory/events/details/user/{user_uid}`
-  - Returns detailed history for one user
-  - Supports `include_returned`
-
-`LoanDetail` currently includes these notable fields beyond the legacy model:
-- `item_type_id`, `item_type_name`
-- `quantity`, `slot_id`, `source_action`
-- `item_image_url`
+- `GET /api/inventory/events`
+  - Canonical source for `borrow` / `return` event stream
+  - Supports filters via query params in backend service
 
 ### Audit log detail endpoint
 Source: `backend/app/routes/audit_logs.py`
@@ -36,11 +24,11 @@ Source: `backend/app/routes/audit_logs.py`
 ## Frontend (Fact-Checked)
 
 ### API client
-Source: `frontend/src/lib/api.ts`
+Source: `frontend/src/lib/api_client/*.ts`
 
 Implemented API functions:
-- `fetchLoanDetails(statusFilter?)`
-- `fetchActiveLoanDetails()`
+- `fetchLoanDetails(statusFilter?)` (derived client-side from `GET /api/inventory/events`)
+- `fetchActiveLoanDetails()` (derived client-side from `GET /api/inventory/events`)
 - `fetchCabinetAccessLogs(hours)`
 
 ### Admin UI placement
@@ -52,8 +40,8 @@ Current UI is split by pages, not tab sections inside one page:
 ## Important Note on Access Control
 
 - Frontend routes are admin-gated by the auth context.
-- These backend handlers are not individually wrapped with `require_admin` in
-  the route definitions above, so API-level role enforcement should be reviewed
+- Some backend handlers may not be individually wrapped with `require_admin` in
+  route definitions, so API-level role enforcement should be reviewed
   separately if strict server-side authorization is required.
 
 
