@@ -100,6 +100,17 @@ export default function LoginPage() {
           </>
         )}
       </button>
+
+      <div className="text-center pt-4">
+        <span className="text-gray-500 text-sm">ยังไม่มีบัญชี? </span>
+        <button
+          type="button"
+          onClick={() => router.push("/register")}
+          className="text-[#ee4d2d] text-sm font-bold hover:underline"
+        >
+          สมัครสมาชิก
+        </button>
+      </div>
     </form>
   );
 
