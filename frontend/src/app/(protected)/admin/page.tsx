@@ -16,9 +16,60 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Download
 } from "lucide-react";
-import { fetchItems, fetchActiveLoanDetails } from "@/lib/api";
+import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
+import { fetchItems, fetchActiveLoanDetails, fetchMostBorrowedItems, fetchMostDamagedItems, ItemStatistic } from "@/lib/api";
+import * as XLSX from "xlsx";
+
+const exportToExcel = (stats: any, userName: string) => {
+  const now = new Date();
+  const timestamp = now.toLocaleString("th-TH");
+  
+  // Create workbook and worksheet
+  const wb = XLSX.utils.book_new();
+  
+  // Sheet 1: Dashboard Summary
+  const summaryData = [
+    ["ศูนย์ควบคุมระบบ - รายงานสรุป", "", ""],
+    ["", "", ""],
+    ["วันที่ & เวลา", timestamp, ""],
+    ["ผู้ส่งออก", userName, ""],
+    ["", "", ""],
+    ["สรุปข้อมูลระบบ", "", ""],
+    ["รายการ", "ปริมาณ", "หน่วย"],
+    ["อุปกรณ์ทั้งหมด", stats.totalItems, "ชิ้น"],
+    ["กำลังถูกยืมอยู่", stats.activeLoans, "รายการ"],
+    ["เลยกำหนดคืน", stats.overdue, "รายการ"],
+    ["Health Score", "98.5", "%"],
+  ];
+  
+  const ws = XLSX.utils.aoa_to_sheet(summaryData);
+  
+  // Set column widths
+  ws["!cols"] = [
+    { wch: 25 },
+    { wch: 15 },
+    { wch: 15 }
+  ];
+  
+  // Style header rows
+  for (let i = 0; i <= 10; i++) {
+    const cellRef = XLSX.utils.encode_col(0) + (i + 1);
+    if (ws[cellRef]) {
+      ws[cellRef].s = { font: { bold: true } };
+    }
+  }
+  
+  XLSX.utils.book_append_sheet(wb, ws, "Summary");
+  
+  // Generate filename with timestamp
+  const filename = `Admin_Report_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}.xlsx`;
+  
+  // Write file
+  XLSX.writeFile(wb, filename);
+};
 
 export default function AdminDashboard() {
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -29,6 +80,8 @@ export default function AdminDashboard() {
     overdue: 0,
     systemHealthy: true
   });
+  const [mostBorrowedItems, setMostBorrowedItems] = useState<ItemStatistic[]>([]);
+  const [mostDamagedItems, setMostDamagedItems] = useState<ItemStatistic[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,9 +93,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [items, activeLoans] = await Promise.all([
+        const [items, activeLoans, borrowed, damaged] = await Promise.all([
           fetchItems(),
-          fetchActiveLoanDetails()
+          fetchActiveLoanDetails(),
+          fetchMostBorrowedItems(5),
+          fetchMostDamagedItems(5)
         ]);
 
         setStats({
@@ -51,6 +106,8 @@ export default function AdminDashboard() {
           overdue: activeLoans.filter(l => l.status === 'overdue').length,
           systemHealthy: true
         });
+        setMostBorrowedItems(borrowed);
+        setMostDamagedItems(damaged);
       } catch (err) {
         console.error("Failed to load dashboard stats", err);
       } finally {
@@ -79,7 +136,13 @@ export default function AdminDashboard() {
           </h1>
           <p className="text-gray-500 font-medium mt-1">ยินดีต้อนรับคุณ {user.name}, ข้อมูลสรุปสถานะระบบล่าสุด</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => exportToExcel(stats, user.name)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors"
+          >
+            <Download size={14} /> Export Excel
+          </button>
           <Link href="/" className="sm:hidden flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-xl text-[10px] font-black uppercase tracking-wider">
             ไปยังหน้ายืมของ <ArrowRight size={12} />
           </Link>
@@ -132,6 +195,109 @@ export default function AdminDashboard() {
           <div className="mt-4 flex items-center gap-1 text-[10px] font-black text-green-400 uppercase tracking-widest">
             <ShieldCheck size={12} /> All Sensors OK
           </div>
+        </div>
+      </div>
+
+      {/* STATISTICS CHARTS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Most Borrowed Items */}
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+          <h3 className="font-black text-gray-900 mb-6 flex items-center gap-2">
+            <Package size={20} className="text-orange-500" /> อุปกรณ์ที่ยืมมากที่สุด
+          </h3>
+          {mostBorrowedItems.length > 0 ? (
+            <div className="flex flex-col items-center">
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={mostBorrowedItems}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {mostBorrowedItems.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color || '#ee4d2d'} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value) => `${value} ครั้ง`}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mt-4 space-y-2 w-full">
+                {mostBorrowedItems.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: item.color || '#ee4d2d' }}
+                      ></div>
+                      <span className="font-medium text-gray-700">{item.name}</span>
+                    </div>
+                    <span className="font-black text-gray-900">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-gray-400">
+              <p>ไม่มีข้อมูล</p>
+            </div>
+          )}
+        </div>
+
+        {/* Most Damaged Items */}
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+          <h3 className="font-black text-gray-900 mb-6 flex items-center gap-2">
+            <AlertCircle size={20} className="text-red-500" /> อุปกรณ์ที่ชำรุดมากที่สุด
+          </h3>
+          {mostDamagedItems.length > 0 ? (
+            <div className="flex flex-col items-center">
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={mostDamagedItems}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {mostDamagedItems.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color || '#ef5350'} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value) => `${value} รายการ`}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mt-4 space-y-2 w-full">
+                {mostDamagedItems.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: item.color || '#ef5350' }}
+                      ></div>
+                      <span className="font-medium text-gray-700">{item.name}</span>
+                    </div>
+                    <span className="font-black text-gray-900">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="h-64 flex items-center justify-center text-gray-400">
+              <p>ไม่มีข้อมูล</p>
+            </div>
+          )}
         </div>
       </div>
 

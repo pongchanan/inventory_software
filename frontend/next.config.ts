@@ -23,6 +23,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Note: Turbopack is enabled by default in Next.js 16
+  // It automatically handles code splitting and caching
 };
 
 export default nextConfig;

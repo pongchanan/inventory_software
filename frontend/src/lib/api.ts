@@ -52,3 +52,8 @@ export {
   fetchUserLoans,
   returnLoan,
 } from "./api_client/loans";
+export type { ItemStatistic } from "./api_client/statistics";
+export {
+  fetchMostBorrowedItems,
+  fetchMostDamagedItems,
+} from "./api_client/statistics";
