@@ -3,17 +3,61 @@ from __future__ import annotations
 import time
 from datetime import datetime
 from typing import Dict, Optional
+import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.auth import POWERUSER_EMAIL, POWERUSER_PASSWORD, POWERUSER_UID, create_access_token
+from app.auth import POWERUSER_EMAIL, POWERUSER_PASSWORD, POWERUSER_UID, create_access_token, hash_password, verify_password
 from app.models.user import User
-from app.schemas.user import KioskPrepareRequest, KioskStatusResponse, LoginRequest, TokenResponse, UserResponse
+from app.schemas.user import KioskPrepareRequest, KioskStatusResponse, LoginRequest, TokenResponse, UserResponse, RegisterRequest, RegistrationResponse
 
 
 KIOSK_REGISTRATION_TIMEOUT = 120
 pending_registrations: Dict[str, dict] = {}
+
+
+def register(request: RegisterRequest, db: Session) -> TokenResponse:
+    """Register a new user with email and password and return access token."""
+    # Validate password length before processing
+    if len(request.password.encode('utf-8')) > 72:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must not exceed 72 bytes (approximately 72 characters)"
+        )
+    
+    # Check if email already exists
+    existing_user = db.query(User).filter(User.email == request.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Create new user with unique NFC UID (for now, use email-based identifier)
+    nfc_card_uid = f"USER-{uuid.uuid4().hex[:12].upper()}"
+    
+    new_user = User(
+        nfc_card_uid=nfc_card_uid,
+        name=request.name,
+        email=request.email,
+        password_hash=hash_password(request.password),
+        role="user",
+        active=True,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )
+    
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    # Create JWT token for immediate login
+    token = create_access_token(data={"sub": new_user.nfc_card_uid, "role": new_user.role})
+    return TokenResponse(
+        access_token=token,
+        user=UserResponse.model_validate(new_user)
+    )
 
 
 def login(credentials: LoginRequest, db: Session) -> TokenResponse:
@@ -34,9 +78,8 @@ def login(credentials: LoginRequest, db: Session) -> TokenResponse:
     user = db.query(User).filter(User.email == credentials.email).first()
     if not user or not user.password_hash:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
-    from app.routes import auth as auth_routes
 
-    if not auth_routes.verify_password(credentials.password, user.password_hash):
+    if not verify_password(credentials.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
     if not user.authorized:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is disabled")
@@ -46,8 +89,6 @@ def login(credentials: LoginRequest, db: Session) -> TokenResponse:
 
 
 def prepare_kiosk_registration(request: KioskPrepareRequest) -> dict:
-    from app.routes import auth as auth_routes
-
     existing: Optional[dict] = pending_registrations.get(request.kiosk_id)
     if existing and existing["expires_at"] > time.time() and existing["status"] == "waiting":
         raise HTTPException(
@@ -58,7 +99,7 @@ def prepare_kiosk_registration(request: KioskPrepareRequest) -> dict:
     pending_registrations[request.kiosk_id] = {
         "name": request.name,
         "email": request.email,
-        "password_hash": auth_routes.hash_password(request.password),
+        "password_hash": hash_password(request.password),
         "expires_at": time.time() + KIOSK_REGISTRATION_TIMEOUT,
         "status": "waiting",
         "user": None,

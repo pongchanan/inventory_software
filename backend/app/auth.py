@@ -31,11 +31,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def hash_password(password: str) -> str:
-    # bcrypt has a 72 byte limit. If longer, we truncate or pre-hash.
-    # We will truncate to 72 bytes for safety before hashing.
-    password_bytes = password.encode("utf-8")
-    if len(password_bytes) > 72:
-        password = password_bytes[:72].decode("utf-8", "ignore")
+    """Hash password using bcrypt. Password should be validated before calling this function.
+    Truncates to 72 bytes as a safety measure.
+    """
+    # Bcrypt has a 72-byte limit, so truncate password if necessary
+    if len(password.encode('utf-8')) > 72:
+        password = password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
     return pwd_context.hash(password)
 
 

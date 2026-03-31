@@ -4,6 +4,7 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.user import (
     LoginRequest,
+    RegisterRequest,
     TokenResponse,
     UserResponse,
     KioskPrepareRequest,
@@ -17,6 +18,11 @@ from app.auth import (
 from app.services import auth_service
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+@router.post("/register", response_model=TokenResponse)
+def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    """Register a new user with email and password."""
+    return auth_service.register(request, db)
 
 @router.post("/login", response_model=TokenResponse)
 def login(credentials: LoginRequest, db: Session = Depends(get_db)):

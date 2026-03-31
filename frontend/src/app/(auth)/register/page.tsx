@@ -5,16 +5,15 @@ import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { RegisterDesktopShell } from "./_components/RegisterDesktopShell";
 import { RegisterMobileShell } from "./_components/RegisterMobileShell";
-
-// Normally you'd import a specific prepare_registration API call from lib/api.ts
-// We'll add that to api.ts shortly.
-import { API_BASE } from "@/lib/api";
+import { register } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterPage() {
     const router = useRouter();
+    const { loginStore } = useAuth();
     const [formData, setFormData] = useState({
         name: "",
-        email: "", // Used as username/student ID
+        email: "", // Email/username for login
         password: "",
     });
     const [loading, setLoading] = useState(false);
@@ -26,27 +25,14 @@ export default function RegisterPage() {
         setLoading(true);
 
         try {
-            // Call the preparation API
-            const res = await fetch(`${API_BASE}/api/auth/kiosk/prepare_registration`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    kiosk_id: "web-registration",
-                    name: formData.name,
-                    email: formData.email,
-                    password: formData.password,
-                }),
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => null);
-                throw new Error(errData?.detail || "Registration failed. Please try again.");
-            }
-
-            // If successful, push to the tap-card waiting screen
-            router.push("/register/tap-card");
+            // Call the standard registration API
+            const res = await register(formData.name, formData.email, formData.password);
+            
+            // Store the token and user in auth context
+            loginStore(res.access_token, res.user);
+            
+            // Redirect to home page
+            router.push("/");
         } catch (err: any) {
             setError(err.message || "An unexpected error occurred.");
         } finally {
@@ -79,10 +65,10 @@ export default function RegisterPage() {
 
             <div className="space-y-1.5">
                 <label className="block text-sm font-bold text-gray-700 ml-1">
-                    รหัสนักศึกษา / อีเมล
+                    อีเมล
                 </label>
                 <input
-                    type="text"
+                    type="email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -115,7 +101,7 @@ export default function RegisterPage() {
                     <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                     <>
-                        ดำเนินการต่อ
+                        ลงทะเบียน
                         <ArrowRight className="w-5 h-5" />
                     </>
                 )}
