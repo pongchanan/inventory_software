@@ -9,6 +9,7 @@ from app.schemas.user import (
     UserResponse,
     KioskPrepareRequest,
     KioskStatusResponse,
+    LinkNFCCardRequest,
 )
 from app.auth import (
     get_current_user,
@@ -33,6 +34,12 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
 def get_me(current_user: User = Depends(get_current_user)):
     """Return the currently authenticated user."""
     return current_user
+
+
+@router.post("/link-nfc-card", response_model=UserResponse)
+def link_nfc_card(request: LinkNFCCardRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Link an NFC card to the current user's account."""
+    return auth_service.link_nfc_card(current_user, request, db)
 
 
 @router.post("/kiosk/prepare_registration")

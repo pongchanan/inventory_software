@@ -56,6 +56,10 @@ class RegistrationResponse(BaseModel):
     user: UserResponse
 
 
+class LinkNFCCardRequest(BaseModel):
+    nfc_card_uid: str
+
+
 class KioskPrepareRequest(BaseModel):
     kiosk_id: str
     name: str

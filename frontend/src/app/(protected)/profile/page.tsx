@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from '@/context/AuthContext';
-import { User, Mail, LogOut, Clock, ShieldCheck, Settings } from 'lucide-react';
+import { User, Mail, LogOut, Clock, ShieldCheck, Settings, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -59,6 +59,30 @@ export default function ProfilePage() {
                             ประวัติที่เคยยืมทั้งหมด
                         </div>
                     </button>
+
+                    <Link href="/profile/cards" className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-2xl transition-colors group border border-blue-200">
+                        <div className="flex items-center gap-3 text-gray-700 font-medium">
+                            <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                                <Smartphone size={20} />
+                            </div>
+                            <div className="text-left">
+                                <div className="font-semibold">การ์ด NFC ของฉัน</div>
+                                <div className="text-xs text-gray-600 font-normal">
+                                    {user?.nfc_card_uid ? (
+                                        <span className="text-green-600 font-semibold">✓ 1 ใบ เชื่อมต่ออยู่</span>
+                                    ) : (
+                                        <span className="text-orange-600 font-semibold">ยังไม่มีการ์ดเชื่อมต่อ</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-2xl font-black text-blue-500">
+                                {user?.nfc_card_uid ? '1' : '0'}
+                            </div>
+                            <div className="text-xs text-gray-600">ใบ</div>
+                        </div>
+                    </Link>
 
                     <button className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors group">
                         <div className="flex items-center gap-3 text-gray-700 font-medium">

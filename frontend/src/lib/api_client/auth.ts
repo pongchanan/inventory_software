@@ -113,11 +113,59 @@ export async function register(name: string, email: string, password: string): P
   };
 }
 
-export async function fetchMe(token: string): Promise<AuthUser> {
+export async function fetchMe(token?: string): Promise<AuthUser> {
+  // If no token provided, get it from localStorage
+  let authToken = token;
+  if (!authToken && typeof window !== 'undefined') {
+    authToken = localStorage.getItem('access_token') || '';
+  }
+  
+  if (!authToken) {
+    throw new Error("Not authenticated");
+  }
+  
   const res = await fetch(`${API_BASE}/api/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${authToken}` },
   });
   if (!res.ok) throw new Error("Not authenticated");
+  const payload: {
+    id: number;
+    nfc_card_uid?: string;
+    uid?: string;
+    name: string;
+    email: string | null;
+    role: string;
+    active?: boolean;
+    authorized?: boolean;
+    created_at: string;
+    updated_at: string;
+  } = await res.json();
+  return normalizeAuthUser(payload);
+}
+
+export async function linkNFCCard(nfc_card_uid: string, token?: string): Promise<AuthUser> {
+  // If no token provided, get it from localStorage
+  let authToken = token;
+  if (!authToken && typeof window !== 'undefined') {
+    authToken = localStorage.getItem('access_token') || '';
+  }
+  
+  if (!authToken) {
+    throw new Error("Not authenticated");
+  }
+  
+  const res = await fetch(`${API_BASE}/api/auth/link-nfc-card`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ nfc_card_uid }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to link NFC card" }));
+    throw new Error(err.detail || "Failed to link NFC card");
+  }
   const payload: {
     id: number;
     nfc_card_uid?: string;

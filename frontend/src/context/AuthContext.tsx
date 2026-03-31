@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // On mount, check localStorage
   useEffect(() => {
     let isSubscribed = true;
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("access_token");
 
     if (token) {
       fetchMe(token)
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         .catch(() => {
           if (isSubscribed) {
-            localStorage.removeItem("token");
+            localStorage.removeItem("access_token");
             setUser(null);
           }
         })
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginStore = (newToken: string, newUser: AuthUser) => {
-    localStorage.setItem("token", newToken);
+    localStorage.setItem("access_token", newToken);
     setToken(newToken);
     setUser(newUser);
     // Ensure loading is false after explicit login so auth guards don't block rendering
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("access_token");
     setToken(null);
     setUser(null);
     router.push("/login");

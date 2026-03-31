@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import POWERUSER_EMAIL, POWERUSER_PASSWORD, POWERUSER_UID, create_access_token, hash_password, verify_password
 from app.models.user import User
-from app.schemas.user import KioskPrepareRequest, KioskStatusResponse, LoginRequest, TokenResponse, UserResponse, RegisterRequest, RegistrationResponse
+from app.schemas.user import KioskPrepareRequest, KioskStatusResponse, LoginRequest, TokenResponse, UserResponse, RegisterRequest, RegistrationResponse, LinkNFCCardRequest
 
 
 KIOSK_REGISTRATION_TIMEOUT = 120
@@ -61,7 +61,11 @@ def register(request: RegisterRequest, db: Session) -> TokenResponse:
 
 
 def login(credentials: LoginRequest, db: Session) -> TokenResponse:
-    if credentials.email == POWERUSER_EMAIL and credentials.password == POWERUSER_PASSWORD:
+    # Query user from database first
+    user = db.query(User).filter(User.email == credentials.email).first()
+    
+    # If user doesn't exist in database but credentials match poweruser, still allow (for backward compatibility)
+    if not user and credentials.email == POWERUSER_EMAIL and credentials.password == POWERUSER_PASSWORD:
         mock_user = User(
             id=0,
             nfc_card_uid=POWERUSER_UID,
@@ -75,7 +79,6 @@ def login(credentials: LoginRequest, db: Session) -> TokenResponse:
         token = create_access_token(data={"sub": POWERUSER_UID, "role": "admin"})
         return TokenResponse(access_token=token, user=UserResponse.model_validate(mock_user))
 
-    user = db.query(User).filter(User.email == credentials.email).first()
     if not user or not user.password_hash:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
@@ -130,3 +133,40 @@ def check_kiosk_registration_status(kiosk_id: str) -> KioskStatusResponse:
         return response
 
     return KioskStatusResponse(status="waiting")
+
+
+def link_nfc_card(current_user: User, request: LinkNFCCardRequest, db: Session) -> UserResponse:
+    """Link an NFC card to the current user's account."""
+    # Fetch the user from the database to ensure it's in the session
+    db_user = db.query(User).filter(User.id == current_user.id).first()
+    if not db_user:
+        # If user not found in db, fetch by email
+        db_user = db.query(User).filter(User.email == current_user.email).first()
+    
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Check if NFC card UID is already in use by another user
+    existing_user = db.query(User).filter(
+        User.nfc_card_uid == request.nfc_card_uid,
+        User.id != db_user.id
+    ).first()
+    
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="NFC card UID is already registered to another user"
+        )
+    
+    # Update the user's NFC card UID
+    db_user.nfc_card_uid = request.nfc_card_uid
+    db_user.updated_at = datetime.utcnow()
+    
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    return UserResponse.model_validate(db_user)
