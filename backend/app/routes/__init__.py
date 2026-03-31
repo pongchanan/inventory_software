@@ -7,6 +7,7 @@ from .observations_api import router as observations_router
 from .inventory_api import router as inventory_router
 from .audit_logs import router as audit_logs_router
 from .kiosk_api import router as kiosk_router
+from .statistics_api import router as statistics_router
 
 __all__ = [
     "users_router",
@@ -18,4 +19,5 @@ __all__ = [
     "inventory_router",
     "auth_router",
     "kiosk_router",
+    "statistics_router",
 ]

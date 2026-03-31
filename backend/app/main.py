@@ -17,6 +17,7 @@ from app.routes import (
     item_types_router,
     kiosk_router,
     observations_router,
+    statistics_router,
     storage_router,
     users_router,
 )
@@ -84,6 +85,7 @@ app.include_router(storage_router)
 app.include_router(access_sessions_router)
 app.include_router(observations_router)
 app.include_router(inventory_router)
+app.include_router(statistics_router)
 
 
 @app.get("/")
