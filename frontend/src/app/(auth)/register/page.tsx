@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { RegisterDesktopShell } from "./_components/RegisterDesktopShell";
@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterPage() {
     const router = useRouter();
-    const { loginStore } = useAuth();
+    const { loginStore, user } = useAuth();
     const [formData, setFormData] = useState({
         name: "",
         email: "", // Email/username for login
@@ -18,6 +18,21 @@ export default function RegisterPage() {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Already logged in — redirect to admin or home based on role.
+    useEffect(() => {
+        if (user) {
+            if (user.role === "admin") {
+                router.push("/admin");
+            } else {
+                router.push("/");
+            }
+        }
+    }, [user, router]);
+
+    if (user) {
+        return null;
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
