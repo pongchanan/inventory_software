@@ -67,5 +67,15 @@ def complete_registration(db: Session, registration_id: int, card_id: str) -> Us
     return user
 
 
-def list_pending_registrations(db: Session) -> list[Registration]:
-    return db.query(Registration).order_by(Registration.created_at.desc()).all()
+def get_registration_by_credentials(
+    db: Session, email: str, password: str
+) -> Registration:
+    from app.services.auth_service import verify_password
+
+    reg = db.query(Registration).filter(Registration.email == email).first()
+    if not reg or not verify_password(password, reg.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+    return reg

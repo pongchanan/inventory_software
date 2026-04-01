@@ -3,6 +3,18 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
 
+class UserOut(BaseModel):
+    id: int
+    name: str
+    email: str
+    role: str
+    card_id: str | None
+    is_blacklist: bool
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
@@ -11,7 +23,7 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    user: "UserOut"
+    user: UserOut
 
 
 class RegisterRequest(BaseModel):
@@ -30,18 +42,6 @@ class RegistrationOut(BaseModel):
     name: str
     email: str
     role: str
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class UserOut(BaseModel):
-    id: int
-    name: str
-    email: str
-    role: str
-    card_id: str | None
-    is_blacklist: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}

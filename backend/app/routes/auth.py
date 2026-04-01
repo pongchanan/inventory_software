@@ -18,7 +18,7 @@ from app.services.auth_service import (
 from app.services.registration_service import (
     complete_registration,
     create_registration,
-    list_pending_registrations,
+    get_registration_by_credentials,
 )
 from app.models.user import User
 
@@ -46,10 +46,10 @@ def register_complete(body: RegisterCompleteRequest, db: Session = Depends(get_d
     return user
 
 
-@router.get("/registrations", response_model=list[RegistrationOut])
-def get_pending_registrations(db: Session = Depends(get_db)):
-    """List all pending registrations waiting for card scan."""
-    return list_pending_registrations(db)
+@router.post("/registrations", response_model=RegistrationOut)
+def get_pending_registration(body: LoginRequest, db: Session = Depends(get_db)):
+    """Look up a pending registration by email + password."""
+    return get_registration_by_credentials(db, body.email, body.password)
 
 
 @router.get("/me", response_model=UserOut)
