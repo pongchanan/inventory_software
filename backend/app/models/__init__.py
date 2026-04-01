@@ -10,6 +10,7 @@ from .vision_observation_detail_core import VisionObservationDetail
 from .inventory_event_core import InventoryEvent
 from .audit_log_core import AuditLog
 from .slot_occupancy_core import SlotOccupancy
+from .notification_core import Notification
 
 __all__ = [
     "User",
@@ -24,4 +25,5 @@ __all__ = [
     "InventoryEvent",
     "AuditLog",
     "SlotOccupancy",
+    "Notification",
 ]

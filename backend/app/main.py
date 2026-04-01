@@ -20,6 +20,7 @@ from app.routes import (
     statistics_router,
     storage_router,
     users_router,
+    notifications_router,
 )
 import app.models  # noqa: F401
 
@@ -86,6 +87,7 @@ app.include_router(access_sessions_router)
 app.include_router(observations_router)
 app.include_router(inventory_router)
 app.include_router(statistics_router)
+app.include_router(notifications_router)
 
 
 @app.get("/")

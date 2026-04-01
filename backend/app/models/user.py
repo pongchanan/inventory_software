@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
-from sqlalchemy.orm import synonym
+from sqlalchemy.orm import synonym, relationship
 from datetime import datetime
 from app.database import Base
 
@@ -18,6 +18,9 @@ class User(Base):
     authorized = synonym("active")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User {self.name} ({self.nfc_card_uid})>"

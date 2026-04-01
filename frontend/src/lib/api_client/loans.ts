@@ -3,6 +3,8 @@ import {
   fetchItemTypes,
   pickPrimaryImage,
   toItemUid,
+  authHeaders,
+  API_BASE,
 } from "./core";
 import { fetchUsers } from "./auth";
 import { Loan, LoanCreate, LoanDetail } from "./types";
@@ -198,4 +200,71 @@ export async function createLoan(loan: LoanCreate): Promise<Loan> {
 export async function returnLoan(loanId: number): Promise<Loan> {
   void loanId;
   throw new Error("Loan return uses /api/inventory/events with event_type=return and session context");
+}
+
+/**
+ * Send late item reminder emails to users with overdue items.
+ * Dev/admin endpoint for testing email notifications.
+ * 
+ * @param userId - Optional specific user ID to send reminder to
+ * @returns Summary of emails sent
+ */
+export async function sendLateItemReminders(userId?: number): Promise<{
+  status: string;
+  message?: string;
+  total_users_checked?: number;
+  emails_sent?: number;
+  users_with_overdue?: Array<{
+    user_id: number;
+    user_name: string;
+    user_email: string;
+    overdue_count: number;
+  }>;
+  errors?: string[];
+}> {
+  const url = new URL(`${API_BASE}/api/inventory/dev/send-late-reminders`, window.location.origin);
+  if (userId) {
+    url.searchParams.append("user_id", String(userId));
+  }
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to send late item reminders: ${res.statusText}`);
+  }
+
+  return res.json();
+}
+
+export async function sendTestEmail(
+  userId: number,
+  itemName: string = "Test Item",
+  daysOverdue: number = 5
+): Promise<{
+  status: string;
+  message: string;
+  user_id?: number;
+  user_name?: string;
+  user_email?: string;
+  item_name?: string;
+  days_overdue?: number;
+}> {
+  const url = new URL(`${API_BASE}/api/inventory/dev/send-test-email`, window.location.origin);
+  url.searchParams.append("user_id", String(userId));
+  url.searchParams.append("item_name", itemName);
+  url.searchParams.append("days_overdue", String(daysOverdue));
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to send test email: ${res.statusText}`);
+  }
+
+  return res.json();
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { Search, Bell } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useInventory, SortOption } from '../../../services/hooks/useInventory';
+import { NotificationDropdown } from '../../notifications/NotificationDropdown';
 
 export function TopHeader() {
     const { searchQuery, setSearchQuery, sortBy, setSortBy } = useInventory();
@@ -33,10 +34,7 @@ export function TopHeader() {
                     </select>
                 </div>
                 <div className="h-8 w-px bg-gray-200"></div>
-                <button className="relative p-2 text-gray-400 hover:text-[#ee4d2d] transition-colors">
-                    <Bell size={24} />
-                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#ee4d2d] border-2 border-white rounded-full"></span>
-                </button>
+                <NotificationDropdown />
             </div>
         </header>
     );

@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.auth import hash_password
+from app.auth import hash_password, require_admin
+from app.models.user import User
 from app.schemas.user_api import UserCreate, UserUpdate, UserResponse
 from app.services import users_service
 
@@ -32,7 +33,13 @@ def get_user_by_nfc(nfc_card_uid: str, db: Session = Depends(get_db)):
 
 
 @router.patch("/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get_db)):
+def update_user(
+    user_id: int, 
+    user_update: UserUpdate, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Update user. Requires admin privileges."""
     return users_service.update_user(db, user_id, user_update)
 
 

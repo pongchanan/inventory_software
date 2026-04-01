@@ -28,6 +28,7 @@ export type {
 
 export { fetchCabinetAccessLogs } from "./api_client/audit";
 export { fetchMe, fetchUsers, login, register, linkNFCCard } from "./api_client/auth";
+export { getAllUsers, updateUserRole } from "./api_client/users";
 export {
   createItem,
   createItemAuth,
@@ -51,9 +52,21 @@ export {
   fetchUserLoanDetails,
   fetchUserLoans,
   returnLoan,
+  sendLateItemReminders,
+  sendTestEmail,
 } from "./api_client/loans";
 export type { ItemStatistic } from "./api_client/statistics";
 export {
   fetchMostBorrowedItems,
   fetchMostDamagedItems,
 } from "./api_client/statistics";
+export type { Notification, NotificationStats, NotificationListResponse } from "./api_client/notifications";
+export {
+  getNotifications,
+  getUnreadNotifications,
+  getNotificationStats,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification,
+  deleteAllNotifications,
+} from "./api_client/notifications";

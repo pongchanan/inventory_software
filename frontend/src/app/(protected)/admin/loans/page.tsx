@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { LoansDesktopShell } from "./_components/LoansDesktopShell";
 import { LoansMobileShell } from "./_components/LoansMobileShell";
+import { SendLateRemindersButton } from "./_components/SendLateRemindersButton";
 
 export default function LoansAdminPage() {
     const { user, isAdmin, loading: authLoading } = useAuth();
@@ -94,12 +95,17 @@ export default function LoansAdminPage() {
 
     return (
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
-            <div>
-                <h1 className="text-3xl font-black text-gray-900 flex items-center gap-2">
-                    <Wrench className="w-8 h-8 text-[#ee4d2d]" />
-                    ยืม-คืน & แจ้งซ่อม
-                </h1>
-                <p className="text-gray-500 font-medium mt-1">ติดตามสถานะการยืมอุปกรณ์ และจัดการรายงานของชำรุดจากผู้ใช้งาน</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex-grow">
+                    <h1 className="text-3xl font-black text-gray-900 flex items-center gap-2">
+                        <Wrench className="w-8 h-8 text-[#ee4d2d]" />
+                        ยืม-คืน & แจ้งซ่อม
+                    </h1>
+                    <p className="text-gray-500 font-medium mt-1">ติดตามสถานะการยืมอุปกรณ์ และจัดการรายงานของชำรุดจากผู้ใช้งาน</p>
+                </div>
+                <div className="w-full sm:w-auto">
+                    <SendLateRemindersButton />
+                </div>
             </div>
 
             {loading ? (
