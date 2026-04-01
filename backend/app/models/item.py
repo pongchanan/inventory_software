@@ -10,5 +10,5 @@ class Item(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     image_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    quantity: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_borrowed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
