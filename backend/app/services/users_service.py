@@ -18,6 +18,7 @@ def get_user_by_id(db: Session, user_id: int) -> User:
 
 
 def verify_card(db: Session, card_id: str) -> bool:
+    """Check valid user during open the inventory"""
     user = db.query(User).filter(User.card_id == card_id).first()
     if not user:
         raise HTTPException(
@@ -27,7 +28,7 @@ def verify_card(db: Session, card_id: str) -> bool:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="User is blacklisted"
         )
-    return True
+    return user
 
 
 def update_user(db: Session, user_id: int, data: dict) -> User:
