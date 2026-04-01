@@ -3,13 +3,26 @@ and dispatches incoming messages to the correct handler."""
 
 import json
 import os
-import threading
+import time
 
+import jwt
 import paho.mqtt.client as paho
 
 from app.database import SessionLocal
 
 _client: paho.Client | None = None
+
+
+def _create_mqtt_jwt() -> str:
+    """Create a JWT token for MQTT broker authentication."""
+    secret = os.environ.get("JWT_SECRET", "")
+    algorithm = os.environ.get("JWT_ALGORITHM", "HS256")
+    payload = {
+        "sub": os.environ.get("MOSQUITTO_USER", "admin"),
+        "iat": int(time.time()),
+        "exp": int(time.time()) + 86400,
+    }
+    return jwt.encode(payload, secret, algorithm=algorithm)
 
 
 def _get_base_topic() -> str:
@@ -67,10 +80,9 @@ def start_mqtt() -> paho.Client | None:
 
     _client = paho.Client(paho.CallbackAPIVersion.VERSION2)
 
-    user = os.environ.get("MOSQUITTO_USER")
-    password = os.environ.get("MOSQUITTO_PASSWORD", "")
-    if user:
-        _client.username_pw_set(user, password)
+    user = os.environ.get("MOSQUITTO_USER", "admin")
+    token = _create_mqtt_jwt()
+    _client.username_pw_set(user, token)
 
     _client.on_connect = _on_connect
     _client.on_message = _on_message
