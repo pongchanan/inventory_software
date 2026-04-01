@@ -1,0 +1,36 @@
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
+# Load .env from backend/ dir (parents[1] = backend/)
+load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=True)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is required (PostgreSQL)")
+
+# Fix Railway's postgres:// prefix
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
