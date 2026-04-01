@@ -5,10 +5,8 @@ from app.database import get_db
 from app.schemas.auth import (
     LoginRequest,
     LoginResponse,
-    RegisterCompleteRequest,
     RegisterRequest,
     RegisterWithCardRequest,
-    RegistrationOut,
     UserOut,
 )
 from app.services.auth_service import (
@@ -17,9 +15,7 @@ from app.services.auth_service import (
     get_current_user,
 )
 from app.services.registration_service import (
-    complete_registration,
     create_registration,
-    get_registration_by_credentials,
     register_with_card,
 )
 from app.models.user import User
@@ -34,11 +30,11 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     return LoginResponse(access_token=token, user=UserOut.model_validate(user))
 
 
-@router.post("/register", response_model=RegistrationOut, status_code=201)
+@router.post("/register", response_model=UserOut, status_code=201)
 def register(body: RegisterRequest, db: Session = Depends(get_db)):
-    """Step 1: Create a pending registration (card scan comes later)."""
-    reg = create_registration(db, body.name, body.email, body.password)
-    return reg
+    """Register a new user (card_id=None, can be linked later)."""
+    user = create_registration(db, body.name, body.email, body.password)
+    return user
 
 
 @router.post("/register/with-card", response_model=UserOut, status_code=201)
@@ -46,19 +42,6 @@ def register_direct(body: RegisterWithCardRequest, db: Session = Depends(get_db)
     """Register and scan card at the same time — creates user directly."""
     user = register_with_card(db, body.name, body.email, body.password, body.card_id)
     return user
-
-
-@router.post("/register/complete", response_model=UserOut, status_code=201)
-def register_complete(body: RegisterCompleteRequest, db: Session = Depends(get_db)):
-    """Step 2: Scan card to finish registration — moves data to users, deletes from registrations."""
-    user = complete_registration(db, body.registration_id, body.card_id)
-    return user
-
-
-@router.post("/registrations", response_model=RegistrationOut)
-def get_pending_registration(body: LoginRequest, db: Session = Depends(get_db)):
-    """Look up a pending registration by email + password."""
-    return get_registration_by_credentials(db, body.email, body.password)
 
 
 @router.get("/me", response_model=UserOut)

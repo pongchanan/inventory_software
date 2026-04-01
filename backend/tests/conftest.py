@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime
 
 from app.models.user import User
-from app.models.registration import Registration
 
 
 @pytest.fixture
@@ -40,15 +39,3 @@ def sample_admin():
     user.created_at = datetime(2026, 1, 1)
     user.password_hash = "$2b$12$fakehash"
     return user
-
-
-@pytest.fixture
-def sample_registration():
-    reg = MagicMock(spec=Registration)
-    reg.id = 1
-    reg.name = "Pending User"
-    reg.email = "pending@example.com"
-    reg.role = "user"
-    reg.password_hash = "$2b$12$fakehash"
-    reg.created_at = datetime(2026, 1, 1)
-    return reg
