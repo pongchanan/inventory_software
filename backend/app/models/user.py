@@ -15,6 +15,7 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, nullable=False
     )
+    password_hash: Mapped[str] = mapped_column(String, nullable=False)
     role: Mapped[str] = mapped_column(String, nullable=False, default="user")
     card_id: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
     is_blacklist: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
