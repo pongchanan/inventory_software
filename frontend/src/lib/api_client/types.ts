@@ -114,6 +114,14 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
+export interface RegistrationOut {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  created_at: string;
+}
+
 export interface LoanDetail {
   id: number;
   user_uid: string;
