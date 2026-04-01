@@ -17,6 +17,19 @@ def get_user_by_id(db: Session, user_id: int) -> User:
     return user
 
 
+def verify_card(db: Session, card_id: str) -> bool:
+    user = db.query(User).filter(User.card_id == card_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Card not found"
+        )
+    if user.is_blacklist:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="User is blacklisted"
+        )
+    return True
+
+
 def update_user(db: Session, user_id: int, data: dict) -> User:
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
