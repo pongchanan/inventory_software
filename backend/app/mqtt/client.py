@@ -104,5 +104,7 @@ def stop_mqtt():
 
 def publish(topic: str, payload: dict):
     """Publish a JSON message to the broker."""
+    base = _get_base_topic() + "/from-backend"
+    full_topic = f"{base}/{topic}"
     if _client and _client.is_connected():
-        _client.publish(topic, json.dumps(payload))
+        _client.publish(full_topic, json.dumps(payload))

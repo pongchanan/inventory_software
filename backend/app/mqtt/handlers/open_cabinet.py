@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.models.open_session import OpenSession
 from app.mqtt.handlers.session_store import set_active_session
 from app.services.users_service import verify_card
+from app.mqtt.client import publish
 
 
 def handle_open_cabinet(payload: dict, db: Session):
@@ -36,3 +37,4 @@ def handle_open_cabinet(payload: dict, db: Session):
 
     set_active_session(session.id)
     print(f"[open-cabinet] Session #{session.id} opened by user #{user.id}")
+    publish("open-cabinet-result", {"session_id": session.id, "user_id": user.id})
