@@ -32,6 +32,13 @@ class RegisterRequest(BaseModel):
     password: str
 
 
+class RegisterWithCardRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    card_id: str
+
+
 class RegisterCompleteRequest(BaseModel):
     registration_id: int
     card_id: str

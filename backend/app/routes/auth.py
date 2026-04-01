@@ -7,6 +7,7 @@ from app.schemas.auth import (
     LoginResponse,
     RegisterCompleteRequest,
     RegisterRequest,
+    RegisterWithCardRequest,
     RegistrationOut,
     UserOut,
 )
@@ -19,6 +20,7 @@ from app.services.registration_service import (
     complete_registration,
     create_registration,
     get_registration_by_credentials,
+    register_with_card,
 )
 from app.models.user import User
 
@@ -37,6 +39,13 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
     """Step 1: Create a pending registration (card scan comes later)."""
     reg = create_registration(db, body.name, body.email, body.password)
     return reg
+
+
+@router.post("/register/with-card", response_model=UserOut, status_code=201)
+def register_direct(body: RegisterWithCardRequest, db: Session = Depends(get_db)):
+    """Register and scan card at the same time — creates user directly."""
+    user = register_with_card(db, body.name, body.email, body.password, body.card_id)
+    return user
 
 
 @router.post("/register/complete", response_model=UserOut, status_code=201)
