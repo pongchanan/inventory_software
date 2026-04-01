@@ -25,10 +25,8 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `POST` | `/login` | No | Authenticate with email + password, returns JWT |
-| `POST` | `/register` | No | Step 1: create pending registration |
+| `POST` | `/register` | No | Register a new user (card_id=None, link card later) |
 | `POST` | `/register/with-card` | No | Register with card scan in one step |
-| `POST` | `/register/complete` | No | Step 2: attach card to pending registration, create user |
-| `POST` | `/registrations` | No | Look up pending registration by email + password |
 | `GET` | `/me` | JWT | Get current authenticated user |
 
 ### Users — `/api/users` (admin only)
@@ -80,5 +78,5 @@ Runs all unit tests in `tests/`. Tests use `unittest.mock` — no real database 
 | Test file | Covers |
 |-----------|--------|
 | `test_auth_service.py` | Password hashing, JWT creation/decoding, user authentication |
-| `test_registration_service.py` | Registration create, complete, credential lookup, direct register |
+| `test_registration_service.py` | Register user (with and without card), duplicate checks |
 | `test_users_service.py` | List users, get by ID, update user |
