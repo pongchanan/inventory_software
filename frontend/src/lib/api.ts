@@ -28,7 +28,7 @@ export type {
 } from "./api_client/types";
 
 export { fetchCabinetAccessLogs } from "./api_client/audit";
-export { fetchMe, fetchUsers, login, register, registerWithCard, completeRegistration } from "./api_client/auth";
+export { fetchMe, fetchUsers, login, register, registerWithCard, completeRegistration, linkCardForUser, unlinkCardForUser } from "./api_client/auth";
 export {
   createItem,
   createItemAuth,

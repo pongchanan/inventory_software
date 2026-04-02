@@ -27,63 +27,19 @@ export async function fetchItemByUid(uid: string): Promise<Item> {
 }
 
 export async function createItem(item: ItemCreate): Promise<Item> {
-  const name = item.name?.trim() || item.uid?.trim();
-  if (!name) throw new Error("Item name is required");
-
-  const res = await fetch(`${API_BASE}/api/item-types`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Failed to create item" }));
-    throw new Error(err.detail || "Failed to create item");
-  }
-  const created: ItemTypeApi = await res.json();
-  return mapItemTypeToItem(created);
+  throw new Error("POST /api/item-types endpoint not yet implemented in backend. Please implement item creation endpoint.");
 }
 
 export async function updateItem(uid: string, item: ItemCreate): Promise<Item> {
-  const itemTypeId = parseItemTypeId(uid);
-  const payload: Record<string, unknown> = {};
-  if (item.name) payload.name = item.name;
-  if (item.available !== undefined) payload.active = item.available;
-
-  const res = await fetch(`${API_BASE}/api/item-types/${itemTypeId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Failed to update item" }));
-    throw new Error(err.detail || "Failed to update item");
-  }
-  const updated: ItemTypeApi = await res.json();
-  return mapItemTypeToItem(updated);
+  throw new Error("PATCH /api/item-types/{id} endpoint not yet implemented in backend. Please implement item update endpoint.");
 }
 
 export async function deleteItem(uid: string): Promise<void> {
-  const itemTypeId = parseItemTypeId(uid);
-  const res = await fetch(`${API_BASE}/api/item-types/${itemTypeId}`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Failed to delete item");
+  throw new Error("DELETE /api/item-types/{id} endpoint not yet implemented in backend. Please implement item delete endpoint.");
 }
 
 export async function uploadItemImage(uid: string, file: File): Promise<Item> {
-  const itemTypeId = parseItemTypeId(uid);
-  const formData = new FormData();
-  formData.append("image_file", file);
-
-  const res = await fetch(`${API_BASE}/api/item-types/${itemTypeId}/images`, {
-    method: "POST",
-    body: formData,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Failed to upload item image" }));
-    throw new Error(err.detail || "Failed to upload item image");
-  }
-
-  const updated: ItemTypeApi = await res.json();
-  return mapItemTypeToItem(updated);
+  throw new Error("POST /api/item-types/{id}/images endpoint not yet implemented in backend. Please implement image upload endpoint.");
 }
 
 export async function fetchImageUrl(uid: string): Promise<string> {
@@ -106,49 +62,13 @@ export function getImageUrl(imageUrl: string | null): string {
 }
 
 export async function createItemAuth(item: ItemCreate): Promise<Item> {
-  const name = item.name?.trim() || item.uid?.trim();
-  if (!name) throw new Error("Item name is required");
-
-  const res = await fetch(`${API_BASE}/api/item-types`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify({ name }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Failed to create item" }));
-    throw new Error(err.detail || "Failed to create item");
-  }
-  const created: ItemTypeApi = await res.json();
-  return mapItemTypeToItem(created);
+  throw new Error("POST /api/item-types endpoint not yet implemented in backend. Please implement item creation endpoint.");
 }
 
 export async function deleteItemAuth(uid: string): Promise<void> {
-  const itemTypeId = parseItemTypeId(uid);
-  const res = await fetch(`${API_BASE}/api/item-types/${itemTypeId}`, {
-    method: "DELETE",
-    headers: authHeaders(),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Failed to delete item" }));
-    throw new Error(err.detail || "Failed to delete item");
-  }
+  throw new Error("DELETE /api/item-types/{id} endpoint not yet implemented in backend. Please implement item delete endpoint.");
 }
 
 export async function uploadItemImageAuth(uid: string, file: File): Promise<Item> {
-  const itemTypeId = parseItemTypeId(uid);
-  const formData = new FormData();
-  formData.append("image_file", file);
-
-  const res = await fetch(`${API_BASE}/api/item-types/${itemTypeId}/images`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: formData,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Failed to upload item image" }));
-    throw new Error(err.detail || "Failed to upload item image");
-  }
-
-  const updated: ItemTypeApi = await res.json();
-  return mapItemTypeToItem(updated);
+  throw new Error("POST /api/item-types/{id}/images endpoint not yet implemented in backend. Please implement image upload endpoint.");
 }

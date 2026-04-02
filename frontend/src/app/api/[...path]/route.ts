@@ -9,7 +9,9 @@ import { NextRequest, NextResponse } from "next/server";
  */
 
 function getBackendUrl(): string {
-  const url = process.env.BACKEND_URL ?? "http://localhost:3000";
+  const envBackendUrl = process.env.BACKEND_URL?.trim();
+  const publicApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const url = envBackendUrl || publicApiUrl || "http://localhost:3000";
   return url.replace(/\/+$/, "");
 }
 

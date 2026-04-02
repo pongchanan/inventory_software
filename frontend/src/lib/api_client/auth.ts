@@ -15,7 +15,8 @@ function normalizeAuthUser(row: {
 }): AuthUser {
   return {
     id: row.id,
-    uid: row.nfc_card_uid ?? row.uid ?? "",
+    uid: row.uid ?? "",
+    nfc_card_uid: row.nfc_card_uid,
     name: row.name,
     email: row.email,
     role: row.role,
@@ -180,5 +181,53 @@ export async function completeRegistration(
     updated_at: string;
   } = await res.json();
 
+  return normalizeAuthUser(payload);
+}
+
+export async function linkCardForUser(userId: number): Promise<AuthUser> {
+  const res = await fetch(`${API_BASE}/api/users/me/link-card`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to link card" }));
+    throw new Error(err.detail || "Failed to link card");
+  }
+  const payload: {
+    id: number;
+    nfc_card_uid?: string;
+    uid?: string;
+    name: string;
+    email: string | null;
+    role: string;
+    active?: boolean;
+    authorized?: boolean;
+    created_at: string;
+    updated_at: string;
+  } = await res.json();
+  return normalizeAuthUser(payload);
+}
+
+export async function unlinkCardForUser(userId: number): Promise<AuthUser> {
+  const res = await fetch(`${API_BASE}/api/users/me/unlink-card`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to unlink card" }));
+    throw new Error(err.detail || "Failed to unlink card");
+  }
+  const payload: {
+    id: number;
+    nfc_card_uid?: string;
+    uid?: string;
+    name: string;
+    email: string | null;
+    role: string;
+    active?: boolean;
+    authorized?: boolean;
+    created_at: string;
+    updated_at: string;
+  } = await res.json();
   return normalizeAuthUser(payload);
 }

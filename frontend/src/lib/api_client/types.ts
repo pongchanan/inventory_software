@@ -100,6 +100,7 @@ export interface LoanCreate {
 export interface AuthUser {
   id: number;
   uid: string;
+  nfc_card_uid?: string;
   name: string;
   email: string | null;
   role: string;

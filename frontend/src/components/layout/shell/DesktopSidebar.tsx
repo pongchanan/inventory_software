@@ -82,13 +82,6 @@ export function DesktopSidebar({ currentUser, onLogout, currentPath }: DesktopSi
                         </Link>
 
                         <Link
-                            href="/admin/hardware"
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/hardware') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
-                        >
-                            <Cpu size={20} /> จัดการตู้ & ฮาร์ดแวร์
-                        </Link>
-
-                        <Link
                             href="/admin/loans"
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/loans') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                         >

@@ -36,9 +36,9 @@ export default function RegisterPage() {
                 sessionStorage.setItem("registrationId", registrationData.id.toString());
                 router.push("/register/tap-card");
             } else {
-                // Register without card - go directly to dashboard
+                // Register without card - continue through explicit login flow
                 await register(formData.name, formData.email, formData.password);
-                router.push("/");
+                router.push("/login");
             }
         } catch (err: any) {
             setError(err.message || "An unexpected error occurred.");
@@ -139,7 +139,7 @@ export default function RegisterPage() {
             <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ee4d2d] to-[#ff7355] text-white py-3 rounded-2xl hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm font-black disabled:opacity-50 shadow-lg shadow-orange-500/20"
+                className="w-full flex items-center justify-center gap-2 bg-linear-to-r from-[#ee4d2d] to-[#ff7355] text-white py-3 rounded-2xl hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm font-black disabled:opacity-50 shadow-lg shadow-orange-500/20"
             >
                 {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

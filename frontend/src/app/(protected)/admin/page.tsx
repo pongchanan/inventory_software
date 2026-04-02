@@ -121,7 +121,6 @@ export default function AdminDashboard() {
 
   const quickActions = [
     { title: "จัดการอุปกรณ์", icon: Package, href: "/admin/inventory", color: "bg-orange-500", desc: "เพิ่ม/ลบ รายการครุภัณฑ์" },
-    { title: "จัดการตู้", icon: Cpu, href: "/admin/hardware", color: "bg-blue-500", desc: "เช็คสถานะเซนเซอร์และตู้" },
     { title: "ยืม-คืน & ซ่อม", icon: Wrench, href: "/admin/loans", color: "bg-green-500", desc: "ตรวจสอบการยืมและแจ้งซ่อม" },
     { title: "จัดการสมาชิก", icon: Users, href: "/admin/users", color: "bg-purple-500", desc: "สิทธิ์การเข้าถึงและบัตร RFID" },
   ];

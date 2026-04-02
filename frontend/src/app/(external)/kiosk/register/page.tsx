@@ -43,11 +43,10 @@ function KioskRegistrationForm() {
                 const data = await res.json()
 
                 if (data.status === "success") {
-                    // Store token and redirect
-                    localStorage.setItem("token", data.access_token)
+                    // Registration succeeded; require user to log in explicitly.
                     setStep("SUCCESS")
                     setTimeout(() => {
-                        router.push("/") // Redirect to home/dashboard
+                        router.push("/login")
                     }, 3000)
                 } else if (data.status === "expired" || data.status === "not_found") {
                     setStep("ERROR")
@@ -129,7 +128,7 @@ function KioskRegistrationForm() {
                     </div>
                     <h2 className="text-2xl font-bold text-green-600">ลงทะเบียนสำเร็จ!</h2>
                     <p className="text-slate-600">
-                        กำลังพาท่านเข้าสู่ระบบอัตโนมัติ...
+                        กรุณาเข้าสู่ระบบเพื่อใช้งานต่อ...
                     </p>
                 </div>
             </div>
