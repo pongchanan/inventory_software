@@ -25,8 +25,8 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `POST` | `/login` | No | Authenticate with email + password, returns JWT |
-| `POST` | `/register` | No | Register a new user (card_id=None, link card later) |
-| `POST` | `/register/with-card` | No | Register with card scan in one step |
+| `POST` | `/register` | No | Register a new user. Set `register_card_now: true` to trigger IoT card scan and wait for link |
+| `POST` | `/register/with-card` | No | Register with card_id provided directly (no IoT scan) |
 | `GET` | `/me` | JWT | Get current authenticated user |
 
 ### Users — `/api/users` (admin only)
@@ -35,7 +35,8 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 |--------|------|------|-------------|
 | `GET` | `/` | Admin | List all users |
 | `GET` | `/{user_id}` | Admin | Get user by ID |
-| `PATCH` | `/{user_id}` | Admin | Update user fields (name, email, role, card_id, is_blacklist) |
+| `PATCH` | `/{user_id}` | Admin | Update user fields (name, email, role, is_blacklist) |
+| `POST` | `/{user_id}/link-card` | Admin | Tell IoT to enter register mode, wait for card scan, link card to user |
 
 ### General
 
@@ -53,6 +54,17 @@ Messages are dispatched by sub-topic:
 | Sub-topic | Handler | Description |
 |-----------|---------|-------------|
 | `open-cabinet` | `handle_open_cabinet` | Verify card, create an OpenSession record |
+| `register-card-scan` | `handle_register_card_scan` | IoT scanned a card during registration — links card to pending user |
+
+### MQTT Topics
+
+| Topic | Direction | Purpose |
+|-------|-----------|----------|
+| `inventory/iot/open-cabinet` | IoT → Backend | NFC card scanned for cabinet access |
+| `inventory/iot/open-cabinet-result` | Backend → IoT | Access result (session_id) |
+| `inventory/iot/register-card` | Backend → IoT | Enter register mode (with user_id) |
+| `inventory/iot/register-card-scan` | IoT → Backend | Card scanned during registration |
+| `inventory/iot/register-card-result` | Backend → IoT | Registration confirmation/error |
 
 To add a new handler: create a file in `app/mqtt/handlers/`, then register it in `handlers/__init__.py` `HANDLER_MAP`.
 
