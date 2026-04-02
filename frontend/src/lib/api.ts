@@ -58,3 +58,8 @@ export {
   fetchMostBorrowedItems,
   fetchMostDamagedItems,
 } from "./api_client/statistics";
+export type { BorrowingRecord } from "./api_client/borrowings";
+export {
+  fetchMyBorrowings,
+  fetchUserBorrowings,
+} from "./api_client/borrowings";

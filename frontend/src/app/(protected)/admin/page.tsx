@@ -20,7 +20,7 @@ import {
   Download
 } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
-import { fetchItems, fetchActiveLoanDetails, fetchMostBorrowedItems, fetchMostDamagedItems, ItemStatistic } from "@/lib/api";
+import { fetchItems } from "@/lib/api";
 import * as XLSX from "xlsx";
 
 const exportToExcel = (stats: any, userName: string) => {
@@ -80,8 +80,8 @@ export default function AdminDashboard() {
     overdue: 0,
     systemHealthy: true
   });
-  const [mostBorrowedItems, setMostBorrowedItems] = useState<ItemStatistic[]>([]);
-  const [mostDamagedItems, setMostDamagedItems] = useState<ItemStatistic[]>([]);
+  const [mostBorrowedItems] = useState([]);  // Backend endpoint not yet available
+  const [mostDamagedItems] = useState([]);   // Backend endpoint not yet available
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -93,21 +93,14 @@ export default function AdminDashboard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [items, activeLoans, borrowed, damaged] = await Promise.all([
-          fetchItems(),
-          fetchActiveLoanDetails(),
-          fetchMostBorrowedItems(5),
-          fetchMostDamagedItems(5)
-        ]);
+        const items = await fetchItems();
 
         setStats({
           totalItems: items.length,
-          activeLoans: activeLoans.length,
-          overdue: activeLoans.filter(l => l.status === 'overdue').length,
+          activeLoans: 0,  // Backend doesn't have active loans endpoint yet
+          overdue: 0,      // Backend doesn't have overdue loans endpoint yet
           systemHealthy: true
         });
-        setMostBorrowedItems(borrowed);
-        setMostDamagedItems(damaged);
       } catch (err) {
         console.error("Failed to load dashboard stats", err);
       } finally {
