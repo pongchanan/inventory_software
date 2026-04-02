@@ -17,6 +17,7 @@
 
 #include <WiFi.h>
 #include <Wire.h>
+#include <ArduinoOTA.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <Adafruit_PN532.h>
@@ -299,6 +300,30 @@ void setup() {
     if (WiFi.status() == WL_CONNECTED) {
         Serial.print("\n[WiFi] Connected — IP: ");
         Serial.println(WiFi.localIP());
+
+        // OTA setup
+        ArduinoOTA.setHostname("cabinet-nfc");
+        ArduinoOTA.setPassword("cabinet-ota-2026");
+        ArduinoOTA.onStart([]() {
+            Serial.println("[OTA] Update starting...");
+        });
+        ArduinoOTA.onEnd([]() {
+            Serial.println("\n[OTA] Update complete — rebooting");
+        });
+        ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+            Serial.printf("[OTA] %u%%\r", progress * 100 / total);
+        });
+        ArduinoOTA.onError([](ota_error_t error) {
+            Serial.printf("[OTA] Error[%u]: ", error);
+            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+            else if (error == OTA_END_ERROR) Serial.println("End Failed");
+        });
+        ArduinoOTA.begin();
+        Serial.println("[OTA] Ready");
+
         mqttConnect();
     } else {
         Serial.println("\n[WiFi] Connection failed");
@@ -307,6 +332,9 @@ void setup() {
 
 // ======================== LOOP ==========================
 void loop() {
+    // Handle OTA
+    ArduinoOTA.handle();
+
     // Keep MQTT alive
     if (!mqtt.connected()) {
         mqttConnect();
