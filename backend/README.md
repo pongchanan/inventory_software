@@ -36,7 +36,13 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 | `GET` | `/` | Admin | List all users |
 | `GET` | `/{user_id}` | Admin | Get user by ID |
 | `PATCH` | `/{user_id}` | Admin | Update user fields (name, email, role, is_blacklist) |
-| `POST` | `/{user_id}/link-card` | Admin | Tell IoT to enter register mode, wait for card scan, link card to user |
+
+### Card — `/api/users/me` (JWT owner)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/link-card` | JWT | Tell IoT to enter register mode, wait for card scan, link card to current user |
+| `POST` | `/unlink-card` | JWT | Remove the linked card from the current user |
 
 ### General
 
