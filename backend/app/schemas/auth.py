@@ -30,6 +30,7 @@ class RegisterRequest(BaseModel):
     name: str
     email: EmailStr
     password: str
+    register_card_now: bool = False
 
 
 class RegisterWithCardRequest(BaseModel):

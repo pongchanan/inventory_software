@@ -36,9 +36,13 @@ const char* JWT_SECRET    = "ij11kndivmplh2l9e3rmi5hrpteqbvvr";
 // MQTT topics (must match backend MQTT_SUBSCRIBE_TOPICS base)
 const char* TOPIC_PUB_OPEN = "inventory/iot/open-cabinet";
 const char* TOPIC_SUB_RESULT = "inventory/iot/open-cabinet-result";
+const char* TOPIC_SUB_REGISTER = "inventory/iot/register-card";         // Backend → IoT: enter register mode
+const char* TOPIC_PUB_REGISTER_SCAN = "inventory/iot/register-card-scan"; // IoT → Backend: scanned card during register
+const char* TOPIC_SUB_REGISTER_RESULT = "inventory/iot/register-card-result"; // Backend → IoT: confirmation
 
 // ======================== PINS ==========================
-#define LED_PIN     2       // Built-in LED
+#define LED_PIN     2       // Built-in LED (green = open mode)
+#define LED_REG_PIN 4       // Registration mode LED (yellow — change pin as needed)
 #define PN532_SDA   17      // I2C SDA
 #define PN532_SCL   16      // I2C SCL
 
@@ -50,9 +54,17 @@ WiFiClient wifiClient;
 PubSubClient mqtt(wifiClient);
 
 // ======================== STATE =========================
+enum NfcMode { MODE_OPEN, MODE_REGISTER };
+NfcMode nfcMode = MODE_OPEN;
+
 bool ledActive = false;
 unsigned long ledOnTime = 0;
 const unsigned long LED_DURATION = 3000;  // LED on for 3 seconds
+
+// Registration mode state
+unsigned long registerModeStart = 0;
+const unsigned long REGISTER_TIMEOUT = 10000; // 10 seconds to scan card
+int registerUserId = -1;
 
 // ======================== JWT GENERATION =================
 // Base64url encode (no padding)
@@ -99,8 +111,14 @@ String generateMqttJWT() {
     // Header
     String header = base64url("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
 
-    // Payload — mosquitto-jwt plugin requires "subs" and "publ" arrays (NOT sub/iat/exp)
-    String payload = "{\"subs\":[\"" + String(TOPIC_SUB_RESULT) + "\"],\"publ\":[\"" + String(TOPIC_PUB_OPEN) + "\"]}";
+    // Payload — mosquitto-jwt plugin requires "subs" and "publ" arrays
+    // Subscribe to: open-cabinet-result, register-card, register-card-result
+    // Publish to: open-cabinet, register-card-scan
+    String payload = "{\"subs\":[\"" + String(TOPIC_SUB_RESULT)
+        + "\",\"" + String(TOPIC_SUB_REGISTER)
+        + "\",\"" + String(TOPIC_SUB_REGISTER_RESULT)
+        + "\"],\"publ\":[\"" + String(TOPIC_PUB_OPEN)
+        + "\",\"" + String(TOPIC_PUB_REGISTER_SCAN) + "\"]}";
     String encodedPayload = base64url(payload);
 
     // Signature
@@ -123,15 +141,13 @@ void onMessage(const char* topic, byte* payload, unsigned int length) {
     Serial.print(": ");
     Serial.println(message);
 
-    if (String(topic) == TOPIC_SUB_RESULT) {
-        // Backend confirmed — light up LED
+    String t = String(topic);
+
+    if (t == TOPIC_SUB_RESULT) {
+        // Backend confirmed open-cabinet — light up LED
         JsonDocument doc;
         DeserializationError err = deserializeJson(doc, message);
-        if (err) {
-            Serial.print("[MQTT] JSON parse error: ");
-            Serial.println(err.c_str());
-            return;
-        }
+        if (err) return;
 
         if (doc.containsKey("session_id")) {
             Serial.print("[MQTT] Session opened: #");
@@ -139,6 +155,41 @@ void onMessage(const char* topic, byte* payload, unsigned int length) {
             digitalWrite(LED_PIN, HIGH);
             ledActive = true;
             ledOnTime = millis();
+        }
+    }
+    else if (t == TOPIC_SUB_REGISTER) {
+        // Backend says: enter register mode
+        JsonDocument doc;
+        DeserializationError err = deserializeJson(doc, message);
+        if (err) return;
+
+        registerUserId = doc["user_id"] | -1;
+        nfcMode = MODE_REGISTER;
+        registerModeStart = millis();
+
+        // Turn on registration LED (yellow)
+        digitalWrite(LED_REG_PIN, HIGH);
+        digitalWrite(LED_PIN, LOW);
+
+        Serial.print("[NFC] Entering REGISTER mode for user #");
+        Serial.println(registerUserId);
+    }
+    else if (t == TOPIC_SUB_REGISTER_RESULT) {
+        // Backend confirmed card registration
+        JsonDocument doc;
+        DeserializationError err = deserializeJson(doc, message);
+        if (err) return;
+
+        const char* st = doc["status"] | "";
+        if (strcmp(st, "ok") == 0) {
+            Serial.println("[MQTT] Card registered successfully");
+            // Blink green LED to confirm
+            digitalWrite(LED_PIN, HIGH);
+            ledActive = true;
+            ledOnTime = millis();
+        } else {
+            Serial.print("[MQTT] Card registration failed: ");
+            Serial.println(doc["message"] | "unknown");
         }
     }
 }
@@ -165,8 +216,9 @@ void mqttConnect() {
     if (mqtt.connect(clientId.c_str(), MQTT_USER, token.c_str())) {
         Serial.println("[MQTT] Connected");
         mqtt.subscribe(TOPIC_SUB_RESULT);
-        Serial.print("[MQTT] Subscribed to ");
-        Serial.println(TOPIC_SUB_RESULT);
+        mqtt.subscribe(TOPIC_SUB_REGISTER);
+        mqtt.subscribe(TOPIC_SUB_REGISTER_RESULT);
+        Serial.println("[MQTT] Subscribed to all topics");
     } else {
         Serial.print("[MQTT] Failed, state: ");
         Serial.println(mqtt.state());
@@ -213,6 +265,8 @@ void setup() {
     // LED
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, LOW);
+    pinMode(LED_REG_PIN, OUTPUT);
+    digitalWrite(LED_REG_PIN, LOW);
 
     // NFC (I2C) — set custom SDA/SCL pins before nfc.begin()
     Wire.begin(PN532_SDA, PN532_SCL);
@@ -265,7 +319,43 @@ void loop() {
         ledActive = false;
     }
 
-    // Scan NFC
+    // --- REGISTER MODE ---
+    if (nfcMode == MODE_REGISTER) {
+        // Check timeout
+        if (millis() - registerModeStart >= REGISTER_TIMEOUT) {
+            Serial.println("[NFC] Register mode timed out");
+            nfcMode = MODE_OPEN;
+            registerUserId = -1;
+            digitalWrite(LED_REG_PIN, LOW);
+            return;
+        }
+
+        // Scan card for registration
+        String cardId = readNFC();
+        if (cardId.length() > 0) {
+            Serial.print("[NFC] Register scan: ");
+            Serial.println(cardId);
+
+            // Publish scanned card to backend
+            JsonDocument doc;
+            doc["card_id"] = cardId;
+            char buf[128];
+            serializeJson(doc, buf);
+            mqtt.publish(TOPIC_PUB_REGISTER_SCAN, buf);
+            Serial.print("[MQTT] Published → ");
+            Serial.println(TOPIC_PUB_REGISTER_SCAN);
+
+            // Exit register mode
+            nfcMode = MODE_OPEN;
+            registerUserId = -1;
+            digitalWrite(LED_REG_PIN, LOW);
+
+            delay(2000); // debounce
+        }
+        return; // Skip normal open-cabinet scan while in register mode
+    }
+
+    // --- NORMAL MODE (open cabinet) ---
     String cardId = readNFC();
     if (cardId.length() > 0) {
         Serial.print("[NFC] Card scanned: ");

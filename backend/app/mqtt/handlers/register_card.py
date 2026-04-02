@@ -1,0 +1,82 @@
+"""Handler for the 'register-card-scan' MQTT sub-topic.
+
+Received when the IoT device scans a card during registration mode.
+
+Expected payload:
+    { "card_id": "A1B2C3D4" }
+
+Flow:
+    1. Look up the pending user_id from card_registration_store
+    2. Check card_id is not already taken
+    3. Update the user's card_id
+    4. Publish result back to IoT
+"""
+
+from sqlalchemy.orm import Session
+
+from app.models.user import User
+from app.mqtt.handlers.card_registration_store import (
+    get_pending_user,
+    resolve_pending,
+    clear_pending,
+)
+from app.mqtt.client import publish
+
+
+def handle_register_card_scan(payload: dict, db: Session):
+    card_id = payload.get("card_id")
+    if not card_id:
+        print("[register-card-scan] Missing card_id in payload")
+        publish(
+            "register-card-result", {"status": "error", "message": "Missing card_id"}
+        )
+        return
+
+    user_id = get_pending_user()
+    if user_id is None:
+        print("[register-card-scan] No pending registration")
+        publish(
+            "register-card-result",
+            {"status": "error", "message": "No pending registration"},
+        )
+        return
+
+    # Check card not already taken
+    existing = db.query(User).filter(User.card_id == card_id).first()
+    if existing:
+        print(
+            f"[register-card-scan] Card {card_id} already assigned to user #{existing.id}"
+        )
+        clear_pending()
+        publish(
+            "register-card-result",
+            {"status": "error", "message": "Card already assigned"},
+        )
+        return
+
+    # Update user
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        print(f"[register-card-scan] User #{user_id} not found")
+        clear_pending()
+        publish(
+            "register-card-result", {"status": "error", "message": "User not found"}
+        )
+        return
+
+    user.card_id = card_id
+    db.commit()
+    db.refresh(user)
+
+    print(f"[register-card-scan] Linked card {card_id} to user #{user.id}")
+    publish(
+        "register-card-result",
+        {
+            "status": "ok",
+            "user_id": user.id,
+            "card_id": card_id,
+        },
+    )
+
+    # Resolve the pending wait so the HTTP endpoint can return
+    resolve_pending(card_id)
