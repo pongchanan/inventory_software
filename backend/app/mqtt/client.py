@@ -24,13 +24,13 @@ def _create_mqtt_jwt() -> str:
 
     sub_topics = [
         t.strip()
-        for t in os.environ.get("MQTT_SUBSCRIBE_TOPICS", "inventory/iot/#")
+        for t in os.environ.get("MQTT_SUBSCRIBE_TOPICS", "cabinet/#")
         .strip('"')
         .split(",")
     ]
     pub_topics = [
         t.strip()
-        for t in os.environ.get("MQTT_PUBLISH_TOPICS", "inventory/iot/#")
+        for t in os.environ.get("MQTT_PUBLISH_TOPICS", "cabinet/#")
         .strip('"')
         .split(",")
     ]
@@ -41,13 +41,13 @@ def _create_mqtt_jwt() -> str:
 
 def _get_base_topic() -> str:
     """Return base topic stripped of trailing '/#'."""
-    raw = os.environ.get("MQTT_SUBSCRIBE_TOPICS", "inventory/iot/#")
+    raw = os.environ.get("MQTT_SUBSCRIBE_TOPICS", "cabinet/#")
     return raw.strip('"').removesuffix("/#").removesuffix("#")
 
 
 def _on_connect(client: paho.Client, userdata, flags, rc, properties=None):
     if rc == 0:
-        topic = os.environ.get("MQTT_SUBSCRIBE_TOPICS", "inventory/iot/#").strip('"')
+        topic = os.environ.get("MQTT_SUBSCRIBE_TOPICS", "cabinet/#").strip('"')
         client.subscribe(topic)
         print(f"[MQTT] Connected & subscribed to {topic}")
     else:
@@ -58,7 +58,7 @@ def _on_message(client: paho.Client, userdata, msg: paho.MQTTMessage):
     from app.mqtt.handlers import HANDLER_MAP
 
     base = _get_base_topic()
-    # e.g. topic="inventory/iot/open-cabinet" → sub_topic="open-cabinet"
+    # e.g. topic="cabinet/access/request" → sub_topic="access/request"
     sub_topic = msg.topic[len(base) :].lstrip("/")
 
     handler = HANDLER_MAP.get(sub_topic)

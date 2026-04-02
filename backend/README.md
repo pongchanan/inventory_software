@@ -53,24 +53,26 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 
 ## MQTT
 
-Subscribes to the wildcard topic from `MQTT_SUBSCRIBE_TOPICS` env.
+Subscribes to the wildcard topic from `MQTT_SUBSCRIBE_TOPICS` env (default: `cabinet/#`).
 
 Messages are dispatched by sub-topic:
 
 | Sub-topic | Handler | Description |
 |-----------|---------|-------------|
-| `open-cabinet` | `handle_open_cabinet` | Verify card, create an OpenSession record |
-| `register-card-scan` | `handle_register_card_scan` | IoT scanned a card during registration — links card to pending user |
+| `access/request` | `handle_open_cabinet` | Verify card, create an OpenSession record |
+| `door/closed` | `handle_close_cabinet` | Receive image, close the active session |
+| `card/scanned` | `handle_register_card_scan` | IoT scanned a card during registration — links card to pending user |
 
 ### MQTT Topics
 
 | Topic | Direction | Purpose |
 |-------|-----------|----------|
-| `inventory/iot/open-cabinet` | IoT → Backend | NFC card scanned for cabinet access |
-| `inventory/iot/open-cabinet-result` | Backend → IoT | Access result (session_id) |
-| `inventory/iot/register-card` | Backend → IoT | Enter register mode (with user_id) |
-| `inventory/iot/register-card-scan` | IoT → Backend | Card scanned during registration |
-| `inventory/iot/register-card-result` | Backend → IoT | Registration confirmation/error |
+| `cabinet/access/request` | IoT → Backend | NFC card scanned for cabinet access |
+| `cabinet/access/response` | Backend → IoT | Access result (session_id) |
+| `cabinet/door/closed` | IoT → Backend | Door closed with captured image |
+| `cabinet/card/register` | Backend → IoT | Enter register mode (with user_id) |
+| `cabinet/card/scanned` | IoT → Backend | Card scanned during registration |
+| `cabinet/card/registered` | Backend → IoT | Registration confirmation/error |
 
 To add a new handler: create a file in `app/mqtt/handlers/`, then register it in `handlers/__init__.py` `HANDLER_MAP`.
 

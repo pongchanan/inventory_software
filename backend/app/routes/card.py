@@ -25,7 +25,7 @@ def link_card(
         raise HTTPException(status_code=409, detail="You already have a card linked")
 
     set_pending_user(current_user.id)
-    publish("register-card", {"user_id": current_user.id, "action": "start"})
+    publish("card/register", {"user_id": current_user.id, "action": "start"})
 
     card_id = wait_for_card(timeout=15.0)
     clear_pending()

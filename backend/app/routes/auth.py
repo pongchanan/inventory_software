@@ -44,7 +44,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
 
     if body.register_card_now:
         set_pending_user(user.id)
-        publish("register-card", {"user_id": user.id, "action": "start"})
+        publish("card/register", {"user_id": user.id, "action": "start"})
 
         card_id = wait_for_card(timeout=15.0)
         clear_pending()

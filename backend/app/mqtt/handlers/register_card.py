@@ -1,4 +1,4 @@
-"""Handler for the 'register-card-scan' MQTT sub-topic.
+"""Handler for the 'card/scanned' MQTT sub-topic.
 
 Received when the IoT device scans a card during registration mode.
 
@@ -26,17 +26,15 @@ from app.mqtt.client import publish
 def handle_register_card_scan(payload: dict, db: Session):
     card_id = payload.get("card_id")
     if not card_id:
-        print("[register-card-scan] Missing card_id in payload")
-        publish(
-            "register-card-result", {"status": "error", "message": "Missing card_id"}
-        )
+        print("[card/scanned] Missing card_id in payload")
+        publish("card/registered", {"status": "error", "message": "Missing card_id"})
         return
 
     user_id = get_pending_user()
     if user_id is None:
-        print("[register-card-scan] No pending registration")
+        print("[card/scanned] No pending registration")
         publish(
-            "register-card-result",
+            "card/registered",
             {"status": "error", "message": "No pending registration"},
         )
         return
@@ -44,12 +42,10 @@ def handle_register_card_scan(payload: dict, db: Session):
     # Check card not already taken
     existing = db.query(User).filter(User.card_id == card_id).first()
     if existing:
-        print(
-            f"[register-card-scan] Card {card_id} already assigned to user #{existing.id}"
-        )
+        print(f"[card/scanned] Card {card_id} already assigned to user #{existing.id}")
         clear_pending()
         publish(
-            "register-card-result",
+            "card/registered",
             {"status": "error", "message": "Card already assigned"},
         )
         return
@@ -57,20 +53,18 @@ def handle_register_card_scan(payload: dict, db: Session):
     # Update user
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        print(f"[register-card-scan] User #{user_id} not found")
+        print(f"[card/scanned] User #{user_id} not found")
         clear_pending()
-        publish(
-            "register-card-result", {"status": "error", "message": "User not found"}
-        )
+        publish("card/registered", {"status": "error", "message": "User not found"})
         return
 
     user.card_id = card_id
     db.commit()
     db.refresh(user)
 
-    print(f"[register-card-scan] Linked card {card_id} to user #{user.id}")
+    print(f"[card/scanned] Linked card {card_id} to user #{user.id}")
     publish(
-        "register-card-result",
+        "card/registered",
         {
             "status": "ok",
             "user_id": user.id,

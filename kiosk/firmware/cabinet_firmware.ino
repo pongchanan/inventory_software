@@ -5,8 +5,8 @@
  *
  * Flow:
  *   1. Scan NFC card via I2C (PN532 v3: SDA=17, SCL=16)
- *   2. Publish card_id to  inventory/iot/open-cabinet
- *   3. Subscribe to  inventory/iot/open-cabinet-result
+ *   2. Publish card_id to  cabinet/access/request
+ *   3. Subscribe to  cabinet/access/response
  *   4. If backend responds, light up built-in LED
  *
  * Libraries (install via Arduino Library Manager):
@@ -34,11 +34,11 @@ const char* MQTT_USER     = "admin";
 const char* JWT_SECRET    = "ij11kndivmplh2l9e3rmi5hrpteqbvvr";
 
 // MQTT topics (must match backend MQTT_SUBSCRIBE_TOPICS base)
-const char* TOPIC_PUB_OPEN = "inventory/iot/open-cabinet";
-const char* TOPIC_SUB_RESULT = "inventory/iot/open-cabinet-result";
-const char* TOPIC_SUB_REGISTER = "inventory/iot/register-card";         // Backend → IoT: enter register mode
-const char* TOPIC_PUB_REGISTER_SCAN = "inventory/iot/register-card-scan"; // IoT → Backend: scanned card during register
-const char* TOPIC_SUB_REGISTER_RESULT = "inventory/iot/register-card-result"; // Backend → IoT: confirmation
+const char* TOPIC_PUB_OPEN = "cabinet/access/request";
+const char* TOPIC_SUB_RESULT = "cabinet/access/response";
+const char* TOPIC_SUB_REGISTER = "cabinet/card/register";         // Backend → IoT: enter register mode
+const char* TOPIC_PUB_REGISTER_SCAN = "cabinet/card/scanned"; // IoT → Backend: scanned card during register
+const char* TOPIC_SUB_REGISTER_RESULT = "cabinet/card/registered"; // Backend → IoT: confirmation
 
 // ======================== PINS ==========================
 #define LED_PIN     2       // Built-in LED (green = open mode)
@@ -112,8 +112,8 @@ String generateMqttJWT() {
     String header = base64url("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
 
     // Payload — mosquitto-jwt plugin requires "subs" and "publ" arrays
-    // Subscribe to: open-cabinet-result, register-card, register-card-result
-    // Publish to: open-cabinet, register-card-scan
+    // Subscribe to: access/response, card/register, card/registered
+    // Publish to: access/request, card/scanned
     String payload = "{\"subs\":[\"" + String(TOPIC_SUB_RESULT)
         + "\",\"" + String(TOPIC_SUB_REGISTER)
         + "\",\"" + String(TOPIC_SUB_REGISTER_RESULT)
