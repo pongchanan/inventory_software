@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.user import User
 from app.schemas.auth import UserOut
 from app.schemas.user import UserUpdate
 from app.services.auth_service import require_admin
@@ -26,3 +25,4 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 @router.patch("/{user_id}", response_model=UserOut)
 def edit_user(user_id: int, body: UserUpdate, db: Session = Depends(get_db)):
     return update_user(db, user_id, body.model_dump(exclude_unset=True))
+    return current_user

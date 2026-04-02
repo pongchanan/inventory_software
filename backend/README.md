@@ -25,10 +25,8 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `POST` | `/login` | No | Authenticate with email + password, returns JWT |
-| `POST` | `/register` | No | Step 1: create pending registration |
-| `POST` | `/register/with-card` | No | Register with card scan in one step |
-| `POST` | `/register/complete` | No | Step 2: attach card to pending registration, create user |
-| `POST` | `/registrations` | No | Look up pending registration by email + password |
+| `POST` | `/register` | No | Register a new user. Set `register_card_now: true` to trigger IoT card scan and wait for link |
+| `POST` | `/register/with-card` | No | Register with card_id provided directly (no IoT scan) |
 | `GET` | `/me` | JWT | Get current authenticated user |
 
 ### Users — `/api/users` (admin only)
@@ -37,7 +35,27 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 |--------|------|------|-------------|
 | `GET` | `/` | Admin | List all users |
 | `GET` | `/{user_id}` | Admin | Get user by ID |
-| `PATCH` | `/{user_id}` | Admin | Update user fields (name, email, role, card_id, is_blacklist) |
+| `PATCH` | `/{user_id}` | Admin | Update user fields (name, email, role, is_blacklist) |
+
+### Card — `/api/users/me` (JWT owner)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/link-card` | JWT | Tell IoT to enter register mode, wait for card scan, link card to current user |
+| `POST` | `/unlink-card` | JWT | Remove the linked card from the current user |
+
+### Items — `/api/items`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | No | List active items (paginated). Query params: `page` (default 1), `page_size` (default 20, max 100) |
+
+### Borrowings — `/api/borrowings`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/me` | JWT | List current user's active borrowings (paginated) |
+| `GET` | `/users/{user_id}` | Admin | List a specific user's active borrowings (paginated) |
 
 ### General
 
@@ -48,13 +66,26 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 
 ## MQTT
 
-Subscribes to the wildcard topic from `MQTT_SUBSCRIBE_TOPICS` env.
+Subscribes to the wildcard topic from `MQTT_SUBSCRIBE_TOPICS` env (default: `cabinet/#`).
 
 Messages are dispatched by sub-topic:
 
 | Sub-topic | Handler | Description |
 |-----------|---------|-------------|
-| `open-cabinet` | `handle_open_cabinet` | Verify card, create an OpenSession record |
+| `access/request` | `handle_open_cabinet` | Verify card, create an OpenSession record |
+| `door/closed` | `handle_close_cabinet` | Receive image, close the active session |
+| `card/scanned` | `handle_register_card_scan` | IoT scanned a card during registration — links card to pending user |
+
+### MQTT Topics
+
+| Topic | Direction | Purpose |
+|-------|-----------|----------|
+| `cabinet/access/request` | IoT → Backend | NFC card scanned for cabinet access |
+| `cabinet/access/response` | Backend → IoT | Access result (session_id) |
+| `cabinet/door/closed` | IoT → Backend | Door closed with captured image |
+| `cabinet/card/register` | Backend → IoT | Enter register mode (with user_id) |
+| `cabinet/card/scanned` | IoT → Backend | Card scanned during registration |
+| `cabinet/card/registered` | Backend → IoT | Registration confirmation/error |
 
 To add a new handler: create a file in `app/mqtt/handlers/`, then register it in `handlers/__init__.py` `HANDLER_MAP`.
 
@@ -80,5 +111,5 @@ Runs all unit tests in `tests/`. Tests use `unittest.mock` — no real database 
 | Test file | Covers |
 |-----------|--------|
 | `test_auth_service.py` | Password hashing, JWT creation/decoding, user authentication |
-| `test_registration_service.py` | Registration create, complete, credential lookup, direct register |
+| `test_registration_service.py` | Register user (with and without card), duplicate checks |
 | `test_users_service.py` | List users, get by ID, update user |

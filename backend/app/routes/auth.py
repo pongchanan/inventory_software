@@ -1,14 +1,12 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas.auth import (
     LoginRequest,
     LoginResponse,
-    RegisterCompleteRequest,
     RegisterRequest,
     RegisterWithCardRequest,
-    RegistrationOut,
     UserOut,
 )
 from app.services.auth_service import (
@@ -17,12 +15,16 @@ from app.services.auth_service import (
     get_current_user,
 )
 from app.services.registration_service import (
-    complete_registration,
     create_registration,
-    get_registration_by_credentials,
     register_with_card,
 )
 from app.models.user import User
+from app.mqtt.client import publish
+from app.mqtt.handlers.card_registration_store import (
+    set_pending_user,
+    wait_for_card,
+    clear_pending,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
@@ -34,11 +36,25 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     return LoginResponse(access_token=token, user=UserOut.model_validate(user))
 
 
-@router.post("/register", response_model=RegistrationOut, status_code=201)
+@router.post("/register", response_model=UserOut, status_code=201)
 def register(body: RegisterRequest, db: Session = Depends(get_db)):
-    """Step 1: Create a pending registration (card scan comes later)."""
-    reg = create_registration(db, body.name, body.email, body.password)
-    return reg
+    """Register a new user. If register_card_now=true, tells IoT to enter
+    register mode and waits for card scan before responding."""
+    user = create_registration(db, body.name, body.email, body.password)
+
+    if body.register_card_now:
+        set_pending_user(user.id)
+        publish("card/register", {"user_id": user.id, "action": "start"})
+
+        card_id = wait_for_card(timeout=15.0)
+        clear_pending()
+
+        if card_id:
+            db.refresh(user)
+        else:
+            print(f"[register] Card scan timed out for user #{user.id}")
+
+    return user
 
 
 @router.post("/register/with-card", response_model=UserOut, status_code=201)
@@ -46,19 +62,6 @@ def register_direct(body: RegisterWithCardRequest, db: Session = Depends(get_db)
     """Register and scan card at the same time — creates user directly."""
     user = register_with_card(db, body.name, body.email, body.password, body.card_id)
     return user
-
-
-@router.post("/register/complete", response_model=UserOut, status_code=201)
-def register_complete(body: RegisterCompleteRequest, db: Session = Depends(get_db)):
-    """Step 2: Scan card to finish registration — moves data to users, deletes from registrations."""
-    user = complete_registration(db, body.registration_id, body.card_id)
-    return user
-
-
-@router.post("/registrations", response_model=RegistrationOut)
-def get_pending_registration(body: LoginRequest, db: Session = Depends(get_db)):
-    """Look up a pending registration by email + password."""
-    return get_registration_by_credentials(db, body.email, body.password)
 
 
 @router.get("/me", response_model=UserOut)

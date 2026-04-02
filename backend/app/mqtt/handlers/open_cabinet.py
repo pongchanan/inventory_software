@@ -12,10 +12,13 @@ Flow:
 from sqlalchemy.orm import Session
 
 from app.models.open_session import OpenSession
+from app.mqtt.handlers.session_store import set_active_session
 from app.services.users_service import verify_card
+from app.mqtt.client import publish
 
 
 def handle_open_cabinet(payload: dict, db: Session):
+    """For verify who is opening the cabinet, then create an OpenSession record."""
     card_id = payload.get("card_id")
     if not card_id:
         print("[open-cabinet] Missing card_id in payload")
@@ -31,4 +34,7 @@ def handle_open_cabinet(payload: dict, db: Session):
     db.add(session)
     db.commit()
     db.refresh(session)
+
+    set_active_session(session.id)
     print(f"[open-cabinet] Session #{session.id} opened by user #{user.id}")
+    publish("access/response", {"session_id": session.id, "user_id": user.id})

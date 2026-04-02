@@ -30,6 +30,7 @@ class RegisterRequest(BaseModel):
     name: str
     email: EmailStr
     password: str
+    register_card_now: bool = False
 
 
 class RegisterWithCardRequest(BaseModel):
@@ -37,18 +38,3 @@ class RegisterWithCardRequest(BaseModel):
     email: EmailStr
     password: str
     card_id: str
-
-
-class RegisterCompleteRequest(BaseModel):
-    registration_id: int
-    card_id: str
-
-
-class RegistrationOut(BaseModel):
-    id: int
-    name: str
-    email: str
-    role: str
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
