@@ -50,6 +50,13 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 |--------|------|------|-------------|
 | `GET` | `/` | No | List active items (paginated). Query params: `page` (default 1), `page_size` (default 20, max 100) |
 
+### Borrowings — `/api/borrowings`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/me` | JWT | List current user's active borrowings (paginated) |
+| `GET` | `/users/{user_id}` | Admin | List a specific user's active borrowings (paginated) |
+
 ### General
 
 | Method | Path | Description |
