@@ -44,6 +44,12 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 | `POST` | `/link-card` | JWT | Tell IoT to enter register mode, wait for card scan, link card to current user |
 | `POST` | `/unlink-card` | JWT | Remove the linked card from the current user |
 
+### Items — `/api/items`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | No | List active items (paginated). Query params: `page` (default 1), `page_size` (default 20, max 100) |
+
 ### General
 
 | Method | Path | Description |
