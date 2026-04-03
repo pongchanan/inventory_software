@@ -416,7 +416,7 @@ void loop() {
             // Beep solenoid lock to confirm close (adjust frequency/duration as needed)
             tone(SOLENOID_LOCK_PIN, 1000, 200); // Beep solenoid lock to confirm close (adjust as needed)
             delay(5000);
-            notone(SOLENOID_LOCK_PIN);
+            noTone(SOLENOID_LOCK_PIN);
             // digitalWrite(SOLENOID_LOCK_PIN, LOW); // (TEST high first) Ensure solenoid lock is disengaged
             delay(1000); // debounce door
         }
