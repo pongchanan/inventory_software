@@ -1,20 +1,14 @@
-import os
-import uuid
 from datetime import datetime
 
 from sqlalchemy.orm import Session
 
 from app.models.open_session import OpenSession
 from app.mqtt.handlers.image_store import pop_assembled_image
-
-
-# Directory to save captured images
-IMAGE_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "captured_images")
-os.makedirs(IMAGE_DIR, exist_ok=True)
+from app.services.s3_storage import upload_image
 
 
 def handle_close_cabinet(payload: dict, db: Session):
-    """Assemble the JPEG image from MQTT chunks, save to disk, and close the OpenSession."""
+    """Assemble the JPEG image from MQTT chunks, upload to S3, and close the OpenSession."""
     session_id = payload.get("session_id")
     if session_id is None:
         print("[close-cabinet] Missing session_id in payload")
@@ -33,12 +27,12 @@ def handle_close_cabinet(payload: dict, db: Session):
             print(f"[close-cabinet] Session #{session.id} closed (no image)")
         return
 
-    # Save JPEG to disk
-    filename = f"session_{session_id}_{uuid.uuid4().hex[:8]}.jpg"
-    filepath = os.path.join(IMAGE_DIR, filename)
-    with open(filepath, "wb") as f:
-        f.write(jpeg_data)
-    print(f"[close-cabinet] Saved image: {filepath} ({len(jpeg_data)} bytes)")
+    # Upload JPEG to S3
+    try:
+        image_url = upload_image(jpeg_data, session_id)
+    except Exception as exc:
+        print(f"[close-cabinet] S3 upload failed: {exc}")
+        image_url = None
 
     # Update the session record
     session = db.query(OpenSession).filter(OpenSession.id == session_id).first()
@@ -46,7 +40,8 @@ def handle_close_cabinet(payload: dict, db: Session):
         print(f"[close-cabinet] No OpenSession found with id {session_id}")
         return
 
-    session.close_image_path = filepath
+    if image_url:
+        session.close_image_path = image_url
     session.close_at = datetime.utcnow()
     db.commit()
-    print(f"[close-cabinet] Session #{session.id} closed with image {filepath}")
+    print(f"[close-cabinet] Session #{session.id} closed with image {image_url}")
