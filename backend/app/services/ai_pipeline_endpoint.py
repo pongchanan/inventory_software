@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -197,4 +198,160 @@ def recognize_from_detections(
         )
 
     return results
+
+
+def enroll_from_video(
+    db_path: str | Path,
+    label: str,
+    *,
+    video_path: str | Path | None = None,
+    video_bytes: bytes | None = None,
+    frame_stride: int = 15,
+    max_frames: int = 40,
+    sample_dir: str | Path = AI_SAMPLES_DIR,
+    detector_fn: Any | None = None,
+) -> dict[str, Any]:
+    """Extract frames from a video and run each frame through enroll_from_detections.
+
+    `detector_fn` must return a list of detection dictionaries in the same shape used by
+    enroll_from_detections. Frames with no detections are skipped.
+    """
+    try:
+        import cv2  # type: ignore
+    except Exception as exc:
+        raise RuntimeError("opencv-python-headless is required for enroll_from_video") from exc
+
+    _prepare_runtime(db_path)
+
+    if frame_stride <= 0:
+        frame_stride = 1
+    if max_frames <= 0:
+        max_frames = 1
+
+    if detector_fn is None:
+        raise ValueError("detector_fn is required for enroll_from_video")
+    detector = detector_fn
+
+    temp_video_path: Path | None = None
+    source_path: Path
+    if video_bytes is not None:
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+        try:
+            temp_file.write(video_bytes)
+        finally:
+            temp_file.close()
+        temp_video_path = Path(temp_file.name)
+        source_path = temp_video_path
+    elif video_path is not None:
+        source_path = Path(video_path)
+    else:
+        raise ValueError("either video_path or video_bytes must be provided")
+
+    if not source_path.exists():
+        raise ValueError("video source not found")
+
+    capture = cv2.VideoCapture(str(source_path))
+    if not capture.isOpened():
+        capture.release()
+        if temp_video_path is not None:
+            temp_video_path.unlink(missing_ok=True)
+        raise RuntimeError("failed to open video source")
+
+    frames_seen = 0
+    frames_sampled = 0
+    aggregate_accepted = 0
+    aggregate_rejected = 0
+    skipped_no_detections = 0
+    aggregate_saved: list[str] = []
+    aggregate_frame_results: list[dict[str, Any]] = []
+
+    try:
+        while frames_sampled < max_frames:
+            ok, frame = capture.read()
+            if not ok:
+                break
+
+            if frames_seen % frame_stride != 0:
+                frames_seen += 1
+                continue
+
+            encoded_ok, encoded = cv2.imencode(".jpg", frame)
+            if not encoded_ok:
+                aggregate_frame_results.append(
+                    {
+                        "frame_index": frames_seen,
+                        "ok": False,
+                        "reason": "encode_failed",
+                    }
+                )
+                frames_seen += 1
+                frames_sampled += 1
+                continue
+
+            frame_bytes = encoded.tobytes()
+
+            try:
+                raw_detections = detector(frame_bytes)
+            except Exception:
+                raw_detections = []
+
+            if not isinstance(raw_detections, list):
+                raw_detections = []
+
+            if not raw_detections:
+                skipped_no_detections += 1
+                aggregate_frame_results.append(
+                    {
+                        "frame_index": frames_seen,
+                        "detections": 0,
+                        "accepted_count": 0,
+                        "rejected_count": 0,
+                        "prototype_updated": False,
+                        "reason": "no_detections",
+                    }
+                )
+                frames_seen += 1
+                frames_sampled += 1
+                continue
+
+            frame_enroll = enroll_from_detections(
+                db_path=db_path,
+                label=label,
+                image_bytes=frame_bytes,
+                detections=raw_detections,
+                sample_dir=sample_dir,
+            )
+
+            aggregate_accepted += frame_enroll.accepted_count
+            aggregate_rejected += frame_enroll.rejected_count
+            aggregate_saved.extend(frame_enroll.saved_samples)
+
+            aggregate_frame_results.append(
+                {
+                    "frame_index": frames_seen,
+                    "detections": len(raw_detections),
+                    "accepted_count": frame_enroll.accepted_count,
+                    "rejected_count": frame_enroll.rejected_count,
+                    "prototype_updated": frame_enroll.prototype_updated,
+                }
+            )
+
+            frames_seen += 1
+            frames_sampled += 1
+    finally:
+        capture.release()
+        if temp_video_path is not None:
+            temp_video_path.unlink(missing_ok=True)
+
+    return {
+        "ok": True,
+        "label": label,
+        "frames_seen": frames_seen,
+        "frames_sampled": frames_sampled,
+        "accepted_count": aggregate_accepted,
+        "rejected_count": aggregate_rejected,
+        "skipped_no_detections": skipped_no_detections,
+        "saved_samples": aggregate_saved,
+        "frame_results": aggregate_frame_results,
+    }
 
