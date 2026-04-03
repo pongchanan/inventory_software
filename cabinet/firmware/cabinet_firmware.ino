@@ -47,7 +47,7 @@ const char* TOPIC_SUB_REGISTER_RESULT = "cabinet/card/registered"; // Backend â†
 // ======================== PINS ==========================
 #define LED_PIN     2       // Built-in LED (green = open mode)
 #define LED_REG_PIN 4       // Registration mode LED (yellow â€” change pin as needed)
-#define DOOR_SWITCH_PIN 15  // Magnetic contact switch (LOW = closed, HIGH = open)
+#define DOOR_SWITCH_PIN 25  // Magnetic contact switch (LOW = closed, HIGH = open)
 #define PN532_SDA   17      // I2C SDA
 #define PN532_SCL   16      // I2C SCL
 
