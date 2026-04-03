@@ -3,6 +3,9 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime
 
 from app.models.user import User
+from app.models.item import Item
+from app.models.borrowing import Borrowing
+from app.models.open_session import OpenSession
 
 
 @pytest.fixture
@@ -39,3 +42,37 @@ def sample_admin():
     user.created_at = datetime(2026, 1, 1)
     user.password_hash = "$2b$12$fakehash"
     return user
+
+
+@pytest.fixture
+def sample_item():
+    item = MagicMock(spec=Item)
+    item.id = 1
+    item.name = "Screwdriver"
+    item.image_path = "/images/screwdriver.jpg"
+    item.quantity = 5
+    item.is_active = True
+    return item
+
+
+@pytest.fixture
+def sample_borrowing():
+    b = MagicMock(spec=Borrowing)
+    b.id = 1
+    b.item_id = 1
+    b.user_id = 1
+    b.borrow_at = datetime(2026, 3, 1, 10, 0)
+    b.due_at = datetime(2026, 3, 8, 10, 0)
+    b.return_at = None
+    return b
+
+
+@pytest.fixture
+def sample_session():
+    s = MagicMock(spec=OpenSession)
+    s.id = 1
+    s.close_image_path = None
+    s.open_by = 1
+    s.open_at = datetime(2026, 3, 1, 10, 0)
+    s.close_at = None
+    return s
