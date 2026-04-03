@@ -7,8 +7,8 @@
  *   1. Connect to WiFi + MQTT broker
  *   2. Subscribe to  cabinet/camera/capture
  *   3. When triggered (door closed), capture JPEG from camera
- *   4. Send JPEG via MQTT in chunks to  cabinet/camera/image/data
- *   5. Publish metadata to  cabinet/camera/image
+ *   4. Send JPEG via MQTT as base64 JSON chunks on  cabinet/camera/image
+ *   5. Publish door/closed after transfer completes
  *
  * Hardware: AI-Thinker ESP32-CAM module
  *
@@ -38,12 +38,11 @@ const char* JWT_SECRET    = "ij11kndivmplh2l9e3rmi5hrpteqbvvr";
 
 // MQTT topics
 const char* TOPIC_SUB_CAPTURE      = "cabinet/camera/capture";      // Cabinet → CAM: take picture
-const char* TOPIC_PUB_IMAGE        = "cabinet/camera/image";        // CAM → Backend: image metadata (start/done)
-const char* TOPIC_PUB_IMAGE_DATA   = "cabinet/camera/image/data";   // CAM → Backend: raw JPEG chunks
+const char* TOPIC_PUB_IMAGE        = "cabinet/camera/image";        // CAM → Backend: image events (start/chunk/done)
 const char* TOPIC_PUB_DOOR_CLOSED  = "cabinet/door/closed";         // CAM → Backend: door closed (after image sent)
 
-// Chunk size for MQTT image transfer (4 KB per message)
-const size_t MQTT_CHUNK_SIZE = 4096;
+// Chunk size for base64 encoding (2KB raw = ~2.7KB base64, fits in 4KB MQTT msg with JSON overhead)
+const size_t RAW_CHUNK_SIZE = 2048;
 
 // ======================== CAMERA PINS (AI-Thinker ESP32-CAM) =====
 #define PWDN_GPIO_NUM     32
@@ -119,7 +118,6 @@ String generateMqttJWT() {
     String header = base64url("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
     String payload = "{\"subs\":[\"" + String(TOPIC_SUB_CAPTURE)
         + "\"],\"publ\":[\"" + String(TOPIC_PUB_IMAGE)
-        + "\",\"" + String(TOPIC_PUB_IMAGE_DATA)
         + "\",\"" + String(TOPIC_PUB_DOOR_CLOSED) + "\"]}";
     String encodedPayload = base64url(payload);
     String toSign = header + "." + encodedPayload;
@@ -185,6 +183,24 @@ void setupCamera() {
     Serial.println("[CAM] Camera ready");
 }
 
+// ======================== BASE64 ENCODE =================
+// Standard base64 (not URL-safe) for image data transfer
+String base64Encode(const uint8_t* data, size_t len) {
+    const char* table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    String out;
+    out.reserve((len * 4) / 3 + 4);
+    for (size_t i = 0; i < len; i += 3) {
+        uint32_t n = ((uint32_t)data[i]) << 16;
+        if (i + 1 < len) n |= ((uint32_t)data[i + 1]) << 8;
+        if (i + 2 < len) n |= data[i + 2];
+        out += table[(n >> 18) & 0x3F];
+        out += table[(n >> 12) & 0x3F];
+        out += (i + 1 < len) ? table[(n >> 6) & 0x3F] : '=';
+        out += (i + 2 < len) ? table[n & 0x3F] : '=';
+    }
+    return out;
+}
+
 // ======================== CAPTURE & SEND VIA MQTT =======
 void captureAndSend(int sessionId) {
     Serial.println("[CAM] Capturing image...");
@@ -209,7 +225,7 @@ void captureAndSend(int sessionId) {
 
     Serial.printf("[CAM] Captured %u bytes (%dx%d)\n", fb->len, fb->width, fb->height);
 
-    int totalChunks = (fb->len + MQTT_CHUNK_SIZE - 1) / MQTT_CHUNK_SIZE;
+    int totalChunks = (fb->len + RAW_CHUNK_SIZE - 1) / RAW_CHUNK_SIZE;
 
     // 1) Publish START metadata
     {
@@ -218,7 +234,6 @@ void captureAndSend(int sessionId) {
         doc["event"]        = "start";
         doc["total_size"]   = fb->len;
         doc["total_chunks"] = totalChunks;
-        doc["chunk_size"]   = MQTT_CHUNK_SIZE;
         doc["width"]        = fb->width;
         doc["height"]       = fb->height;
         char buf[256];
@@ -227,32 +242,42 @@ void captureAndSend(int sessionId) {
         Serial.printf("[MQTT] Published START — %d chunks\n", totalChunks);
     }
 
-    // 2) Send raw JPEG data in chunks
+    // 2) Send JPEG data as base64-encoded JSON chunks
     size_t offset = 0;
     int chunkIndex = 0;
     bool sendOk = true;
 
     while (offset < fb->len && sendOk) {
         size_t remaining = fb->len - offset;
-        size_t chunkLen  = (remaining < MQTT_CHUNK_SIZE) ? remaining : MQTT_CHUNK_SIZE;
+        size_t chunkLen  = (remaining < RAW_CHUNK_SIZE) ? remaining : RAW_CHUNK_SIZE;
 
-        // Build topic with chunk index: cabinet/camera/image/data/{chunk}
-        char chunkTopic[64];
-        snprintf(chunkTopic, sizeof(chunkTopic), "%s/%d", TOPIC_PUB_IMAGE_DATA, chunkIndex);
+        // Base64 encode this chunk
+        String b64 = base64Encode(fb->buf + offset, chunkLen);
 
-        if (!mqtt.publish(chunkTopic, fb->buf + offset, chunkLen)) {
+        // Build JSON: {"event":"chunk","index":N,"data":"..."}
+        JsonDocument doc;
+        doc["event"] = "chunk";
+        doc["index"] = chunkIndex;
+        doc["data"]  = b64;
+
+        // Serialize to a dynamic buffer (base64 expands ~33%)
+        String jsonStr;
+        serializeJson(doc, jsonStr);
+
+        if (!mqtt.publish(TOPIC_PUB_IMAGE, jsonStr.c_str())) {
             Serial.printf("[MQTT] Chunk %d/%d send FAILED\n", chunkIndex, totalChunks);
             sendOk = false;
             break;
         }
 
-        Serial.printf("[MQTT] Chunk %d/%d sent (%u bytes)\n", chunkIndex + 1, totalChunks, chunkLen);
+        Serial.printf("[MQTT] Chunk %d/%d sent (%u raw, %u b64)\n",
+                      chunkIndex + 1, totalChunks, chunkLen, b64.length());
         offset += chunkLen;
         chunkIndex++;
 
         // Keep MQTT alive between chunks
         mqtt.loop();
-        delay(20);  // small delay to avoid overwhelming the broker
+        delay(50);  // allow broker to process
     }
 
     // 3) Publish DONE metadata
@@ -330,7 +355,7 @@ bool wifiConnect() {
 // ======================== MQTT CONNECT ==================
 void mqttConnect() {
     mqtt.setServer(MQTT_HOST, MQTT_PORT);
-    mqtt.setBufferSize(MQTT_CHUNK_SIZE + 128);  // buffer large enough for chunk + overhead
+    mqtt.setBufferSize(4096);  // large enough for base64 JSON chunks (~3KB each)
     mqtt.setCallback(onMessage);
     mqtt.setKeepAlive(30);
 

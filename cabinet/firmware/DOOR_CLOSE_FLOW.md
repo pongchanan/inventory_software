@@ -24,9 +24,9 @@ sequenceDiagram
     CAM->>MQTT: cabinet/camera/image<br/>{"event":"start","session_id":N,<br/>"total_size":...,"total_chunks":...}
     MQTT->>Backend: Start transfer (init chunk store)
 
-    loop For each 4KB chunk
-        CAM->>MQTT: cabinet/camera/image/data/{i}<br/>(raw JPEG bytes)
-        MQTT->>Backend: Store chunk in memory
+    loop For each 2KB chunk
+        CAM->>MQTT: cabinet/camera/image<br/>{"event":"chunk","index":i,"data":"<base64>"}
+        MQTT->>Backend: Decode base64, store chunk
     end
 
     CAM->>MQTT: cabinet/camera/image<br/>{"event":"done","chunks_sent":...}
@@ -48,8 +48,7 @@ sequenceDiagram
 | Topic                              | Direction         | Payload Type | Description                        |
 | ---------------------------------- | ----------------- | ------------ | ---------------------------------- |
 | `cabinet/camera/capture`           | ESP32 → ESP32-CAM | JSON         | Trigger camera capture             |
-| `cabinet/camera/image`             | ESP32-CAM → Backend | JSON       | Transfer metadata (start/done)     |
-| `cabinet/camera/image/data/{idx}`  | ESP32-CAM → Backend | Binary     | Raw JPEG chunk (4KB)               |
+| `cabinet/camera/image`             | ESP32-CAM → Backend | JSON       | All image events (start/chunk/done)|
 | `cabinet/door/closed`              | ESP32-CAM → Backend | JSON       | Door closed (after image transfer) |
 
 ## Component Details

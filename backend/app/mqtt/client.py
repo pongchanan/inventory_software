@@ -56,20 +56,10 @@ def _on_connect(client: paho.Client, userdata, flags, rc, properties=None):
 
 def _on_message(client: paho.Client, userdata, msg: paho.MQTTMessage):
     from app.mqtt.handlers import HANDLER_MAP
-    from app.mqtt.handlers.camera_image import handle_camera_chunk
 
     base = _get_base_topic()
     # e.g. topic="cabinet/access/request" → sub_topic="access/request"
     sub_topic = msg.topic[len(base) :].lstrip("/")
-
-    # Handle binary image chunks: camera/image/data/{chunk_index}
-    if sub_topic.startswith("camera/image/data/"):
-        try:
-            chunk_index = int(sub_topic.split("/")[-1])
-            handle_camera_chunk(chunk_index, msg.payload)
-        except (ValueError, IndexError) as exc:
-            print(f"[MQTT] Bad chunk topic: {sub_topic} — {exc}")
-        return
 
     handler = HANDLER_MAP.get(sub_topic)
     if handler is None:

@@ -1,9 +1,10 @@
 """In-memory store for image chunks received via MQTT from ESP32-CAM.
 
-Chunks arrive on  cabinet/camera/image/data/{chunk_index}  as raw bytes.
-Metadata (start/done) arrives on  cabinet/camera/image  as JSON.
+All events (start, chunk, done) arrive on  cabinet/camera/image  as JSON.
+Chunks contain base64-encoded JPEG data in the "data" field.
 """
 
+import base64
 import threading
 from dataclasses import dataclass, field
 
@@ -35,14 +36,20 @@ def start_transfer(session_id: int, total_size: int, total_chunks: int):
     )
 
 
-def add_chunk(chunk_index: int, data: bytes):
+def add_chunk(chunk_index: int, b64_data: str):
+    """Decode a base64 chunk and store the raw bytes."""
     with _lock:
         if _current is None:
             print(f"[image-store] Chunk {chunk_index} received but no active transfer")
             return
-        _current.chunks[chunk_index] = data
+        try:
+            raw = base64.b64decode(b64_data)
+        except Exception as exc:
+            print(f"[image-store] Chunk {chunk_index} base64 decode failed: {exc}")
+            return
+        _current.chunks[chunk_index] = raw
         print(
-            f"[image-store] Chunk {chunk_index} stored ({len(data)} bytes, {len(_current.chunks)}/{_current.total_chunks})"
+            f"[image-store] Chunk {chunk_index} stored ({len(raw)} bytes, {len(_current.chunks)}/{_current.total_chunks})"
         )
 
 
