@@ -67,6 +67,11 @@ unsigned long registerModeStart = 0;
 const unsigned long REGISTER_TIMEOUT = 10000; // 10 seconds to scan card
 int registerUserId = -1;
 
+// WiFi reconnect state
+unsigned long lastWifiAttempt = 0;
+const unsigned long WIFI_RETRY_INTERVAL = 5000; // 5 seconds between retries
+bool otaInitialized = false;
+
 // ======================== JWT GENERATION =================
 // Base64url encode (no padding)
 String base64url(const uint8_t* data, size_t len) {
@@ -195,6 +200,54 @@ void onMessage(const char* topic, byte* payload, unsigned int length) {
     }
 }
 
+// ======================== WIFI CONNECT ==================
+void setupOTA() {
+    ArduinoOTA.setHostname("cabinet-nfc");
+    ArduinoOTA.setPassword("cabinet-ota-2026");
+    ArduinoOTA.onStart([]() {
+        Serial.println("[OTA] Update starting...");
+    });
+    ArduinoOTA.onEnd([]() {
+        Serial.println("\n[OTA] Update complete — rebooting");
+    });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+        Serial.printf("[OTA] %u%%\r", progress * 100 / total);
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+        Serial.printf("[OTA] Error[%u]: ", error);
+        if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+        else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+        else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+        else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+        else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    });
+    ArduinoOTA.begin();
+    otaInitialized = true;
+    Serial.println("[OTA] Ready");
+}
+
+bool wifiConnect() {
+    Serial.print("[WiFi] Connecting to ");
+    Serial.println(WIFI_SSID);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+    int timeout = 0;
+    while (WiFi.status() != WL_CONNECTED && timeout < 20) {
+        delay(500);
+        Serial.print(".");
+        timeout++;
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.print("\n[WiFi] Connected — IP: ");
+        Serial.println(WiFi.localIP());
+        return true;
+    }
+
+    Serial.println("\n[WiFi] Connection failed");
+    return false;
+}
+
 // ======================== MQTT CONNECT ==================
 void mqttConnect() {
     mqtt.setServer(MQTT_HOST, MQTT_PORT);
@@ -285,53 +338,29 @@ void setup() {
         Serial.println("[NFC] Ready");
     }
 
-    // WiFi
-    Serial.print("[WiFi] Connecting to ");
-    Serial.println(WIFI_SSID);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-    int timeout = 0;
-    while (WiFi.status() != WL_CONNECTED && timeout < 20) {
-        delay(500);
-        Serial.print(".");
-        timeout++;
-    }
-
-    if (WiFi.status() == WL_CONNECTED) {
-        Serial.print("\n[WiFi] Connected — IP: ");
-        Serial.println(WiFi.localIP());
-
-        // OTA setup
-        ArduinoOTA.setHostname("cabinet-nfc");
-        ArduinoOTA.setPassword("cabinet-ota-2026");
-        ArduinoOTA.onStart([]() {
-            Serial.println("[OTA] Update starting...");
-        });
-        ArduinoOTA.onEnd([]() {
-            Serial.println("\n[OTA] Update complete — rebooting");
-        });
-        ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-            Serial.printf("[OTA] %u%%\r", progress * 100 / total);
-        });
-        ArduinoOTA.onError([](ota_error_t error) {
-            Serial.printf("[OTA] Error[%u]: ", error);
-            if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-            else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-            else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-            else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-            else if (error == OTA_END_ERROR) Serial.println("End Failed");
-        });
-        ArduinoOTA.begin();
-        Serial.println("[OTA] Ready");
-
+    // WiFi + OTA + MQTT
+    WiFi.setAutoReconnect(true);
+    WiFi.persistent(true);
+    if (wifiConnect()) {
+        setupOTA();
         mqttConnect();
-    } else {
-        Serial.println("\n[WiFi] Connection failed");
     }
 }
 
 // ======================== LOOP ==========================
 void loop() {
+    // --- WiFi reconnect ---
+    if (WiFi.status() != WL_CONNECTED) {
+        if (millis() - lastWifiAttempt >= WIFI_RETRY_INTERVAL) {
+            lastWifiAttempt = millis();
+            if (wifiConnect()) {
+                if (!otaInitialized) setupOTA();
+                mqttConnect();
+            }
+        }
+        return; // Skip everything else until WiFi is back
+    }
+
     // Handle OTA
     ArduinoOTA.handle();
 

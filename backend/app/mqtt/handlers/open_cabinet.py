@@ -36,5 +36,5 @@ def handle_open_cabinet(payload: dict, db: Session):
     db.refresh(session)
 
     set_active_session(session.id)
-    print(f"[open-cabinet] Session #{session.id} opened by user #{user.id}")
+    print(f"[open-cabinet] Session #{session.id} opened by user_id #{user.id}")
     publish("access/response", {"session_id": session.id, "user_id": user.id})
