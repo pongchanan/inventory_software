@@ -40,6 +40,7 @@ const char* JWT_SECRET    = "ij11kndivmplh2l9e3rmi5hrpteqbvvr";
 const char* TOPIC_PUB_OPEN = "cabinet/access/request";
 const char* TOPIC_SUB_RESULT = "cabinet/access/response";
 const char* TOPIC_PUB_DOOR_CLOSED = "cabinet/door/closed";         // IoT → Backend: door closed by magnet
+const char* TOPIC_PUB_CAPTURE = "cabinet/camera/capture";         // IoT → ESP-CAM: trigger photo
 const char* TOPIC_SUB_REGISTER = "cabinet/card/register";         // Backend → IoT: enter register mode
 const char* TOPIC_PUB_REGISTER_SCAN = "cabinet/card/scanned"; // IoT → Backend: scanned card during register
 const char* TOPIC_SUB_REGISTER_RESULT = "cabinet/card/registered"; // Backend → IoT: confirmation
@@ -134,7 +135,8 @@ String generateMqttJWT() {
         + "\",\"" + String(TOPIC_SUB_REGISTER_RESULT)
         + "\"],\"publ\":[\"" + String(TOPIC_PUB_OPEN)
         + "\",\"" + String(TOPIC_PUB_REGISTER_SCAN)
-        + "\",\"" + String(TOPIC_PUB_DOOR_CLOSED) + "\"]}";
+        + "\",\"" + String(TOPIC_PUB_DOOR_CLOSED)
+        + "\",\"" + String(TOPIC_PUB_CAPTURE) + "\"]}";
     String encodedPayload = base64url(payload);
 
     // Signature
@@ -396,16 +398,16 @@ void loop() {
         if (digitalRead(DOOR_SWITCH_PIN) == LOW) { // magnet engaged = door closed
             Serial.println("[CABINET] Door closed (magnet detected)");
 
-            // Publish door/closed to backend
-            JsonDocument doc;
-            doc["session_id"] = currentSessionId;
-            char buf[128];
-            serializeJson(doc, buf);
-            mqtt.publish(TOPIC_PUB_DOOR_CLOSED, buf);
+            // Trigger ESP32-CAM to capture → it will publish door/closed after image transfer
+            JsonDocument capDoc;
+            capDoc["session_id"] = currentSessionId;
+            char capBuf[128];
+            serializeJson(capDoc, capBuf);
+            mqtt.publish(TOPIC_PUB_CAPTURE, capBuf);
             Serial.print("[MQTT] Published → ");
-            Serial.print(TOPIC_PUB_DOOR_CLOSED);
+            Serial.print(TOPIC_PUB_CAPTURE);
             Serial.print(" | ");
-            Serial.println(buf);
+            Serial.println(capBuf);
 
             cabinetState = CABINET_CLOSED;
             currentSessionId = -1;
