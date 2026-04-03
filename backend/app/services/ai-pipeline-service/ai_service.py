@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 from PIL import Image
 
-from app.services.ai_config import (
+from ai_config import (
     AI_BLUR_MIN,
     AI_BRIGHTNESS_MAX,
     AI_BRIGHTNESS_MIN,
@@ -18,11 +18,11 @@ from app.services.ai_config import (
     AI_SQLITE_PATH,
     ensure_ai_runtime_dirs,
 )
-from app.services.ai_embedding_service import cosine_similarity, embed_image
-from app.services.ai_preprocess_service import crop_by_bbox, image_sha256, is_quality_ok, normalize_bbox, save_crop_file, summarize_quality
-from app.services.ai_prototype_service import recompute_label_prototype
-from app.services.ai_sqlite_store import get_or_create_label_id, init_ai_store, insert_sample, load_all_prototypes, sample_hash_exists
-from app.services.ai_types import Detection, EnrollResult, RecognizeHit
+from ai_embedding_service import cosine_similarity, embed_image
+from ai_preprocess_service import crop_by_bbox, image_sha256, is_quality_ok, normalize_bbox, save_crop_file, summarize_quality
+from ai_prototype_service import recompute_label_prototype
+from ai_sqlite_store import get_or_create_label_id, init_ai_store, insert_sample, load_all_prototypes, sample_hash_exists
+from ai_types import Detection, EnrollResult, RecognizeHit
 
 
 def _prepare_runtime(db_path: str | Path = AI_SQLITE_PATH) -> None:

@@ -15,21 +15,25 @@
 ## โครงไฟล์ที่เสนอ
 ภายใต้ `inventory_software/backend/app/services/`:
 
-- `ai_pipeline_endpoint.py`
+ภายใต้ `inventory_software/backend/app/services/ai-pipeline-service/`:
+
+- `ai_service.py`
 - `ai_config.py`
 - `ai_sqlite_store.py`
 - `ai_preprocess_service.py`
 - `ai_embedding_service.py`
 - `ai_prototype_service.py`
 - `ai_types.py`
-- `ai_pipeline_test_script.py`
+
+และสคริปต์ทดสอบอยู่ที่:
+- `inventory_software/backend/scripts/ai_pipeline_test_script.py`
 
 สคริปต์ทดสอบควรรองรับอย่างน้อย 2 โหมด:
 - video enroll
 - image recognize
 
 หมายเหตุ:
-- `ai_pipeline_endpoint.py` คือไฟล์หลักที่รวม flow enroll และ recognize
+- `ai_service.py` คือไฟล์หลักที่รวม flow enroll และ recognize
 - `ai_config.py` ใช้เก็บค่าคงที่ทั้งหมด
 - `ai_pipeline_test_script.py` คือสคริปต์รันทดสอบแบบ manual/CLI
 
@@ -43,7 +47,7 @@
 - ลดการกระจาย logic ที่ซับซ้อน
 - team สามารถเปิดไฟล์เดียวแล้วเห็นภาพรวม end-to-end ได้ทันที
 
-สิ่งที่ไฟล์ `ai_pipeline_endpoint.py` ควรมี:
+สิ่งที่ไฟล์ `ai_service.py` ควรมี:
 - import config
 - import sqlite store
 - import preprocess
@@ -119,7 +123,7 @@
 
 ## Function Design
 
-## ai_pipeline_endpoint.py
+## ai_service.py
 
 ### `enroll_from_detections(...)`
 หน้าที่:
@@ -293,7 +297,7 @@ def recognize_from_detections(db_path, image_bytes, detections):
 - สร้าง `ai_preprocess_service.py`
 - สร้าง `ai_embedding_service.py`
 - สร้าง `ai_prototype_service.py`
-- สร้าง `ai_pipeline_endpoint.py` สำหรับ image-based enroll/recognize
+- สร้าง `ai_service.py` สำหรับ image-based enroll/recognize
 
 ### Phase 3: Video Enroll Support
 - เพิ่ม `enroll_from_video(...)` ในไฟล์หลัก

@@ -1,0 +1,370 @@
+{
+  "ok": true,
+  "run_at": "2026-04-03T04:45:52.045863+00:00",
+  "db_path": "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\ai_pipeline_phase4_test.sqlite3",
+  "report_path": "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\reports\\ai_pipeline_phase5_last_run.json",
+  "video_esp32": "C:\\Users\\OPLOR\\Documents\\University\\Software project\\prototype\\poc-espcam-detection\\data\\enroll\\esp32.mp4",
+  "video_capacitor": "C:\\Users\\OPLOR\\Documents\\University\\Software project\\prototype\\poc-espcam-detection\\data\\enroll\\capacitor.mp4",
+  "tuning": {
+    "similarity_threshold": 0.55,
+    "min_margin": 0.05,
+    "blur_min": 0.3,
+    "brightness_min": 20.0,
+    "brightness_max": 245.0,
+    "min_crop_area_ratio": 0.0015,
+    "max_crop_area_ratio": 0.98,
+    "detector_conf_threshold": 0.25,
+    "detector_iou_threshold": 0.5,
+    "sample_interval_sec": 0.3,
+    "max_frames": 10
+  },
+  "recognize_frame_index": 3,
+  "first_enroll": {
+    "ok": true,
+    "label": "esp32",
+    "frames_seen": 82,
+    "frames_sampled": 10,
+    "sample_interval_sec": 0.3,
+    "frame_step": 9,
+    "accepted_count": 8,
+    "rejected_count": 0,
+    "skipped_no_detections": 2,
+    "saved_samples": [
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\esp32_5b58c9cf8893.jpg",
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\esp32_84f721438131.jpg",
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\esp32_ca919bf7c28c.jpg",
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\esp32_564b751d587f.jpg",
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\esp32_a81e0bcadae7.jpg",
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\esp32_331b30d16387.jpg",
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\esp32_5c9fc9a5f73f.jpg",
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\esp32_e8e5538efa29.jpg"
+    ],
+    "frame_results": [
+      {
+        "frame_index": 0,
+        "detections": 0,
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "prototype_updated": false,
+        "reason": "no_detections"
+      },
+      {
+        "frame_index": 9,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 18,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 27,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 36,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 45,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 54,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 63,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 72,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 81,
+        "detections": 0,
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "prototype_updated": false,
+        "reason": "no_detections"
+      }
+    ]
+  },
+  "duplicate_enroll": {
+    "ok": true,
+    "label": "esp32",
+    "frames_seen": 82,
+    "frames_sampled": 10,
+    "sample_interval_sec": 0.3,
+    "frame_step": 9,
+    "accepted_count": 0,
+    "rejected_count": 8,
+    "skipped_no_detections": 2,
+    "saved_samples": [],
+    "frame_results": [
+      {
+        "frame_index": 0,
+        "detections": 0,
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "prototype_updated": false,
+        "reason": "no_detections"
+      },
+      {
+        "frame_index": 9,
+        "detections": 1,
+        "accepted_count": 0,
+        "rejected_count": 1,
+        "prototype_updated": false
+      },
+      {
+        "frame_index": 18,
+        "detections": 1,
+        "accepted_count": 0,
+        "rejected_count": 1,
+        "prototype_updated": false
+      },
+      {
+        "frame_index": 27,
+        "detections": 1,
+        "accepted_count": 0,
+        "rejected_count": 1,
+        "prototype_updated": false
+      },
+      {
+        "frame_index": 36,
+        "detections": 1,
+        "accepted_count": 0,
+        "rejected_count": 1,
+        "prototype_updated": false
+      },
+      {
+        "frame_index": 45,
+        "detections": 1,
+        "accepted_count": 0,
+        "rejected_count": 1,
+        "prototype_updated": false
+      },
+      {
+        "frame_index": 54,
+        "detections": 1,
+        "accepted_count": 0,
+        "rejected_count": 1,
+        "prototype_updated": false
+      },
+      {
+        "frame_index": 63,
+        "detections": 1,
+        "accepted_count": 0,
+        "rejected_count": 1,
+        "prototype_updated": false
+      },
+      {
+        "frame_index": 72,
+        "detections": 1,
+        "accepted_count": 0,
+        "rejected_count": 1,
+        "prototype_updated": false
+      },
+      {
+        "frame_index": 81,
+        "detections": 0,
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "prototype_updated": false,
+        "reason": "no_detections"
+      }
+    ]
+  },
+  "second_label_enroll": {
+    "ok": true,
+    "label": "capacitor",
+    "frames_seen": 82,
+    "frames_sampled": 10,
+    "sample_interval_sec": 0.3,
+    "frame_step": 9,
+    "accepted_count": 4,
+    "rejected_count": 0,
+    "skipped_no_detections": 6,
+    "saved_samples": [
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\capacitor_b6301556a7ab.jpg",
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\capacitor_14fb15d2d01c.jpg",
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\capacitor_837f56486f49.jpg",
+      "C:\\Users\\OPLOR\\Documents\\University\\Software project\\inventory_software\\backend\\app\\services\\ai-pipeline-service\\.ai_pipeline_runtime\\samples\\capacitor_e1224f0d3fa6.jpg"
+    ],
+    "frame_results": [
+      {
+        "frame_index": 0,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 9,
+        "detections": 0,
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "prototype_updated": false,
+        "reason": "no_detections"
+      },
+      {
+        "frame_index": 18,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 27,
+        "detections": 0,
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "prototype_updated": false,
+        "reason": "no_detections"
+      },
+      {
+        "frame_index": 36,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      },
+      {
+        "frame_index": 45,
+        "detections": 0,
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "prototype_updated": false,
+        "reason": "no_detections"
+      },
+      {
+        "frame_index": 54,
+        "detections": 0,
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "prototype_updated": false,
+        "reason": "no_detections"
+      },
+      {
+        "frame_index": 63,
+        "detections": 0,
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "prototype_updated": false,
+        "reason": "no_detections"
+      },
+      {
+        "frame_index": 72,
+        "detections": 0,
+        "accepted_count": 0,
+        "rejected_count": 0,
+        "prototype_updated": false,
+        "reason": "no_detections"
+      },
+      {
+        "frame_index": 81,
+        "detections": 1,
+        "accepted_count": 1,
+        "rejected_count": 0,
+        "prototype_updated": true
+      }
+    ]
+  },
+  "default_recognize": [
+    {
+      "bbox": [
+        156,
+        267,
+        334,
+        499
+      ],
+      "label": "esp32",
+      "score": 0.8331397501262491,
+      "margin": 0.48174332962837174,
+      "accepted": true,
+      "scores": [
+        {
+          "label": "esp32",
+          "score": 0.8331397501262491
+        },
+        {
+          "label": "capacitor",
+          "score": 0.35139642049787734
+        }
+      ]
+    }
+  ],
+  "threshold_forced_unknown": [
+    {
+      "bbox": [
+        156,
+        267,
+        334,
+        499
+      ],
+      "label": "unknown",
+      "score": 0.8331397501262491,
+      "margin": 0.48174332962837174,
+      "accepted": false,
+      "scores": [
+        {
+          "label": "esp32",
+          "score": 0.8331397501262491
+        },
+        {
+          "label": "capacitor",
+          "score": 0.35139642049787734
+        }
+      ]
+    }
+  ],
+  "margin_forced_unknown": [
+    {
+      "bbox": [
+        156,
+        267,
+        334,
+        499
+      ],
+      "label": "unknown",
+      "score": 0.8331397501262491,
+      "margin": 0.48174332962837174,
+      "accepted": false,
+      "scores": [
+        {
+          "label": "esp32",
+          "score": 0.8331397501262491
+        },
+        {
+          "label": "capacitor",
+          "score": 0.35139642049787734
+        }
+      ]
+    }
+  ]
+}

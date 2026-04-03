@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.services.ai_embedding_service import l2_normalize
-from app.services.ai_sqlite_store import get_label_name, load_label_embeddings, upsert_prototype
+from ai_embedding_service import l2_normalize
+from ai_sqlite_store import get_label_name, load_label_embeddings, upsert_prototype
 
 
 def recompute_label_prototype(db_path: str | Path, label_id: int) -> dict[str, object]:
@@ -26,7 +26,7 @@ def recompute_label_prototype(db_path: str | Path, label_id: int) -> dict[str, o
 
 
 def recompute_label_prototype_by_name(db_path: str | Path, label: str) -> dict[str, object]:
-    from app.services.ai_sqlite_store import get_or_create_label_id
+    from ai_sqlite_store import get_or_create_label_id
 
     label_id = get_or_create_label_id(db_path, label)
     return recompute_label_prototype(db_path, label_id)

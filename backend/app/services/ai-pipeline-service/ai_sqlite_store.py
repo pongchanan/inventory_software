@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from app.services.ai_config import AI_SQLITE_PATH, ensure_ai_runtime_dirs
+from ai_config import AI_SQLITE_PATH, ensure_ai_runtime_dirs
 
 
 def _now() -> str:

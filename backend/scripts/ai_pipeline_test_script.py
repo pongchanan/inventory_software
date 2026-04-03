@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import sys
 from datetime import datetime, timezone
 from dataclasses import asdict
 from io import BytesIO
@@ -26,7 +27,14 @@ import numpy as np
 from PIL import Image
 import onnxruntime as ort
 
-from app.services.ai_config import (
+SCRIPT_DIR = Path(__file__).resolve().parent
+BACKEND_DIR = SCRIPT_DIR.parent
+AI_SERVICE_DIR = BACKEND_DIR / "app" / "services" / "ai-pipeline-service"
+
+if str(AI_SERVICE_DIR) not in sys.path:
+    sys.path.insert(0, str(AI_SERVICE_DIR))
+
+from ai_config import (  # type: ignore
     AI_BLUR_MIN,
     AI_BRIGHTNESS_MAX,
     AI_BRIGHTNESS_MIN,
@@ -41,7 +49,7 @@ from app.services.ai_config import (
     AI_SAMPLES_DIR,
     AI_SIMILARITY_THRESHOLD,
 )
-from app.services import ai_pipeline_endpoint as pipeline
+import ai_service as pipeline  # type: ignore
 
 
 def _iou_xyxy(a: list[int], b: list[int]) -> float:
@@ -232,11 +240,11 @@ def _resolve_default_videos() -> tuple[Path, Path]:
 
     esp32_candidates = [
         project_root / "prototype" / "poc-espcam-detection" / "data" / "enroll" / "esp32.mp4",
-        project_root / "backend" / "app" / "services" / ".ai_pipeline_runtime" / "videos" / "esp32.mp4",
+        project_root / "backend" / "app" / "services" / "ai-pipeline-service" / ".ai_pipeline_runtime" / "videos" / "esp32.mp4",
     ]
     capacitor_candidates = [
         project_root / "prototype" / "poc-espcam-detection" / "data" / "enroll" / "capacitor.mp4",
-        project_root / "backend" / "app" / "services" / ".ai_pipeline_runtime" / "videos" / "capacitor.mp4",
+        project_root / "backend" / "app" / "services" / "ai-pipeline-service" / ".ai_pipeline_runtime" / "videos" / "capacitor.mp4",
     ]
 
     esp32_video = next((p for p in esp32_candidates if p.exists()), None)
