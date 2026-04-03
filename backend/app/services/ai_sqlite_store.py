@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+from array import array
 import hashlib
 import json
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-
-import numpy as np
 
 from app.services.ai_config import AI_SQLITE_PATH, ensure_ai_runtime_dirs
 
@@ -71,13 +70,14 @@ def init_ai_store(db_path: str | Path = AI_SQLITE_PATH) -> None:
     conn.close()
 
 
-def _vec_to_blob(vec: np.ndarray | list[float]) -> bytes:
-    array = np.asarray(vec, dtype=np.float32)
-    return array.tobytes()
+def _vec_to_blob(vec: list[float]) -> bytes:
+    return array("f", [float(value) for value in vec]).tobytes()
 
 
-def _blob_to_vec(blob: bytes) -> np.ndarray:
-    return np.frombuffer(blob, dtype=np.float32)
+def _blob_to_vec(blob: bytes) -> list[float]:
+    values = array("f")
+    values.frombytes(blob)
+    return [float(value) for value in values]
 
 
 def image_hash_from_bytes(image_bytes: bytes) -> str:
@@ -117,7 +117,7 @@ def insert_sample(
     db_path: str | Path,
     label_id: int,
     image_path: str,
-    embedding: np.ndarray | list[float],
+    embedding: list[float],
     image_hash: str,
     bbox: list[int] | None = None,
     quality_blur: float | None = None,
@@ -156,6 +156,7 @@ def insert_sample(
 
 
 def load_label_embeddings(db_path: str | Path, label_id: int) -> list[np.ndarray]:
+def load_label_embeddings(db_path: str | Path, label_id: int) -> list[list[float]]:
     conn = _connect(db_path)
     cur = conn.cursor()
     cur.execute("SELECT embedding_blob FROM samples WHERE label_id = ? ORDER BY id ASC", (label_id,))
@@ -164,7 +165,7 @@ def load_label_embeddings(db_path: str | Path, label_id: int) -> list[np.ndarray
     return [_blob_to_vec(row["embedding_blob"]) for row in rows]
 
 
-def load_all_prototypes(db_path: str | Path) -> dict[str, np.ndarray]:
+def load_all_prototypes(db_path: str | Path) -> dict[str, list[float]]:
     conn = _connect(db_path)
     cur = conn.cursor()
     cur.execute(
@@ -180,7 +181,7 @@ def load_all_prototypes(db_path: str | Path) -> dict[str, np.ndarray]:
     return {str(row["label_name"]): _blob_to_vec(row["embedding_blob"]) for row in rows}
 
 
-def upsert_prototype(db_path: str | Path, label_id: int, embedding: np.ndarray | list[float]) -> None:
+def upsert_prototype(db_path: str | Path, label_id: int, embedding: list[float]) -> None:
     conn = _connect(db_path)
     cur = conn.cursor()
     cur.execute(
