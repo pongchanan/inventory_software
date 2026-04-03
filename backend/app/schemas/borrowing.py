@@ -20,3 +20,18 @@ class PaginatedBorrowings(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class PopularItemOut(BaseModel):
+    item_id: int
+    name: str
+    image_path: str | None
+    borrow_count: int
+
+
+class PaginatedPopularItems(BaseModel):
+    items: list[PopularItemOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
