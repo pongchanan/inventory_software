@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+from datetime import datetime, timezone
 from dataclasses import asdict
 from io import BytesIO
 from pathlib import Path
@@ -25,7 +26,21 @@ import numpy as np
 from PIL import Image
 import onnxruntime as ort
 
-from app.services.ai_config import AI_DETECTOR_MODEL_PATH, AI_RUNTIME_DIR, AI_SAMPLES_DIR
+from app.services.ai_config import (
+    AI_BLUR_MIN,
+    AI_BRIGHTNESS_MAX,
+    AI_BRIGHTNESS_MIN,
+    AI_DETECTOR_CONF_THRESHOLD,
+    AI_DETECTOR_IOU_THRESHOLD,
+    AI_DETECTOR_MODEL_PATH,
+    AI_MAX_CROP_AREA_RATIO,
+    AI_MIN_CROP_AREA_RATIO,
+    AI_MIN_MARGIN,
+    AI_REPORTS_DIR,
+    AI_RUNTIME_DIR,
+    AI_SAMPLES_DIR,
+    AI_SIMILARITY_THRESHOLD,
+)
 from app.services import ai_pipeline_endpoint as pipeline
 
 
@@ -131,6 +146,11 @@ def _build_real_detector(model_path: str | Path, conf_threshold: float = 0.25, i
         return _nms_xyxy(candidates, iou_threshold=iou_threshold)
 
     return detect
+
+
+def _write_run_report(report_path: Path, payload: dict[str, object]) -> None:
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def _extract_first_frame_bytes(video_path: Path) -> bytes:
@@ -244,10 +264,15 @@ def run_phase4_test(
     db_path: Path,
     sample_interval_sec: float,
     max_frames: int,
+    report_path: Path,
 ) -> dict[str, object]:
     samples_dir = Path(AI_SAMPLES_DIR)
     _clean_previous_runtime(db_path, samples_dir)
-    detector = _build_real_detector(AI_DETECTOR_MODEL_PATH)
+    detector = _build_real_detector(
+        AI_DETECTOR_MODEL_PATH,
+        conf_threshold=AI_DETECTOR_CONF_THRESHOLD,
+        iou_threshold=AI_DETECTOR_IOU_THRESHOLD,
+    )
 
     # 1) Enroll ESP32 from video.
     first_enroll = pipeline.enroll_from_video(
@@ -335,11 +360,26 @@ def run_phase4_test(
         pipeline.AI_SIMILARITY_THRESHOLD = original_threshold
         pipeline.AI_MIN_MARGIN = original_margin
 
-    return {
+    result = {
         "ok": True,
+        "run_at": datetime.now(timezone.utc).isoformat(),
         "db_path": str(db_path),
+        "report_path": str(report_path),
         "video_esp32": str(video_esp32),
         "video_capacitor": str(video_capacitor),
+        "tuning": {
+            "similarity_threshold": AI_SIMILARITY_THRESHOLD,
+            "min_margin": AI_MIN_MARGIN,
+            "blur_min": AI_BLUR_MIN,
+            "brightness_min": AI_BRIGHTNESS_MIN,
+            "brightness_max": AI_BRIGHTNESS_MAX,
+            "min_crop_area_ratio": AI_MIN_CROP_AREA_RATIO,
+            "max_crop_area_ratio": AI_MAX_CROP_AREA_RATIO,
+            "detector_conf_threshold": AI_DETECTOR_CONF_THRESHOLD,
+            "detector_iou_threshold": AI_DETECTOR_IOU_THRESHOLD,
+            "sample_interval_sec": sample_interval_sec,
+            "max_frames": max_frames,
+        },
         "recognize_frame_index": detected_frame_index,
         "first_enroll": first_enroll,
         "duplicate_enroll": duplicate_enroll,
@@ -348,6 +388,8 @@ def run_phase4_test(
         "threshold_forced_unknown": [asdict(hit) for hit in threshold_hits],
         "margin_forced_unknown": [asdict(hit) for hit in margin_hits],
     }
+    _write_run_report(report_path, result)
+    return result
 
 
 def main() -> None:
@@ -378,6 +420,12 @@ def main() -> None:
         default=str(Path(AI_RUNTIME_DIR) / "ai_pipeline_phase4_test.sqlite3"),
         help="sqlite path for test run",
     )
+    parser.add_argument(
+        "--report-path",
+        type=str,
+        default=str(Path(AI_REPORTS_DIR) / "ai_pipeline_phase5_last_run.json"),
+        help="path to JSON report for this run",
+    )
     parser.add_argument("--sample-interval-sec", type=float, default=0.3, help="sample one frame every N seconds (default 0.3)")
     parser.add_argument("--max-frames", type=int, default=0, help="max sampled frames per video (default 0 = no limit)")
     args = parser.parse_args()
@@ -393,6 +441,7 @@ def main() -> None:
         db_path=Path(args.db_path),
         sample_interval_sec=args.sample_interval_sec,
         max_frames=args.max_frames,
+        report_path=Path(args.report_path),
     )
 
     print(json.dumps(result, indent=2, ensure_ascii=False))

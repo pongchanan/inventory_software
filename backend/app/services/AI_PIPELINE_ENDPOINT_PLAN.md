@@ -311,6 +311,14 @@ def recognize_from_detections(db_path, image_bytes, detections):
 - ปรับ quality gate
 - เก็บผลทดสอบจริงเพื่อนำไปปรับ model ที่เทรนเองภายหลัง
 
+Phase 5 ที่ทำแล้วในโค้ด:
+- เพิ่ม tuning parameters ใน `ai_config.py`:
+    - `AI_DETECTOR_CONF_THRESHOLD`, `AI_DETECTOR_IOU_THRESHOLD`
+    - `AI_MIN_CROP_AREA_RATIO`, `AI_MAX_CROP_AREA_RATIO`
+    - `AI_REPORTS_DIR`
+- เพิ่ม quality gate ใน `enroll_from_detections(...)` ให้คัด bbox ที่เล็ก/ใหญ่เกินไปจากสัดส่วนพื้นที่ภาพ
+- สคริปต์ `backend/scripts/ai_pipeline_test_script.py` บันทึกผลรันทดสอบจริงลงไฟล์ JSON report เพื่อใช้วิเคราะห์และปรับ model ภายหลัง
+
 ---
 
 ## KISS Rules for This Design

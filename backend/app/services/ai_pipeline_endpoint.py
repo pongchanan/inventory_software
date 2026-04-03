@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+from io import BytesIO
 import tempfile
 from pathlib import Path
 from typing import Any
+from PIL import Image
 
 from app.services.ai_config import (
     AI_BLUR_MIN,
     AI_BRIGHTNESS_MAX,
     AI_BRIGHTNESS_MIN,
+    AI_MAX_CROP_AREA_RATIO,
+    AI_MIN_CROP_AREA_RATIO,
     AI_MIN_MARGIN,
     AI_SAMPLES_DIR,
     AI_SIMILARITY_THRESHOLD,
@@ -39,6 +43,14 @@ def _coerce_detection(raw_detection: Detection | dict[str, Any]) -> Detection:
     return Detection(bbox=[int(v) for v in bbox], confidence=confidence, class_name=class_name)
 
 
+def _bbox_area_ratio(bbox: list[int], image_width: int, image_height: int) -> float:
+    x1, y1, x2, y2 = [int(v) for v in bbox]
+    box_w = max(0, x2 - x1)
+    box_h = max(0, y2 - y1)
+    image_area = float(max(1, image_width * image_height))
+    return float((box_w * box_h) / image_area)
+
+
 def enroll_from_detections(
     db_path: str | Path,
     label: str,
@@ -50,6 +62,12 @@ def enroll_from_detections(
 
     if not image_bytes:
         return EnrollResult(ok=False, label=label, accepted_count=0, rejected_count=0, rejected_samples=[{"reason": "empty_image"}])
+
+    try:
+        source_image = Image.open(BytesIO(image_bytes)).convert("RGB")
+        source_width, source_height = source_image.size
+    except Exception:
+        return EnrollResult(ok=False, label=label, accepted_count=0, rejected_count=0, rejected_samples=[{"reason": "decode_failed"}])
 
     label_id = get_or_create_label_id(db_path, label)
     accepted_count = 0
@@ -66,6 +84,21 @@ def enroll_from_detections(
             continue
 
         bbox = detection.bbox
+        area_ratio = _bbox_area_ratio(bbox, source_width, source_height)
+        if area_ratio < AI_MIN_CROP_AREA_RATIO or area_ratio > AI_MAX_CROP_AREA_RATIO:
+            rejected_count += 1
+            rejected_samples.append(
+                {
+                    "index": index,
+                    "bbox": bbox,
+                    "reason": "crop_area_out_of_range",
+                    "crop_area_ratio": area_ratio,
+                    "min_crop_area_ratio": AI_MIN_CROP_AREA_RATIO,
+                    "max_crop_area_ratio": AI_MAX_CROP_AREA_RATIO,
+                }
+            )
+            continue
+
         try:
             cropped_bytes = crop_by_bbox(image_bytes, bbox)
         except Exception:
