@@ -57,13 +57,6 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
     return user
 
 
-@router.post("/register/with-card", response_model=UserOut, status_code=201)
-def register_direct(body: RegisterWithCardRequest, db: Session = Depends(get_db)):
-    """Register and scan card at the same time — creates user directly."""
-    user = register_with_card(db, body.name, body.email, body.password, body.card_id)
-    return user
-
-
 @router.get("/me", response_model=UserOut)
 def me(current_user: User = Depends(get_current_user)):
     return current_user
