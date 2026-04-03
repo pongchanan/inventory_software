@@ -155,7 +155,6 @@ def insert_sample(
     return sample_id
 
 
-def load_label_embeddings(db_path: str | Path, label_id: int) -> list[np.ndarray]:
 def load_label_embeddings(db_path: str | Path, label_id: int) -> list[list[float]]:
     conn = _connect(db_path)
     cur = conn.cursor()

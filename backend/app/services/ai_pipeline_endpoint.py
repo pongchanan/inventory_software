@@ -206,8 +206,8 @@ def enroll_from_video(
     *,
     video_path: str | Path | None = None,
     video_bytes: bytes | None = None,
-    frame_stride: int = 15,
-    max_frames: int = 40,
+    sample_interval_sec: float = 0.3,
+    max_frames: int = 0,
     sample_dir: str | Path = AI_SAMPLES_DIR,
     detector_fn: Any | None = None,
 ) -> dict[str, Any]:
@@ -223,10 +223,9 @@ def enroll_from_video(
 
     _prepare_runtime(db_path)
 
-    if frame_stride <= 0:
-        frame_stride = 1
-    if max_frames <= 0:
-        max_frames = 1
+    if sample_interval_sec <= 0:
+        sample_interval_sec = 0.3
+    unlimited_frames = max_frames <= 0
 
     if detector_fn is None:
         raise ValueError("detector_fn is required for enroll_from_video")
@@ -257,6 +256,11 @@ def enroll_from_video(
             temp_video_path.unlink(missing_ok=True)
         raise RuntimeError("failed to open video source")
 
+    fps = float(capture.get(cv2.CAP_PROP_FPS) or 0.0)
+    if fps <= 0.0:
+        fps = 30.0
+    frame_step = max(1, int(round(fps * sample_interval_sec)))
+
     frames_seen = 0
     frames_sampled = 0
     aggregate_accepted = 0
@@ -266,12 +270,14 @@ def enroll_from_video(
     aggregate_frame_results: list[dict[str, Any]] = []
 
     try:
-        while frames_sampled < max_frames:
+        while True:
+            if not unlimited_frames and frames_sampled >= max_frames:
+                break
             ok, frame = capture.read()
             if not ok:
                 break
 
-            if frames_seen % frame_stride != 0:
+            if frames_seen % frame_step != 0:
                 frames_seen += 1
                 continue
 
@@ -348,6 +354,8 @@ def enroll_from_video(
         "label": label,
         "frames_seen": frames_seen,
         "frames_sampled": frames_sampled,
+        "sample_interval_sec": sample_interval_sec,
+        "frame_step": frame_step,
         "accepted_count": aggregate_accepted,
         "rejected_count": aggregate_rejected,
         "skipped_no_detections": skipped_no_detections,
