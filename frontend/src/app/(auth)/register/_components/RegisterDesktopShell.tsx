@@ -51,7 +51,7 @@ export function RegisterDesktopShell({
 
         <div className="relative z-10 w-full max-w-md">
           <div className="mb-10">
-            <h2 className="mb-2 text-4xl font-black text-gray-900">สร้างบัญชีใหม่ ✨</h2>
+            <h2 className="mb-2 text-4xl font-black text-gray-900">สร้างบัญชีใหม่</h2>
             <p className="text-gray-500">ขั้นตอนที่ 1: กรอกข้อมูลเบื้องต้น</p>
           </div>
 

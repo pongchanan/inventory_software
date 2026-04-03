@@ -100,6 +100,7 @@ export interface LoanCreate {
 export interface AuthUser {
   id: number;
   uid: string;
+  nfc_card_uid?: string;
   name: string;
   email: string | null;
   role: string;
@@ -112,6 +113,14 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
   user: AuthUser;
+}
+
+export interface RegistrationOut {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  created_at: string;
 }
 
 export interface LoanDetail {

@@ -8,7 +8,7 @@ import {
   StorageUnitApi,
 } from "./types";
 
-export const API_BASE = "";
+export const API_BASE = "http://localhost:3000";
 
 export function toItemUid(itemTypeId: number): string {
   return `TYPE-${itemTypeId}`;
@@ -52,54 +52,61 @@ export function authHeaders(): Record<string, string> {
 }
 
 export async function fetchItemTypes(): Promise<ItemTypeApi[]> {
-  const res = await fetch(`${API_BASE}/api/item-types`, { cache: "no-store" });
+  const res = await fetch(`${API_BASE}/api/items/`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch item types");
-  return res.json();
+  const data = await res.json();
+  // Convert paginated items response to ItemTypeApi array
+  return (data.items || []).map((item: any) => ({
+    id: item.id,
+    name: item.name,
+    active: item.is_active,
+    created_at: item.created_at || new Date().toISOString(),
+    updated_at: item.updated_at || new Date().toISOString(),
+    images: item.image_path ? [{
+      id: 0,
+      item_type_id: item.id,
+      image_url: item.image_path,
+      is_primary: true,
+      created_at: new Date().toISOString()
+    }] : []
+  }));
 }
 
 export async function fetchItemTypeById(itemTypeId: number): Promise<ItemTypeApi> {
-  const res = await fetch(`${API_BASE}/api/item-types/${itemTypeId}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Item type not found");
-  return res.json();
+  // Fetch all items and find by ID (GET /api/item-types/{id} not implemented)
+  const items = await fetchItemTypes();
+  const item = items.find(i => i.id === itemTypeId);
+  if (!item) throw new Error("Item type not found");
+  return item;
 }
 
 export async function fetchStorageUnits(): Promise<StorageUnitApi[]> {
-  const res = await fetch(`${API_BASE}/api/storage/units`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch storage units");
-  return res.json();
+  // TODO: /api/storage/units endpoint not yet implemented in backend
+  console.warn("fetchStorageUnits: endpoint not implemented in backend");
+  return [];
 }
 
 export async function fetchLocationsByUnit(unitId: number): Promise<StorageLocationApi[]> {
-  const res = await fetch(`${API_BASE}/api/storage/units/${unitId}/locations`, {
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error("Storage unit not found");
-  return res.json();
+  // TODO: /api/storage/units/{unit_id}/locations endpoint not yet implemented in backend
+  console.warn("fetchLocationsByUnit: endpoint not implemented in backend");
+  return [];
 }
 
 export async function fetchInventoryEvents(): Promise<InventoryEventApi[]> {
-  const res = await fetch(`${API_BASE}/api/inventory/events`, {
-    cache: "no-store",
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error("Failed to fetch inventory events");
-  return res.json();
+  // TODO: /api/inventory/events endpoint not yet implemented in backend
+  // Returning empty array for now
+  console.warn("fetchInventoryEvents: endpoint not implemented in backend");
+  return [];
 }
 
 export async function fetchOccupancyByLocation(locationId: number): Promise<SlotOccupancyApi> {
-  const res = await fetch(`${API_BASE}/api/inventory/occupancy/location/${locationId}`, {
-    cache: "no-store",
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error("Storage location not found");
-  return res.json();
+  // TODO: /api/inventory/occupancy/location/{location_id} endpoint not yet implemented in backend
+  console.warn("fetchOccupancyByLocation: endpoint not implemented in backend");
+  throw new Error("Storage location not found");
 }
 
 export async function fetchOccupancyByUnit(unitId: number): Promise<SlotOccupancyApi[]> {
-  const res = await fetch(`${API_BASE}/api/inventory/occupancy/unit/${unitId}`, {
-    cache: "no-store",
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error("Storage unit not found");
-  return res.json();
+  // TODO: /api/inventory/occupancy/unit/{unit_id} endpoint not yet implemented in backend
+  console.warn("fetchOccupancyByUnit: endpoint not implemented in backend");
+  return [];
 }

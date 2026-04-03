@@ -1,20 +1,52 @@
 "use client";
 
 import { useAuth } from '@/context/AuthContext';
-import { User, Mail, LogOut, Clock, ShieldCheck, Settings } from 'lucide-react';
+import { User, Mail, LogOut, Clock, ShieldCheck, Settings, CreditCard, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { linkCardForUser, unlinkCardForUser } from '@/lib/api';
 
 export default function ProfilePage() {
     const { user, isAdmin, logout, loading: authLoading } = useAuth();
     const router = useRouter();
+    const [isLinking, setIsLinking] = useState(false);
+    const [isUnlinking, setIsUnlinking] = useState(false);
+    const [cardLinked, setCardLinked] = useState(!!user?.nfc_card_uid);
 
     useEffect(() => {
         if (!authLoading && !user) {
             router.push('/login');
         }
     }, [user, authLoading, router]);
+
+    useEffect(() => {
+        setCardLinked(!!user?.nfc_card_uid);
+    }, [user?.nfc_card_uid]);
+
+    const handleLinkCard = async () => {
+        setIsLinking(true);
+        try {
+            await linkCardForUser(user!.id);
+            setCardLinked(true);
+        } catch (err) {
+            console.error("Failed to link card:", err);
+        } finally {
+            setIsLinking(false);
+        }
+    };
+
+    const handleUnlinkCard = async () => {
+        setIsUnlinking(true);
+        try {
+            await unlinkCardForUser(user!.id);
+            setCardLinked(false);
+        } catch (err) {
+            console.error("Failed to unlink card:", err);
+        } finally {
+            setIsUnlinking(false);
+        }
+    };
 
     if (authLoading || !user) {
         return null;
@@ -51,6 +83,44 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="px-8 flex flex-col gap-2 pb-8">
+                    {/* NFC Card Section */}
+                    <div className={`w-full p-4 rounded-2xl transition-colors ${cardLinked ? 'bg-green-50 border-2 border-green-100' : 'bg-yellow-50 border-2 border-yellow-100'}`}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center ${cardLinked ? 'bg-white text-green-500' : 'bg-white text-yellow-500'}`}>
+                                    <CreditCard size={20} />
+                                </div>
+                                <div>
+                                    <p className={`font-bold uppercase tracking-widest text-xs ${cardLinked ? 'text-green-700' : 'text-yellow-700'}`}>
+                                        {cardLinked ? '✓ บัตร RFID ถูกผูกแล้ว' : '⚠ ยังไม่ได้ผูกบัตร RFID'}
+                                    </p>
+                                    {cardLinked && user?.nfc_card_uid && (
+                                        <p className="text-xs text-gray-500 mt-1 font-mono">{user.nfc_card_uid}</p>
+                                    )}
+                                </div>
+                            </div>
+                            {!cardLinked ? (
+                                <button
+                                    onClick={handleLinkCard}
+                                    disabled={isLinking}
+                                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg text-sm flex items-center gap-2 transition-colors"
+                                >
+                                    {isLinking ? <Loader2 size={16} className="animate-spin" /> : <CreditCard size={16} />}
+                                    {isLinking ? 'กำลังผูก...' : 'ผูกบัตรตอนนี้'}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={handleUnlinkCard}
+                                    disabled={isUnlinking}
+                                    className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg text-sm flex items-center gap-2 transition-colors"
+                                >
+                                    {isUnlinking ? <Loader2 size={16} className="animate-spin" /> : <CreditCard size={16} />}
+                                    {isUnlinking ? 'กำลังยกเลิก...' : 'ยกเลิกการผูก'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
                     <button className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors group">
                         <div className="flex items-center gap-3 text-gray-700 font-medium">
                             <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">

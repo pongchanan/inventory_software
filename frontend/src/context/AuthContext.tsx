@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { AuthUser, fetchMe } from "@/lib/api";
+import { AuthUser } from "@/lib/api";
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -35,36 +35,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const router = useRouter();
 
-  // On mount, check localStorage
+  // On mount, restore auth session from localStorage if it exists.
   useEffect(() => {
-    let isSubscribed = true;
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      fetchMe(token)
-        .then((userData: AuthUser) => {
-          if (isSubscribed) setUser(userData);
-        })
-        .catch(() => {
-          if (isSubscribed) {
-            localStorage.removeItem("token");
-            setUser(null);
-          }
-        })
-        .finally(() => {
-          if (isSubscribed) setLoading(false);
-        });
+    const savedToken = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
+    if (savedToken && savedUser) {
+      setToken(savedToken);
+      setUser(JSON.parse(savedUser));
+      setLoading(false);
     } else {
-      // No token — nothing to validate, mark auth check as done immediately
+      setToken(null);
+      setUser(null);
       setLoading(false);
     }
-    return () => {
-      isSubscribed = false;
-    };
   }, []);
 
   const loginStore = (newToken: string, newUser: AuthUser) => {
     localStorage.setItem("token", newToken);
+    localStorage.setItem("user", JSON.stringify(newUser));
     setToken(newToken);
     setUser(newUser);
     // Ensure loading is false after explicit login so auth guards don't block rendering
@@ -73,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setToken(null);
     setUser(null);
     router.push("/login");

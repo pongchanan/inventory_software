@@ -5,18 +5,17 @@ import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { RegisterDesktopShell } from "./_components/RegisterDesktopShell";
 import { RegisterMobileShell } from "./_components/RegisterMobileShell";
-
-// Normally you'd import a specific prepare_registration API call from lib/api.ts
-// We'll add that to api.ts shortly.
-import { API_BASE } from "@/lib/api";
+import { register, registerWithCard } from "@/lib/api";
 
 export default function RegisterPage() {
     const router = useRouter();
     const [formData, setFormData] = useState({
         name: "",
-        email: "", // Used as username/student ID
+        email: "",
         password: "",
+        cardId: "",
     });
+    const [withNFC, setWithNFC] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -26,27 +25,21 @@ export default function RegisterPage() {
         setLoading(true);
 
         try {
-            // Call the preparation API
-            const res = await fetch(`${API_BASE}/api/auth/kiosk/prepare_registration`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    kiosk_id: "web-registration",
-                    name: formData.name,
-                    email: formData.email,
-                    password: formData.password,
-                }),
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => null);
-                throw new Error(errData?.detail || "Registration failed. Please try again.");
+            if (withNFC) {
+                // Register with NFC card - proceed to tap-card screen to scan
+                if (!formData.cardId.trim()) {
+                    setError("กรุณาสแกนบัตร NFC");
+                    setLoading(false);
+                    return;
+                }
+                const registrationData = await registerWithCard(formData.name, formData.email, formData.password, formData.cardId);
+                sessionStorage.setItem("registrationId", registrationData.id.toString());
+                router.push("/register/tap-card");
+            } else {
+                // Register without card - continue through explicit login flow
+                await register(formData.name, formData.email, formData.password);
+                router.push("/login");
             }
-
-            // If successful, push to the tap-card waiting screen
-            router.push("/register/tap-card");
         } catch (err: any) {
             setError(err.message || "An unexpected error occurred.");
         } finally {
@@ -54,7 +47,8 @@ export default function RegisterPage() {
         }
     };
 
-    const registerForm = (
+
+    const registrationForm = (
         <form onSubmit={handleSubmit} className="w-full space-y-4">
             {error && (
                 <div className="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-3 rounded-2xl border border-red-100 text-sm animate-in fade-in slide-in-from-bottom-2">
@@ -106,16 +100,52 @@ export default function RegisterPage() {
                 />
             </div>
 
+            {/* NFC Card Toggle */}
+            <div className="flex items-center gap-3 py-2">
+                <input
+                    type="checkbox"
+                    id="withNFC"
+                    checked={withNFC}
+                    onChange={(e) => {
+                        setWithNFC(e.target.checked);
+                        setFormData({ ...formData, cardId: "" });
+                        setError(null);
+                    }}
+                    className="w-5 h-5 rounded-lg border-2 border-gray-300 cursor-pointer accent-[#ee4d2d]"
+                />
+                <label htmlFor="withNFC" className="text-sm font-bold text-gray-700 cursor-pointer">
+                    สแกนบัตร NFC ทันที
+                </label>
+            </div>
+
+            {/* NFC Card ID Field - Only visible when checkbox is checked */}
+            {withNFC && (
+                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
+                    <label className="block text-sm font-bold text-gray-700 ml-1">
+                        รหัสบัตร NFC
+                    </label>
+                    <input
+                        type="text"
+                        required
+                        value={formData.cardId}
+                        onChange={(e) => setFormData({ ...formData, cardId: e.target.value })}
+                        className="w-full border-2 border-gray-100 bg-gray-50 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-[#ee4d2d] focus:bg-white transition-all"
+                        placeholder="กรุณาสแกนบัตร NFC"
+                        autoFocus
+                    />
+                </div>
+            )}
+
             <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#ee4d2d] to-[#ff7355] text-white py-4 rounded-2xl hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm font-black disabled:opacity-50 shadow-lg shadow-orange-500/20 mt-6"
+                className="w-full flex items-center justify-center gap-2 bg-linear-to-r from-[#ee4d2d] to-[#ff7355] text-white py-3 rounded-2xl hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all text-sm font-black disabled:opacity-50 shadow-lg shadow-orange-500/20"
             >
                 {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                     <>
-                        ดำเนินการต่อ
+                        สมัครสมาชิก
                         <ArrowRight className="w-5 h-5" />
                     </>
                 )}
@@ -136,8 +166,14 @@ export default function RegisterPage() {
 
     return (
         <>
-            <RegisterDesktopShell form={registerForm} onLogoClick={() => router.push('/')} />
-            <RegisterMobileShell form={registerForm} onLogoClick={() => router.push('/')} />
+            <RegisterDesktopShell 
+                form={registrationForm} 
+                onLogoClick={() => router.push('/')} 
+            />
+            <RegisterMobileShell 
+                form={registrationForm} 
+                onLogoClick={() => router.push('/')} 
+            />
         </>
     );
 }

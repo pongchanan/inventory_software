@@ -16,11 +16,14 @@ import {
     CheckCircle2,
     X
 } from "lucide-react";
+import { fetchUsers } from "@/lib/api";
 
 export default function UsersAdminPage() {
     const { user, isAdmin, loading: authLoading } = useAuth();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
+    const [users, setUsers] = useState<any[]>([]);
+    const [loadingUsers, setLoadingUsers] = useState(true);
 
     // Redirect if not admin
     useEffect(() => {
@@ -29,19 +32,38 @@ export default function UsersAdminPage() {
         }
     }, [authLoading, user, isAdmin, router]);
 
-    // Mock users for UI demonstration
-    const users = [
-        { id: 1, name: "นายสมพงษ์ เรียนดี", uid: "64010123", email: "sompong@uni.ac.th", role: "user", cardMapped: true },
-        { id: 2, name: "นางสาวสมหญิง รักเรียน", uid: "64010567", email: "somying@uni.ac.th", role: "admin", cardMapped: true },
-        { id: 3, name: "นายสิริกร วิศวะ", uid: "64010999", email: "sirikorn@uni.ac.th", role: "user", cardMapped: false },
-        { id: 4, name: "นายสมชาย ใจดี", uid: "UID-GUEST", email: "somchai@gmail.com", role: "user", cardMapped: true },
-    ];
+    // Fetch users
+    useEffect(() => {
+        if (!authLoading && user && isAdmin) {
+            loadUsers();
+        }
+    }, [authLoading, user, isAdmin]);
+
+    async function loadUsers() {
+        try {
+            setLoadingUsers(true);
+            const data = await fetchUsers();
+            setUsers(data);
+        } catch (err) {
+            console.error("Failed to fetch users:", err);
+        } finally {
+            setLoadingUsers(false);
+        }
+    }
 
     const filteredUsers = users.filter(u =>
-        u.name.includes(searchQuery) || u.uid.includes(searchQuery) || u.email.includes(searchQuery)
+        u.name.includes(searchQuery) || u.uid.includes(searchQuery) || u.email?.includes(searchQuery)
     );
 
     if (authLoading || !user || !isAdmin) return null;
+
+    if (loadingUsers) {
+        return (
+            <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8 flex items-center justify-center min-h-screen">
+                <Loader2 className="w-8 h-8 animate-spin text-[#ee4d2d]" />
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
@@ -113,19 +135,13 @@ export default function UsersAdminPage() {
 
                         <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${u.cardMapped ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-400'}`}>
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${u.nfc_card_uid ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-400'}`}>
                                     <CreditCard size={16} />
                                 </div>
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${u.cardMapped ? 'text-green-600' : 'text-red-500'}`}>
-                                    {u.cardMapped ? 'RFID Mapped' : 'No Card Linked'}
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${u.nfc_card_uid ? 'text-green-600' : 'text-red-500'}`}>
+                                    {u.nfc_card_uid ? 'RFID Mapped' : 'No Card Linked'}
                                 </span>
                             </div>
-
-                            {!u.cardMapped && (
-                                <button className="text-[10px] font-black uppercase text-blue-500 hover:text-blue-700 underline underline-offset-4 tracking-wider">
-                                    Link Now
-                                </button>
-                            )}
                         </div>
                     </div>
                 ))}

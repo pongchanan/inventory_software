@@ -1,5 +1,5 @@
 import { API_BASE, authHeaders } from "./core";
-import { AuthUser, LoginResponse } from "./types";
+import { AuthUser, LoginResponse, RegistrationOut } from "./types";
 
 function normalizeAuthUser(row: {
   id: number;
@@ -15,7 +15,8 @@ function normalizeAuthUser(row: {
 }): AuthUser {
   return {
     id: row.id,
-    uid: row.nfc_card_uid ?? row.uid ?? "",
+    uid: row.uid ?? "",
+    nfc_card_uid: row.nfc_card_uid,
     name: row.name,
     email: row.email,
     role: row.role,
@@ -84,6 +85,138 @@ export async function fetchMe(token: string): Promise<AuthUser> {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error("Not authenticated");
+  const payload: {
+    id: number;
+    nfc_card_uid?: string;
+    uid?: string;
+    name: string;
+    email: string | null;
+    role: string;
+    active?: boolean;
+    authorized?: boolean;
+    created_at: string;
+    updated_at: string;
+  } = await res.json();
+  return normalizeAuthUser(payload);
+}
+
+export async function register(
+  name: string,
+  email: string,
+  password: string
+): Promise<RegistrationOut> {
+  const res = await fetch(`${API_BASE}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Registration failed" }));
+    throw new Error(err.detail || "Registration failed");
+  }
+  const payload: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    created_at: string;
+  } = await res.json();
+
+  return payload;
+}
+
+export async function registerWithCard(
+  name: string,
+  email: string,
+  password: string,
+  cardId: string
+): Promise<AuthUser> {
+  const res = await fetch(`${API_BASE}/api/auth/register/with-card`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password, card_id: cardId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Registration with card failed" }));
+    throw new Error(err.detail || "Registration with card failed");
+  }
+  const payload: {
+    id: number;
+    nfc_card_uid?: string;
+    uid?: string;
+    name: string;
+    email: string | null;
+    role: string;
+    active?: boolean;
+    authorized?: boolean;
+    created_at: string;
+    updated_at: string;
+  } = await res.json();
+  return normalizeAuthUser(payload);
+}
+
+export async function completeRegistration(
+  registrationId: number,
+  cardId: string
+): Promise<AuthUser> {
+  const res = await fetch(`${API_BASE}/api/auth/register/complete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ registration_id: registrationId, card_id: cardId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Registration completion failed" }));
+    throw new Error(err.detail || "Registration completion failed");
+  }
+  const payload: {
+    id: number;
+    nfc_card_uid?: string;
+    uid?: string;
+    name: string;
+    email: string | null;
+    role: string;
+    active?: boolean;
+    authorized?: boolean;
+    created_at: string;
+    updated_at: string;
+  } = await res.json();
+
+  return normalizeAuthUser(payload);
+}
+
+export async function linkCardForUser(userId: number): Promise<AuthUser> {
+  const res = await fetch(`${API_BASE}/api/users/me/link-card`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to link card" }));
+    throw new Error(err.detail || "Failed to link card");
+  }
+  const payload: {
+    id: number;
+    nfc_card_uid?: string;
+    uid?: string;
+    name: string;
+    email: string | null;
+    role: string;
+    active?: boolean;
+    authorized?: boolean;
+    created_at: string;
+    updated_at: string;
+  } = await res.json();
+  return normalizeAuthUser(payload);
+}
+
+export async function unlinkCardForUser(userId: number): Promise<AuthUser> {
+  const res = await fetch(`${API_BASE}/api/users/me/unlink-card`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to unlink card" }));
+    throw new Error(err.detail || "Failed to unlink card");
+  }
   const payload: {
     id: number;
     nfc_card_uid?: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Package,
   LayoutGrid,
@@ -18,7 +18,6 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { user, isAdmin, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -35,7 +34,6 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout();
-    router.push("/");
   };
 
   return (
