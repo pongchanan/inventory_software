@@ -49,7 +49,7 @@ from ai_config import (  # type: ignore
     AI_SAMPLES_DIR,
     AI_SIMILARITY_THRESHOLD,
 )
-import ai_service as pipeline  # type: ignore
+import ai_service_impl as pipeline  # type: ignore
 
 
 def _iou_xyxy(a: list[int], b: list[int]) -> float:
