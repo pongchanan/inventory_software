@@ -54,24 +54,112 @@ def _check_due_dates():
 
 
 def _warning_email(name: str, item_name: str, due_at: datetime) -> str:
+    due_str = due_at.strftime("%B %d, %Y at %H:%M")
     return f"""
-    <h2>Borrowing Reminder</h2>
-    <p>Hi {name},</p>
-    <p>This is a reminder that <strong>{item_name}</strong> is due on
-    <strong>{due_at.strftime('%B %d, %Y %H:%M')}</strong>.</p>
-    <p>Please return it before the due date to avoid overdue notices.</p>
-    <p>— Smart Inventory System</p>
+    <!DOCTYPE html>
+    <html>
+    <body style="margin:0;padding:0;background-color:#f4f4f7;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:40px 0;">
+        <tr><td align="center">
+          <table width="560" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <!-- Header -->
+            <tr>
+              <td style="background:linear-gradient(135deg,#f59e0b,#f97316);padding:32px 40px;text-align:center;">
+                <div style="font-size:28px;margin-bottom:4px;">&#9200;</div>
+                <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Due Date Reminder</h1>
+              </td>
+            </tr>
+            <!-- Body -->
+            <tr>
+              <td style="padding:32px 40px;">
+                <p style="margin:0 0 16px;color:#334155;font-size:16px;line-height:1.6;">Hi <strong>{name}</strong>,</p>
+                <p style="margin:0 0 24px;color:#334155;font-size:16px;line-height:1.6;">
+                  This is a friendly reminder that the item you borrowed is due soon. Please return it on time to avoid overdue notices.
+                </p>
+                <!-- Item Card -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fffbeb;border:1px solid #fde68a;border-radius:8px;margin-bottom:24px;">
+                  <tr>
+                    <td style="padding:20px 24px;">
+                      <p style="margin:0 0 4px;color:#92400e;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Item</p>
+                      <p style="margin:0 0 12px;color:#1e293b;font-size:18px;font-weight:700;">{item_name}</p>
+                      <p style="margin:0 0 4px;color:#92400e;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Due Date</p>
+                      <p style="margin:0;color:#1e293b;font-size:16px;font-weight:600;">{due_str}</p>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:0;color:#64748b;font-size:14px;line-height:1.5;">
+                  If you have already returned this item, please disregard this email.
+                </p>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td style="padding:20px 40px;background-color:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
+                <p style="margin:0;color:#94a3b8;font-size:12px;">Smart Inventory System &bull; Automated Notification</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </body>
+    </html>
     """
 
 
 def _overdue_email(name: str, item_name: str, due_at: datetime) -> str:
+    due_str = due_at.strftime("%B %d, %Y at %H:%M")
+    now = datetime.utcnow()
+    days_overdue = (now - due_at).days
     return f"""
-    <h2>Overdue Notice</h2>
-    <p>Hi {name},</p>
-    <p><strong>{item_name}</strong> was due on
-    <strong>{due_at.strftime('%B %d, %Y %H:%M')}</strong> and has not been returned.</p>
-    <p>Please return it as soon as possible.</p>
-    <p>— Smart Inventory System</p>
+    <!DOCTYPE html>
+    <html>
+    <body style="margin:0;padding:0;background-color:#f4f4f7;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:40px 0;">
+        <tr><td align="center">
+          <table width="560" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <!-- Header -->
+            <tr>
+              <td style="background:linear-gradient(135deg,#dc2626,#ef4444);padding:32px 40px;text-align:center;">
+                <div style="font-size:28px;margin-bottom:4px;">&#9888;&#65039;</div>
+                <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">Overdue Notice</h1>
+              </td>
+            </tr>
+            <!-- Body -->
+            <tr>
+              <td style="padding:32px 40px;">
+                <p style="margin:0 0 16px;color:#334155;font-size:16px;line-height:1.6;">Hi <strong>{name}</strong>,</p>
+                <p style="margin:0 0 24px;color:#334155;font-size:16px;line-height:1.6;">
+                  The following item is <strong>overdue</strong> and has not been returned. Please return it as soon as possible.
+                </p>
+                <!-- Item Card -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin-bottom:24px;">
+                  <tr>
+                    <td style="padding:20px 24px;">
+                      <p style="margin:0 0 4px;color:#991b1b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Item</p>
+                      <p style="margin:0 0 12px;color:#1e293b;font-size:18px;font-weight:700;">{item_name}</p>
+                      <p style="margin:0 0 4px;color:#991b1b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Was Due</p>
+                      <p style="margin:0 0 12px;color:#1e293b;font-size:16px;font-weight:600;">{due_str}</p>
+                      <p style="margin:0 0 4px;color:#991b1b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Days Overdue</p>
+                      <p style="margin:0;color:#dc2626;font-size:20px;font-weight:800;">{days_overdue} day{"s" if days_overdue != 1 else ""}</p>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:0;color:#64748b;font-size:14px;line-height:1.5;">
+                  You will continue to receive reminders until the item is returned.
+                </p>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td style="padding:20px 40px;background-color:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
+                <p style="margin:0;color:#94a3b8;font-size:12px;">Smart Inventory System &bull; Automated Notification</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </body>
+    </html>
     """
 
 
