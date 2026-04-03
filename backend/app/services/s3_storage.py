@@ -49,9 +49,23 @@ def upload_image(data: bytes, session_id: int, content_type: str = "image/jpeg")
         ContentType=content_type,
     )
 
-    # Build public URL from endpoint
-    endpoint = os.environ.get("AWS_ENDPOINT_URL", "").rstrip("/")
-    url = f"{endpoint}/{bucket}/{key}"
+    print(f"[s3] Uploaded {len(data)} bytes → {key}")
+    return key
 
-    print(f"[s3] Uploaded {len(data)} bytes → {url}")
-    return url
+
+def get_presigned_url(key: str, expires_in: int = 1800) -> str:
+    """Generate a presigned URL for an S3 object.
+
+    Args:
+        key: The S3 object key.
+        expires_in: URL validity in seconds (default 30 min).
+
+    Returns:
+        A temporary signed URL.
+    """
+    client = _get_client()
+    return client.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": _get_bucket(), "Key": key},
+        ExpiresIn=expires_in,
+    )

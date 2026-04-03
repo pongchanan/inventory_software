@@ -29,10 +29,10 @@ def handle_close_cabinet(payload: dict, db: Session):
 
     # Upload JPEG to S3
     try:
-        image_url = upload_image(jpeg_data, session_id)
+        image_key = upload_image(jpeg_data, session_id)
     except Exception as exc:
         print(f"[close-cabinet] S3 upload failed: {exc}")
-        image_url = None
+        image_key = None
 
     # Update the session record
     session = db.query(OpenSession).filter(OpenSession.id == session_id).first()
@@ -40,8 +40,8 @@ def handle_close_cabinet(payload: dict, db: Session):
         print(f"[close-cabinet] No OpenSession found with id {session_id}")
         return
 
-    if image_url:
-        session.close_image_path = image_url
+    if image_key:
+        session.close_image_path = image_key
     session.close_at = datetime.utcnow()
     db.commit()
-    print(f"[close-cabinet] Session #{session.id} closed with image {image_url}")
+    print(f"[close-cabinet] Session #{session.id} closed with image key {image_key}")
