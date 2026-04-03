@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import app.models  # noqa: F401 — register models so create_all sees them
 from app.database import init_db
 from app.mqtt import start_mqtt, stop_mqtt
+from app.services.due_date_checker import start_due_date_checker, stop_due_date_checker
 from app.routes import (
     auth_router,
     borrowings_router,
@@ -29,7 +30,9 @@ async def lifespan(app: FastAPI):
     print("Database ready")
     start_mqtt()
     print("MQTT client started")
+    start_due_date_checker()
     yield
+    stop_due_date_checker()
     stop_mqtt()
     print("Shutting down")
 
