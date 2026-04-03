@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from app.models.open_session import OpenSession
@@ -22,5 +24,6 @@ def handle_close_cabinet(payload: dict, db: Session):
         return
 
     session.close_image_path = image_path
+    session.close_at = datetime.utcnow()
     db.commit()
     print(f"[close-cabinet] Session #{session.id} closed with image {image_path}")

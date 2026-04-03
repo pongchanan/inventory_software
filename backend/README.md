@@ -57,6 +57,12 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 | `GET` | `/me` | JWT | List current user's active borrowings (paginated) |
 | `GET` | `/users/{user_id}` | Admin | List a specific user's active borrowings (paginated) |
 
+### Sessions — `/api/sessions` (admin only)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | Admin | List cabinet open/close logs (paginated). Includes user info, open_at, close_at, close_image_path |
+
 ### General
 
 | Method | Path | Description |

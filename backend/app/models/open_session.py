@@ -17,3 +17,4 @@ class OpenSession(Base):
     open_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, nullable=False
     )
+    close_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
