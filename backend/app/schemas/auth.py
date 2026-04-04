@@ -38,3 +38,9 @@ class RegisterWithCardRequest(BaseModel):
     email: EmailStr
     password: str
     card_id: str
+
+
+class RegisterResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
