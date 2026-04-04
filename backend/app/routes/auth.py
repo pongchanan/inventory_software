@@ -7,6 +7,7 @@ from app.schemas.auth import (
     LoginResponse,
     RegisterRequest,
     RegisterWithCardRequest,
+    RegisterResponse,
     UserOut,
 )
 from app.services.auth_service import (
@@ -36,7 +37,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     return LoginResponse(access_token=token, user=UserOut.model_validate(user))
 
 
-@router.post("/register", response_model=UserOut, status_code=201)
+@router.post("/register", response_model=RegisterResponse, status_code=201)
 def register(body: RegisterRequest, db: Session = Depends(get_db)):
     """Register a new user. If register_card_now=true, tells IoT to enter
     register mode and waits for card scan before responding."""
@@ -54,7 +55,10 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
         else:
             print(f"[register] Card scan timed out for user #{user.id}")
 
-    return user
+    return RegisterResponse(
+        access_token=create_access_token(user.id, user.role),
+        user=UserOut.model_validate(user),
+    )
 
 
 @router.get("/me", response_model=UserOut)
