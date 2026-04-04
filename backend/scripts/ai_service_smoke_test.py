@@ -44,12 +44,12 @@ RecognizeFromImageInput = SCHEMAS_MODULE.RecognizeFromImageInput
 
 
 def load_ai_service_module():
-    """Load `ai-service.py` from its file path.
+    """Load `ai_service.py` from its file path.
 
-    The service file uses a hyphen in its filename, so we load it explicitly
-    rather than relying on a normal import statement.
+    We load it explicitly from the service path to keep this smoke test
+    independent from import-path/runtime differences.
     """
-    service_path = Path(__file__).resolve().parents[1] / "app" / "services" / "ai-service.py"
+    service_path = Path(__file__).resolve().parents[1] / "app" / "services" / "ai_service.py"
     spec = importlib.util.spec_from_file_location("ai_service_smoke_module", service_path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"cannot load service module: {service_path}")
