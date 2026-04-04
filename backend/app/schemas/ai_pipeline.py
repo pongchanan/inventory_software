@@ -1,37 +1,22 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
-class DetectionInput(BaseModel):
-    bbox: list[int] = Field(..., min_length=4, max_length=4)
-    confidence: float = 0.0
-    class_name: str | None = None
-
-
-class EnrollFromDetectionsInput(BaseModel):
-    db_path: str
+class EnrollFromImageInput(BaseModel):
     label: str
     image_bytes: bytes
-    detections: list[DetectionInput]
-    sample_dir: str | None = None
 
 
 class EnrollFromVideoInput(BaseModel):
-    db_path: str
     label: str
-    video_path: str | None = None
-    video_bytes: bytes | None = None
+    video_bytes: bytes
     sample_interval_sec: float = 0.3
     max_frames: int = 0
-    sample_dir: str | None = None
-    detector_fn: object | None = None
 
 
-class RecognizeFromDetectionsInput(BaseModel):
-    db_path: str
+class RecognizeFromImageInput(BaseModel):
     image_bytes: bytes
-    detections: list[DetectionInput]
 
 
 class EnrollResultOutput(BaseModel):

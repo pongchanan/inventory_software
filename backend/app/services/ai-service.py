@@ -1,105 +1,111 @@
 from __future__ import annotations
 
+from dataclasses import asdict, is_dataclass
 import importlib.util
-import sys
 from pathlib import Path
 
-from app.schemas.ai_pipeline import (
-    EnrollFromDetectionsInput,
-    EnrollFromVideoInput,
-    EnrollResultOutput,
-    RecognizeFromDetectionsInput,
-    RecognizeHitOutput,
-    VideoEnrollOutput,
-)
+_SCHEMAS_PATH = Path(__file__).resolve().parent.parent / "schemas" / "ai_pipeline.py"
+_SCHEMAS_SPEC = importlib.util.spec_from_file_location("ai_pipeline_schemas", _SCHEMAS_PATH)
+if _SCHEMAS_SPEC is None or _SCHEMAS_SPEC.loader is None:
+    raise RuntimeError(f"Failed to load AI schema module from: {_SCHEMAS_PATH}")
+
+_SCHEMAS_MODULE = importlib.util.module_from_spec(_SCHEMAS_SPEC)
+_SCHEMAS_SPEC.loader.exec_module(_SCHEMAS_MODULE)
+
+EnrollFromImageInput = _SCHEMAS_MODULE.EnrollFromImageInput
+EnrollFromVideoInput = _SCHEMAS_MODULE.EnrollFromVideoInput
+EnrollResultOutput = _SCHEMAS_MODULE.EnrollResultOutput
+RecognizeFromImageInput = _SCHEMAS_MODULE.RecognizeFromImageInput
+RecognizeHitOutput = _SCHEMAS_MODULE.RecognizeHitOutput
+VideoEnrollOutput = _SCHEMAS_MODULE.VideoEnrollOutput
+
+_HELPERS_PATH = Path(__file__).resolve().parent / "ai-pipeline-service" / "ai_pipeline_helpers.py"
+_HELPERS_SPEC = importlib.util.spec_from_file_location("ai_pipeline_helpers", _HELPERS_PATH)
+if _HELPERS_SPEC is None or _HELPERS_SPEC.loader is None:
+    raise RuntimeError(f"Failed to load AI helpers module from: {_HELPERS_PATH}")
+
+_HELPERS_MODULE = importlib.util.module_from_spec(_HELPERS_SPEC)
+_HELPERS_SPEC.loader.exec_module(_HELPERS_MODULE)
+
+ai_db_path = _HELPERS_MODULE.ai_db_path
+detect_image_bytes = _HELPERS_MODULE.detect_image_bytes
+load_impl_module = _HELPERS_MODULE.load_impl_module
+build_detector = _HELPERS_MODULE.build_detector
 
 
-def _load_impl_module():
-    base_dir = Path(__file__).resolve().parent
-    impl_dir = base_dir / "ai-pipeline-service"
-    impl_file = impl_dir / "ai_service_impl.py"
-
-    if not impl_file.exists():
-        raise FileNotFoundError(f"AI implementation file not found: {impl_file}")
-
-    if str(impl_dir) not in sys.path:
-        sys.path.insert(0, str(impl_dir))
-
-    module_name = "ai_pipeline_service_impl"
-    if module_name in sys.modules:
-        return sys.modules[module_name]
-
-    spec = importlib.util.spec_from_file_location(module_name, impl_file)
-    if spec is None or spec.loader is None:
-        raise RuntimeError("Failed to build import spec for ai_service_impl.py")
-
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    sys.modules[module_name] = module
-    return module
+def _to_mapping(value):
+    if is_dataclass(value):
+        return asdict(value)
+    return value.__dict__
 
 
-def enroll_from_detections(payload: EnrollFromDetectionsInput) -> EnrollResultOutput:
-    """Enroll object samples from detection boxes in a single image.
+def enroll_from_image(payload: EnrollFromImageInput) -> EnrollResultOutput:
+    """Enroll samples from a single image.
 
-    This wrapper forwards the payload to impl.enroll_from_detections after
-    converting each detection model to a plain dict. In the impl flow, each
-    detection is validated, cropped from the source image, quality-checked,
-    deduplicated by image hash, embedded, and stored to the AI SQLite store.
-    If at least one sample is accepted, the label prototype is recomputed.
-    The returned object includes accepted/rejected counts, saved sample paths,
-    rejected reasons, and whether the prototype was updated.
+    The backend runs detection on `payload.image_bytes`, then forwards the
+    detected boxes to the implementation layer. Accepted crops are quality-
+    checked, deduplicated, embedded, stored, and used to recompute the label
+    prototype when at least one sample passes.
     """
-    impl = _load_impl_module()
+    impl = load_impl_module()
+    detections = detect_image_bytes(payload.image_bytes)
+    if not detections:
+        return EnrollResultOutput(
+            ok=False,
+            label=payload.label,
+            accepted_count=0,
+            rejected_count=0,
+            saved_samples=[],
+            rejected_samples=[{"reason": "no_detections"}],
+            prototype_updated=False,
+        )
+
     result = impl.enroll_from_detections(
-        db_path=payload.db_path,
+        db_path=ai_db_path(),
         label=payload.label,
         image_bytes=payload.image_bytes,
-        detections=[d.model_dump() for d in payload.detections],
-        sample_dir=payload.sample_dir if payload.sample_dir else impl.AI_SAMPLES_DIR,
+        detections=detections,
+        sample_dir=impl.AI_SAMPLES_DIR,
     )
-    return EnrollResultOutput(**result.__dict__)
+    return EnrollResultOutput(**_to_mapping(result))
 
 
-def recognize_from_detections(payload: RecognizeFromDetectionsInput) -> list[RecognizeHitOutput]:
-    """Recognize labels for detection boxes from one image.
+def recognize_from_image(payload: RecognizeFromImageInput) -> list[RecognizeHitOutput]:
+    """Recognize labels from a single image.
 
-    This wrapper converts detections to dicts and calls impl.recognize_from_detections.
-    In the impl flow, each detected crop is embedded and compared against all
-    stored label prototypes using cosine similarity. The best label is accepted
-    only when both similarity threshold and top1-top2 margin pass configured
-    limits; otherwise the hit is marked as unknown. The result contains per-box
-    label, score, margin, acceptance flag, and detailed score breakdown.
+    The backend detects objects on `payload.image_bytes` first, then the
+    implementation layer embeds each crop and compares it with stored label
+    prototypes. The result is one recognition record per detected box.
     """
-    impl = _load_impl_module()
+    impl = load_impl_module()
+    detections = detect_image_bytes(payload.image_bytes)
+    if not detections:
+        return []
+
     hits = impl.recognize_from_detections(
-        db_path=payload.db_path,
+        db_path=ai_db_path(),
         image_bytes=payload.image_bytes,
-        detections=[d.model_dump() for d in payload.detections],
+        detections=detections,
     )
-    return [RecognizeHitOutput(**hit.__dict__) for hit in hits]
+    return [RecognizeHitOutput(**_to_mapping(hit)) for hit in hits]
 
 
 def enroll_from_video(payload: EnrollFromVideoInput) -> VideoEnrollOutput:
-    """Enroll samples by sampling frames from a video source.
+    """Enroll samples from a video source.
 
-    This wrapper passes path/bytes/options to impl.enroll_from_video. In the
-    impl flow, OpenCV opens the video, samples frames by sample_interval_sec,
-    runs detector_fn per sampled frame, and skips frames with no detections.
-    Frames with detections are sent to enroll_from_detections so the same crop,
-    quality, duplicate, embedding, and persistence rules are applied. The output
-    aggregates frame-level enrollment stats and saved sample paths across the
-    whole video run.
+    The implementation samples frames from the video, runs the backend detector
+    on each sampled frame, and forwards detected crops through the same enroll
+    flow used by image enrollment.
     """
-    impl = _load_impl_module()
+    impl = load_impl_module()
     result = impl.enroll_from_video(
-        db_path=payload.db_path,
+        db_path=ai_db_path(),
         label=payload.label,
-        video_path=payload.video_path,
+        video_path=None,
         video_bytes=payload.video_bytes,
         sample_interval_sec=payload.sample_interval_sec,
         max_frames=payload.max_frames,
-        sample_dir=payload.sample_dir if payload.sample_dir else impl.AI_SAMPLES_DIR,
-        detector_fn=payload.detector_fn,
+        sample_dir=impl.AI_SAMPLES_DIR,
+        detector_fn=build_detector(),
     )
     return VideoEnrollOutput(**result)
