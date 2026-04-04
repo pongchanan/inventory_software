@@ -14,8 +14,8 @@ from app.services.ai_pipeline_service.ai_pipeline_helpers import (
     ai_db_path,
     build_detector,
     detect_image_bytes,
-    load_impl_module,
 )
+from app.services.ai_pipeline_service import ai_service_impl as impl
 
 
 def _to_mapping(value):
@@ -32,7 +32,6 @@ def enroll_from_image(payload: EnrollFromImageInput) -> EnrollResultOutput:
     checked, deduplicated, embedded, stored, and used to recompute the label
     prototype when at least one sample passes.
     """
-    impl = load_impl_module()
     detections = detect_image_bytes(payload.image_bytes)
     if not detections:
         return EnrollResultOutput(
@@ -62,7 +61,6 @@ def recognize_from_image(payload: RecognizeFromImageInput) -> list[RecognizeHitO
     implementation layer embeds each crop and compares it with stored label
     prototypes. The result is one recognition record per detected box.
     """
-    impl = load_impl_module()
     detections = detect_image_bytes(payload.image_bytes)
     if not detections:
         return []
@@ -82,7 +80,6 @@ def enroll_from_video(payload: EnrollFromVideoInput) -> VideoEnrollOutput:
     on each sampled frame, and forwards detected crops through the same enroll
     flow used by image enrollment.
     """
-    impl = load_impl_module()
     result = impl.enroll_from_video(
         db_path=ai_db_path(),
         label=payload.label,

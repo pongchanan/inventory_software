@@ -1,39 +1,13 @@
 from __future__ import annotations
 
-import importlib.util
-import sys
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
-import importlib
 
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
-
-
-def load_impl_module():
-    impl_dir = Path(__file__).resolve().parent
-    impl_file = impl_dir / "ai_service_impl.py"
-
-    if not impl_file.exists():
-        raise FileNotFoundError(f"AI implementation file not found: {impl_file}")
-
-    if str(impl_dir) not in sys.path:
-        sys.path.insert(0, str(impl_dir))
-
-    module_name = "ai_pipeline_service_impl"
-    if module_name in sys.modules:
-        return sys.modules[module_name]
-
-    spec = importlib.util.spec_from_file_location(module_name, impl_file)
-    if spec is None or spec.loader is None:
-        raise RuntimeError("Failed to build import spec for ai_service_impl.py")
-
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    sys.modules[module_name] = module
-    return module
+from . import ai_config
 
 
 def iou_xyxy(a: list[int], b: list[int]) -> float:
@@ -68,9 +42,6 @@ def nms_xyxy(detections: list[dict[str, object]], iou_threshold: float = 0.5) ->
 
 @lru_cache(maxsize=1)
 def build_detector():
-    load_impl_module()
-    ai_config = importlib.import_module("ai_config")
-
     model_file = Path(ai_config.AI_DETECTOR_MODEL_PATH)
     if not model_file.exists():
         raise FileNotFoundError(f"detector model not found: {model_file}")
@@ -152,5 +123,4 @@ def detect_image_bytes(image_bytes: bytes) -> list[dict[str, object]]:
 
 
 def ai_db_path() -> str:
-    impl = load_impl_module()
-    return str(impl.AI_SQLITE_PATH)
+    return str(ai_config.AI_SQLITE_PATH)

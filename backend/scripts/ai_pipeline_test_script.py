@@ -29,12 +29,10 @@ import onnxruntime as ort
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 BACKEND_DIR = SCRIPT_DIR.parent
-AI_SERVICE_DIR = BACKEND_DIR / "app" / "services" / "ai_pipeline_service"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
-if str(AI_SERVICE_DIR) not in sys.path:
-    sys.path.insert(0, str(AI_SERVICE_DIR))
-
-from ai_config import (  # type: ignore
+from app.services.ai_pipeline_service.ai_config import (
     AI_BLUR_MIN,
     AI_BRIGHTNESS_MAX,
     AI_BRIGHTNESS_MIN,
@@ -49,7 +47,7 @@ from ai_config import (  # type: ignore
     AI_SAMPLES_DIR,
     AI_SIMILARITY_THRESHOLD,
 )
-import ai_service_impl as pipeline  # type: ignore
+from app.services.ai_pipeline_service import ai_service_impl as pipeline
 
 
 def _iou_xyxy(a: list[int], b: list[int]) -> float:
