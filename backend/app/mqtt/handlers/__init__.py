@@ -1,5 +1,6 @@
-from app.mqtt.handlers.open_cabinet import handle_open_cabinet
+from app.mqtt.handlers.camera_image import handle_camera_image
 from app.mqtt.handlers.close_cabinet import handle_close_cabinet
+from app.mqtt.handlers.open_cabinet import handle_open_cabinet
 from app.mqtt.handlers.register_card import handle_register_card_scan
 
 # Map sub-topic → handler function.
@@ -9,4 +10,5 @@ HANDLER_MAP: dict[str, callable] = {
     "access/request": handle_open_cabinet,
     "door/closed": handle_close_cabinet,
     "card/scanned": handle_register_card_scan,
+    "camera/image": handle_camera_image,
 }

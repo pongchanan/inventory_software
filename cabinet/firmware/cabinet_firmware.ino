@@ -40,6 +40,7 @@ const char* JWT_SECRET    = "ij11kndivmplh2l9e3rmi5hrpteqbvvr";
 const char* TOPIC_PUB_OPEN = "cabinet/access/request";
 const char* TOPIC_SUB_RESULT = "cabinet/access/response";
 const char* TOPIC_PUB_DOOR_CLOSED = "cabinet/door/closed";         // IoT → Backend: door closed by magnet
+const char* TOPIC_PUB_CAPTURE = "cabinet/camera/capture";         // IoT → ESP-CAM: trigger photo
 const char* TOPIC_SUB_REGISTER = "cabinet/card/register";         // Backend → IoT: enter register mode
 const char* TOPIC_PUB_REGISTER_SCAN = "cabinet/card/scanned"; // IoT → Backend: scanned card during register
 const char* TOPIC_SUB_REGISTER_RESULT = "cabinet/card/registered"; // Backend → IoT: confirmation
@@ -47,9 +48,10 @@ const char* TOPIC_SUB_REGISTER_RESULT = "cabinet/card/registered"; // Backend �
 // ======================== PINS ==========================
 #define LED_PIN     2       // Built-in LED (green = open mode)
 #define LED_REG_PIN 4       // Registration mode LED (yellow — change pin as needed)
-#define DOOR_SWITCH_PIN 15  // Magnetic contact switch (LOW = closed, HIGH = open)
+#define DOOR_SWITCH_PIN 25  // Magnetic contact switch (LOW = closed, HIGH = open)
 #define PN532_SDA   17      // I2C SDA
 #define PN532_SCL   16      // I2C SCL
+#define SOLENOID_LOCK_PIN 26
 
 // ======================== OBJECTS ========================
 // I2C constructor: (irq, reset) — use -1 for polling without IRQ/RESET
@@ -133,7 +135,8 @@ String generateMqttJWT() {
         + "\",\"" + String(TOPIC_SUB_REGISTER_RESULT)
         + "\"],\"publ\":[\"" + String(TOPIC_PUB_OPEN)
         + "\",\"" + String(TOPIC_PUB_REGISTER_SCAN)
-        + "\",\"" + String(TOPIC_PUB_DOOR_CLOSED) + "\"]}";
+        + "\",\"" + String(TOPIC_PUB_DOOR_CLOSED)
+        + "\",\"" + String(TOPIC_PUB_CAPTURE) + "\"]}";
     String encodedPayload = base64url(payload);
 
     // Signature
@@ -333,6 +336,8 @@ void setup() {
     pinMode(LED_REG_PIN, OUTPUT);
     digitalWrite(LED_REG_PIN, LOW);
     pinMode(DOOR_SWITCH_PIN, INPUT_PULLUP); // Magnetic switch: LOW = closed
+    pinMode(SOLENOID_LOCK_PIN, OUTPUT);
+    // digitalWrite(SOLENOID_LOCK_PIN, HIGH); // (LOW for test) Ensure solenoid lock is diseng
 
     // NFC (I2C) — set custom SDA/SCL pins before nfc.begin()
     Wire.begin(PN532_SDA, PN532_SCL);
@@ -393,22 +398,26 @@ void loop() {
         if (digitalRead(DOOR_SWITCH_PIN) == LOW) { // magnet engaged = door closed
             Serial.println("[CABINET] Door closed (magnet detected)");
 
-            // Publish door/closed to backend
-            JsonDocument doc;
-            doc["session_id"] = currentSessionId;
-            char buf[128];
-            serializeJson(doc, buf);
-            mqtt.publish(TOPIC_PUB_DOOR_CLOSED, buf);
+            // Trigger ESP32-CAM to capture → it will publish door/closed after image transfer
+            JsonDocument capDoc;
+            capDoc["session_id"] = currentSessionId;
+            char capBuf[128];
+            serializeJson(capDoc, capBuf);
+            mqtt.publish(TOPIC_PUB_CAPTURE, capBuf);
             Serial.print("[MQTT] Published → ");
-            Serial.print(TOPIC_PUB_DOOR_CLOSED);
+            Serial.print(TOPIC_PUB_CAPTURE);
             Serial.print(" | ");
-            Serial.println(buf);
+            Serial.println(capBuf);
 
             cabinetState = CABINET_CLOSED;
             currentSessionId = -1;
             digitalWrite(LED_PIN, LOW);
             ledActive = false;
-
+            // Beep solenoid lock to confirm close (adjust frequency/duration as needed)
+            tone(SOLENOID_LOCK_PIN, 1000, 200); // Beep solenoid lock to confirm close (adjust as needed)
+            delay(5000);
+            noTone(SOLENOID_LOCK_PIN);
+            // digitalWrite(SOLENOID_LOCK_PIN, LOW); // (TEST high first) Ensure solenoid lock is disengaged
             delay(1000); // debounce door
         }
         return; // Block NFC scans while cabinet is open
