@@ -1,36 +1,21 @@
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
-import importlib.util
-from pathlib import Path
 
-_SCHEMAS_PATH = Path(__file__).resolve().parent.parent / "schemas" / "ai_pipeline.py"
-_SCHEMAS_SPEC = importlib.util.spec_from_file_location("ai_pipeline_schemas", _SCHEMAS_PATH)
-if _SCHEMAS_SPEC is None or _SCHEMAS_SPEC.loader is None:
-    raise RuntimeError(f"Failed to load AI schema module from: {_SCHEMAS_PATH}")
-
-_SCHEMAS_MODULE = importlib.util.module_from_spec(_SCHEMAS_SPEC)
-_SCHEMAS_SPEC.loader.exec_module(_SCHEMAS_MODULE)
-
-EnrollFromImageInput = _SCHEMAS_MODULE.EnrollFromImageInput
-EnrollFromVideoInput = _SCHEMAS_MODULE.EnrollFromVideoInput
-EnrollResultOutput = _SCHEMAS_MODULE.EnrollResultOutput
-RecognizeFromImageInput = _SCHEMAS_MODULE.RecognizeFromImageInput
-RecognizeHitOutput = _SCHEMAS_MODULE.RecognizeHitOutput
-VideoEnrollOutput = _SCHEMAS_MODULE.VideoEnrollOutput
-
-_HELPERS_PATH = Path(__file__).resolve().parent / "ai-pipeline-service" / "ai_pipeline_helpers.py"
-_HELPERS_SPEC = importlib.util.spec_from_file_location("ai_pipeline_helpers", _HELPERS_PATH)
-if _HELPERS_SPEC is None or _HELPERS_SPEC.loader is None:
-    raise RuntimeError(f"Failed to load AI helpers module from: {_HELPERS_PATH}")
-
-_HELPERS_MODULE = importlib.util.module_from_spec(_HELPERS_SPEC)
-_HELPERS_SPEC.loader.exec_module(_HELPERS_MODULE)
-
-ai_db_path = _HELPERS_MODULE.ai_db_path
-detect_image_bytes = _HELPERS_MODULE.detect_image_bytes
-load_impl_module = _HELPERS_MODULE.load_impl_module
-build_detector = _HELPERS_MODULE.build_detector
+from app.schemas.ai_pipeline import (
+    EnrollFromImageInput,
+    EnrollFromVideoInput,
+    EnrollResultOutput,
+    RecognizeFromImageInput,
+    RecognizeHitOutput,
+    VideoEnrollOutput,
+)
+from app.services.ai_pipeline_service.ai_pipeline_helpers import (
+    ai_db_path,
+    build_detector,
+    detect_image_bytes,
+    load_impl_module,
+)
 
 
 def _to_mapping(value):
