@@ -81,20 +81,6 @@ export default function BorrowedPage() {
                 )}
             </div>
 
-            <div className="mt-12 p-6 sm:p-8 bg-blue-50 rounded-3xl border border-blue-100 flex flex-col sm:flex-row items-start gap-4">
-                <div className="bg-white p-3 rounded-2xl shadow-sm text-blue-500 flex-shrink-0">
-                    <Package size={24} />
-                </div>
-                <div>
-                    <h4 className="font-black text-blue-900 mb-1">การคืนของอัตโนมัติ (Automated Trust System)</h4>
-                    <p className="text-sm text-blue-700 leading-relaxed opacity-80">
-                        ใน Milestone 3 และ 4 ระบบจะตรวจจับการคืนของผ่านเซนเซอร์ UHF/RFID หน้าตู้โดยตรง
-                        คุณไม่จำเป็นต้องกดคืนของในแอปพลิเคชัน เพียงแค่นำของกลับมาแตะที่เซนเซอร์และวางคืนในตู้
-                        ระบบจะอัปเดตสถานะของคุณให้โดยอัตโนมัติทันที
-                    </p>
-                </div>
-            </div>
-
             <ReportModal
                 isOpen={isReportModalOpen}
                 selectedItem={selectedItem}

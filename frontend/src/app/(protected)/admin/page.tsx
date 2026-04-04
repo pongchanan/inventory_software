@@ -23,6 +23,12 @@ import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recha
 import { fetchItems } from "@/lib/api";
 import * as XLSX from "xlsx";
 
+interface ChartItem {
+  name: string;
+  value: number;
+  color?: string;
+}
+
 const exportToExcel = (stats: any, userName: string) => {
   const now = new Date();
   const timestamp = now.toLocaleString("th-TH");
@@ -42,7 +48,6 @@ const exportToExcel = (stats: any, userName: string) => {
     ["อุปกรณ์ทั้งหมด", stats.totalItems, "ชิ้น"],
     ["กำลังถูกยืมอยู่", stats.activeLoans, "รายการ"],
     ["เลยกำหนดคืน", stats.overdue, "รายการ"],
-    ["Health Score", "98.5", "%"],
   ];
   
   const ws = XLSX.utils.aoa_to_sheet(summaryData);
@@ -80,8 +85,8 @@ export default function AdminDashboard() {
     overdue: 0,
     systemHealthy: true
   });
-  const [mostBorrowedItems] = useState([]);  // Backend endpoint not yet available
-  const [mostDamagedItems] = useState([]);   // Backend endpoint not yet available
+  const [mostBorrowedItems, setMostBorrowedItems] = useState<ChartItem[]>([]);  // Backend endpoint not yet available
+  const [mostDamagedItems, setMostDamagedItems] = useState<ChartItem[]>([]);   // Backend endpoint not yet available
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -146,7 +151,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* STATS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
           <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">อุปกรณ์ทั้งหมด</p>
           <div className="flex items-end gap-2">
@@ -178,16 +183,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-6 rounded-3xl shadow-lg text-white">
-          <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Health Score</p>
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-black">98.5</span>
-            <span className="text-gray-400 text-sm font-bold mb-1">%</span>
-          </div>
-          <div className="mt-4 flex items-center gap-1 text-[10px] font-black text-green-400 uppercase tracking-widest">
-            <ShieldCheck size={12} /> All Sensors OK
-          </div>
-        </div>
       </div>
 
       {/* STATISTICS CHARTS */}

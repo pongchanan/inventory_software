@@ -27,7 +27,13 @@ function normalizeAuthUser(row: {
 }
 
 export async function fetchUsers(): Promise<AuthUser[]> {
-  const res = await fetch(`${API_BASE}/api/users`, {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.warn("fetchUsers skipped - not authenticated");
+    return [];
+  }
+  
+  const res = await fetch(`${API_BASE}/api/users/`, {
     cache: "no-store",
     headers: authHeaders(),
   });
