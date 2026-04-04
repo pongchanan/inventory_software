@@ -2,19 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Nfc, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, Nfc, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { linkCardForUser } from "@/lib/api";
 
 export default function TapCardPage() {
     const router = useRouter();
+    const { token } = useAuth();
     const [status, setStatus] = useState<"waiting" | "success" | "error">("waiting");
     const [errorMsg, setErrorMsg] = useState("");
 
     useEffect(() => {
         const initializeLinkCard = async () => {
             try {
-                // Get JWT token from localStorage
-                const token = localStorage.getItem("token");
+                // Verify authentication token exists
                 if (!token) {
                     setStatus("error");
                     setErrorMsg("Authentication token not found. Please register again.");
@@ -39,7 +40,7 @@ export default function TapCardPage() {
         };
 
         initializeLinkCard();
-    }, [router]);
+    }, [router, token]);
 
     return (
         <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden text-center z-10">
@@ -91,12 +92,20 @@ export default function TapCardPage() {
                         </div>
                         <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Card Scan Failed</h1>
                         <p className="text-gray-500 font-medium mb-8 text-sm">{errorMsg}</p>
-                        <button
-                            onClick={() => router.push("/register")}
-                            className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-colors"
-                        >
-                            Try Again
-                        </button>
+                        <div className="flex flex-col gap-3 w-full">
+                            <button
+                                onClick={() => router.push("/register")}
+                                className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-colors"
+                            >
+                                Try Again
+                            </button>
+                            <button
+                                onClick={() => router.push("/")}
+                                className="w-full py-3 bg-[#ee4d2d] text-white rounded-xl font-bold hover:bg-[#d63f1f] transition-colors flex items-center justify-center gap-2"
+                            >
+                                Skip to Dashboard <ArrowRight size={18} />
+                            </button>
+                        </div>
                     </div>
                 )}
 

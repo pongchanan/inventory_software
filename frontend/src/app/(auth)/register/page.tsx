@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { RegisterDesktopShell } from "./_components/RegisterDesktopShell";
 import { RegisterMobileShell } from "./_components/RegisterMobileShell";
 import { register } from "@/lib/api";
 
 export default function RegisterPage() {
     const router = useRouter();
+    const { loginStore } = useAuth();
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -30,14 +32,14 @@ export default function RegisterPage() {
                 formData.password
             );
 
+            // Store token and user using loginStore (same as login page)
+            loginStore(response.access_token, response.user);
+
             if (withNFC) {
-                // Store JWT token for use in tap-card page
-                localStorage.setItem("token", response.access_token);
                 // Redirect to tap-card page to link card using /link-card endpoint
                 router.push("/register/tap-card");
             } else {
-                // Store token and redirect to home
-                localStorage.setItem("token", response.access_token);
+                // Redirect to home
                 router.push("/");
             }
         } catch (err: any) {
