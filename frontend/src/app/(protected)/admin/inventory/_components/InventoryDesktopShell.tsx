@@ -34,22 +34,22 @@ export function InventoryDesktopShell({
       <table className="w-full text-left">
         <thead className="bg-gray-50 border-b border-gray-100">
           <tr>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">อุปกรณ์</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">หมวดหมู่ / ตำแหน่ง</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">สถานะ</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">ดำเนินการ</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Equipment</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Category / Location</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
           {loading ? (
             <tr>
               <td colSpan={4} className="py-20 text-center text-gray-400 font-bold">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /> กำลังโหลดข้อมูล...
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /> Loading data...
               </td>
             </tr>
           ) : items.length === 0 ? (
             <tr>
-              <td colSpan={4} className="py-20 text-center text-gray-400 font-bold">ไม่พบรายการอุปกรณ์</td>
+              <td colSpan={4} className="py-20 text-center text-gray-400 font-bold">No equipment found</td>
             </tr>
           ) : (
             items.map((item) => (
@@ -65,7 +65,7 @@ export function InventoryDesktopShell({
                 </td>
                 <td className="px-6 py-4">
                   <p className="text-sm font-bold text-gray-600 mb-0.5">{item.category || "—"}</p>
-                  <p className="text-xs text-gray-400 font-medium">ตู้: {item.location || "—"}</p>
+                  <p className="text-xs text-gray-400 font-medium">Cabinet: {item.location || "—"}</p>
                 </td>
                 <td className="px-6 py-4">
                   <span
@@ -75,7 +75,7 @@ export function InventoryDesktopShell({
                         : "bg-red-50 text-red-600 border-red-100"
                     }`}
                   >
-                    {item.available ? "พร้อมใช้งาน" : "ถูกยืมอยู่ / ไม่ว่าง"}
+                    {item.available ? "Ready to Use" : "Borrowed / Unavailable"}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-right">
@@ -84,7 +84,7 @@ export function InventoryDesktopShell({
                       className={`p-2 rounded-xl hover:bg-blue-50 text-blue-500 transition-all cursor-pointer ${
                         uploadingUid === item.uid ? "opacity-50" : ""
                       }`}
-                      title="อัปเกรดรูปภาพ"
+                      title="Upgrade Image"
                     >
                       {uploadingUid === item.uid ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -106,7 +106,7 @@ export function InventoryDesktopShell({
                       onClick={() => handleDelete(item.uid)}
                       disabled={deletingUid === item.uid}
                       className="p-2 rounded-xl hover:bg-red-50 text-red-500 transition-all disabled:opacity-50"
-                      title="ลบข้อมูล"
+                      title="Delete Data"
                     >
                       {deletingUid === item.uid ? (
                         <Loader2 className="w-5 h-5 animate-spin" />

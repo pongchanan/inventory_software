@@ -41,7 +41,7 @@ export function DesktopSidebar({ currentUser, onLogout, currentPath }: DesktopSi
                     href="/"
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                 >
-                    <Home size={20} /> หน้าหลัก
+                    <Home size={20} /> Home Page
                 </Link>
 
 
@@ -52,13 +52,13 @@ export function DesktopSidebar({ currentUser, onLogout, currentPath }: DesktopSi
                             href="/borrowed"
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/borrowed') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                         >
-                            <Package size={20} /> รายการยืมของฉัน
+                            <Package size={20} /> My Borrowed Items
                         </Link>
                         <Link
                             href="/history"
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/history') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                         >
-                            <History size={20} /> ประวัติการใช้งาน
+                            <History size={20} /> Usage history
                         </Link>
                     </>
                 )}
@@ -71,35 +71,35 @@ export function DesktopSidebar({ currentUser, onLogout, currentPath }: DesktopSi
                             href="/admin"
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin') && currentPath === '/admin' ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                         >
-                            <LayoutDashboard size={20} /> แดชบอร์ดภาพรวม
+                            <LayoutDashboard size={20} /> Overview Dashboard
                         </Link>
 
                         <Link
                             href="/admin/inventory"
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/inventory') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                         >
-                            <Settings size={20} /> จัดการอุปกรณ์ถาวร
+                            <Settings size={20} /> Asset Management
                         </Link>
 
                         <Link
                             href="/admin/loans"
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/loans') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                         >
-                            <Wrench size={20} /> ยืม-คืน & แจ้งซ่อม
+                            <Wrench size={20} /> Loans & Maintenance
                         </Link>
 
                         <Link
                             href="/admin/users"
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/users') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                         >
-                            <Users size={20} /> จัดการสมาชิก
+                            <Users size={20} /> Manage Members
                         </Link>
 
                         <Link
                             href="/admin/logs"
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/logs') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                         >
-                            <FileText size={20} /> ล็อกระบบ & รายงาน
+                            <FileText size={20} /> System Logs & Reports
                         </Link>
                     </>
                 )}
@@ -121,7 +121,7 @@ export function DesktopSidebar({ currentUser, onLogout, currentPath }: DesktopSi
                             onClick={onLogout}
                             className="w-full mt-3 flex items-center justify-center gap-2 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                         >
-                            <LogOut size={16} /> ออกจากระบบ
+                            <LogOut size={16} /> Sign Out
                         </button>
                     </>
                 ) : (
@@ -130,13 +130,13 @@ export function DesktopSidebar({ currentUser, onLogout, currentPath }: DesktopSi
                             href="/login"
                             className="w-full flex items-center justify-center gap-2 py-3 bg-[#ee4d2d] text-white rounded-xl font-bold text-sm hover:bg-[#ff7355] transition-colors"
                         >
-                            เข้าสู่ระบบ
+                            Sign In
                         </Link>
                         <Link
                             href="/register"
                             className="w-full flex items-center justify-center gap-2 py-3 bg-gray-50 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors"
                         >
-                            สมัครสมาชิก
+                            Register
                         </Link>
                     </div>
                 )}

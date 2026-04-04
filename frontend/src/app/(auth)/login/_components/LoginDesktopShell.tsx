@@ -34,13 +34,13 @@ export function LoginDesktopShell({
 
           <div className="max-w-lg">
             <h2 className="mb-6 text-5xl font-black leading-tight">
-              ระบบจัดการ
+              System Control Center
               <br />
-              ยืมคืนอุปกรณ์ IoT
+              IoT Equipment Lending
             </h2>
             <p className="text-lg leading-relaxed text-gray-400">
-              ระบบลงทะเบียน ยืม และ คืน อุปกรณ์อัตโนมัติ ใช้งานง่าย
-              รองรับการยืนยันตัวตนด้วยบัตรนักศึกษา และการแจ้งเตือนแบบเรียลไทม์
+              Automated system for borrowing and returning IoT equipment. Easy to use.
+              Supports student card authentication and real-time notifications
             </p>
           </div>
         </div>
@@ -52,20 +52,13 @@ export function LoginDesktopShell({
 
         <div className="relative z-10 w-full max-w-md">
           <div className="mb-10">
-            <h2 className="mb-2 text-4xl font-black text-gray-900">ยินดีต้อนรับกลับ! 👋</h2>
-            <p className="text-gray-500">กรุณาลงชื่อเข้าใช้เพื่อจัดการระบบ</p>
+            <h2 className="mb-2 text-4xl font-black text-gray-900">Welcome Back! 👋</h2>
+            <p className="text-gray-500">Please sign in to manage the system</p>
           </div>
 
           <div className="relative overflow-hidden rounded-[2rem] border border-white/50 bg-white/80 p-10 shadow-2xl backdrop-blur-xl">
             <div className="pointer-events-none absolute inset-0 rounded-[2rem] border-2 border-white/60" />
             {form}
-          </div>
-
-          <div className="mt-8 space-x-1 text-center text-sm">
-            <span className="font-medium text-gray-500">พบปัญหา?</span>
-            <a href="#" className="font-bold text-[#ee4d2d] hover:underline">
-              ติดต่อผู้ดูแลระบบ
-            </a>
           </div>
         </div>
       </div>

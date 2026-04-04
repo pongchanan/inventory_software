@@ -50,7 +50,7 @@ function KioskRegistrationForm() {
                     }, 3000)
                 } else if (data.status === "expired" || data.status === "not_found") {
                     setStep("ERROR")
-                    setErrorMessage("เซสชั่นหมดอายุหรือไม่พบข้อมูลตู้ กรุณาเริ่มใหม่")
+                    setErrorMessage("Session expired or cabinet data not found. Please try again.")
                 }
             } catch (err) {
                 console.error("Polling error:", err)
@@ -81,7 +81,7 @@ function KioskRegistrationForm() {
 
             if (!res.ok) {
                 const errorData = await res.json()
-                throw new Error(errorData.detail || "เกิดข้อผิดพลาดในการส่งข้อมูล")
+                throw new Error(errorData.detail || "An error occurred while sending data")
             }
 
             // Transition to Waiting Step
@@ -99,9 +99,9 @@ function KioskRegistrationForm() {
             <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
                 <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center space-y-6">
                     <div className="w-24 h-24 mx-auto border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                    <h2 className="text-2xl font-bold text-slate-800">กรุณานำบัตรนักศึกษามาแตะที่ตู้</h2>
+                    <h2 className="text-2xl font-bold text-slate-800">Please tap your student card on the cabinet</h2>
                     <p className="text-slate-600">
-                        ระบบกำลังรอรับข้อมูลจากตู้เบอร์ <span className="font-mono font-bold">{kioskId}</span>
+                        System is waiting for data from cabinet <span className="font-mono font-bold">{kioskId}</span>
                     </p>
                     <div className="text-4xl font-mono text-blue-600 font-bold">
                         {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
@@ -110,7 +110,7 @@ function KioskRegistrationForm() {
                         onClick={() => setStep("FORM")}
                         className="text-sm text-slate-400 hover:text-slate-600 underline"
                     >
-                        ยกเลิกการทำรายการ
+                        Cancel
                     </button>
                 </div>
             </div>
@@ -126,9 +126,9 @@ function KioskRegistrationForm() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-green-600">ลงทะเบียนสำเร็จ!</h2>
+                    <h2 className="text-2xl font-bold text-green-600">Registration Successful!</h2>
                     <p className="text-slate-600">
-                        กรุณาเข้าสู่ระบบเพื่อใช้งานต่อ...
+                        Please sign in to continue using the system...
                     </p>
                 </div>
             </div>
@@ -144,7 +144,7 @@ function KioskRegistrationForm() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-red-600">เกิดข้อผิดพลาด</h2>
+                    <h2 className="text-2xl font-bold text-red-600">Error Occurred</h2>
                     <p className="text-slate-600">{errorMessage}</p>
                     <button
                         onClick={() => setStep("FORM")}
@@ -228,7 +228,7 @@ function KioskRegistrationForm() {
 
 export default function KioskRegistrationPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><p className="text-gray-500 font-medium">กำลังโหลดแบบฟอร์ม...</p></div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50"><p className="text-gray-500 font-medium">Loading form...</p></div>}>
             <KioskRegistrationForm />
         </Suspense>
     )

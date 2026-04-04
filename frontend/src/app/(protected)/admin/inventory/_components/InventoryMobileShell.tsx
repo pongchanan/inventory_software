@@ -33,10 +33,10 @@ export function InventoryMobileShell({
     <div className="md:hidden divide-y divide-gray-100">
       {loading ? (
         <div className="py-20 text-center text-gray-400 font-bold">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /> กำลังโหลด...
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /> Loading...
         </div>
       ) : items.length === 0 ? (
-        <div className="py-20 text-center text-gray-400 font-bold">ไม่พบรายการ</div>
+        <div className="py-20 text-center text-gray-400 font-bold">No items found</div>
       ) : (
         items.map((item) => (
           <div key={item.id} className="p-4 flex gap-4">
@@ -56,7 +56,7 @@ export function InventoryMobileShell({
               </div>
               <p className="text-[10px] text-gray-400 font-mono font-bold mt-1 uppercase tracking-wider">{item.uid}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {item.category} • ตู้: {item.location}
+                {item.category} • Cabinet: {item.location}
               </p>
 
               <div className="flex items-center gap-3 mt-3">

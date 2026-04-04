@@ -12,7 +12,7 @@ export function TopHeader() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#ee4d2d] transition-colors" size={20} />
                 <input
                     type="text"
-                    placeholder="ค้นหาอุปกรณ์ IOT หรือ เซ็นเซอร์..."
+                    placeholder="Search for devices or sensors..."
                     className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-2xl border-2 border-transparent focus:bg-white focus:border-[#ee4d2d] outline-none text-sm transition-all"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -21,15 +21,15 @@ export function TopHeader() {
 
             <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-gray-400">เรียงตาม:</span>
+                    <span className="text-xs font-bold text-gray-400">Sort by:</span>
                     <select
                         className="bg-transparent text-sm font-bold text-gray-800 outline-none cursor-pointer"
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as SortOption)}
                     >
-                        <option value="name">ชื่อ (A-Z)</option>
-                        <option value="qty-desc">คงเหลือมากที่สุด</option>
-                        <option value="qty-asc">สต็อกใกล้หมด</option>
+                        <option value="name">Name (A-Z)</option>
+                        <option value="qty-desc">Highest Stock</option>
+                        <option value="qty-asc">Low Stock</option>
                     </select>
                 </div>
                 <div className="h-8 w-px bg-gray-200"></div>

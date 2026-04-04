@@ -31,7 +31,7 @@ export function ItemCard({ item }: ItemCardProps) {
                 <div>
                     <div className="flex justify-between items-center mb-1">
                         <span className={`text-[10px] font-bold ${isOutOfStock ? 'text-gray-400' : 'text-[#ee4d2d]'}`}>
-                            {isOutOfStock ? 'สินค้าหมด' : `คงเหลือ ${item.qty}`}
+                            {isOutOfStock ? 'Out of Stock' : `${item.qty} Available`}
                         </span>
                     </div>
                     <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">

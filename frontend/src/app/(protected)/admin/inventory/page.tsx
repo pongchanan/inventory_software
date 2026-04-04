@@ -96,7 +96,7 @@ export default function InventoryAdminPage() {
             if (imageFile) {
                 await uploadItemImageAuth(created.uid, imageFile);
             }
-            setSuccessMsg(`เพิ่มอุปกรณ์ "${created.name}" เรียบร้อยแล้ว!`);
+            setSuccessMsg(`Added device "${created.name}" successfully!`);
             setForm({ ...emptyForm });
             setImageFile(null);
             setImagePreview(null);
@@ -109,14 +109,14 @@ export default function InventoryAdminPage() {
     };
 
     const handleDelete = async (uid: string) => {
-        if (!confirm(`ยืนยันการลบอุปกรณ์ ${uid}? ไม่สามารถเรียกคืนได้`)) return;
+        if (!confirm(`Confirm deletion of device ${uid}? This cannot be undone`)) return;
         setDeletingUid(uid);
         try {
             await deleteItemAuth(uid);
-            setSuccessMsg(`ลบอุปกรณ์ ${uid} แล้ว`);
+            setSuccessMsg(`Device ${uid} deleted.`);
             loadItems();
         } catch {
-            setError("ไม่สามารถลบอุปกรณ์ได้");
+            setError("Unable to delete device.");
         }
         setDeletingUid(null);
     };
@@ -125,10 +125,10 @@ export default function InventoryAdminPage() {
         setUploadingUid(uid);
         try {
             await uploadItemImageAuth(uid, file);
-            setSuccessMsg(`อัปโหลดรูปภาพสำหรับ ${uid} เรียบร้อย`);
+            setSuccessMsg(`Image uploaded for ${uid} successfully.`);
             loadItems();
         } catch {
-            setError("ไม่สามารถอัปโหลดรูปภาพได้");
+            setError("Unable to upload image.");
         }
         setUploadingUid(null);
     };
@@ -141,9 +141,9 @@ export default function InventoryAdminPage() {
                 <div>
                     <h1 className="text-3xl font-black text-gray-900 flex items-center gap-2">
                         <Package className="w-8 h-8 text-[#ee4d2d]" />
-                        จัดการอุปกรณ์ถาวร
+                        Asset Management
                     </h1>
-                    <p className="text-gray-500 font-medium mt-1">เพิ่ม ลบ แก้ไข และจัดการรายการครุภัณฑ์ทั้งหมดในระบบ</p>
+                    <p className="text-gray-500 font-medium mt-1">Add, delete, edit, and manage all assets in the system</p>
                 </div>
 
                 <button
@@ -154,7 +154,7 @@ export default function InventoryAdminPage() {
                     className="inline-flex items-center gap-2 bg-[#ee4d2d] text-white px-6 py-3 rounded-2xl hover:bg-[#ff7355] transition-all shadow-md font-bold"
                 >
                     {showForm ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                    {showForm ? "ยกเลิก" : "เพิ่มอุปกรณ์ใหม่"}
+                    {showForm ? "Cancel" : "Add New Device"}
                 </button>
             </div>
 
@@ -176,33 +176,33 @@ export default function InventoryAdminPage() {
 
             {showForm && (
                 <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm space-y-6">
-                    <h2 className="text-xl font-black mb-4">ลงทะเบียนของชิ้นใหม่</h2>
+                    <h2 className="text-xl font-black mb-4">Register New Device</h2>
                     {submitError && <div className="p-4 bg-red-50 text-red-600 rounded-2xl text-sm font-bold">{submitError}</div>}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-700">UID / RFID *</label>
-                            <input type="text" required value={form.uid} onChange={(e) => setForm({ ...form, uid: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="แตะบัตรหรือพิมพ์เลข RFID" />
+                            <input type="text" required value={form.uid} onChange={(e) => setForm({ ...form, uid: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="Tap card or enter RFID number" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">ชื่ออุปกรณ์ *</label>
-                            <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="เช่น Arduino Uno R3" />
+                            <label className="text-sm font-bold text-gray-700">Device Name *</label>
+                            <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="e.g., Arduino Uno R3" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">หมวดหมู่</label>
-                            <input type="text" value={form.category || ""} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="เช่น Electronics, Tools" />
+                            <label className="text-sm font-bold text-gray-700">Category</label>
+                            <input type="text" value={form.category || ""} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="e.g., Electronics, Tools" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">ตำแหน่งที่เก็บ (ตู้/ช่อง)</label>
-                            <input type="text" value={form.location || ""} onChange={(e) => setForm({ ...form, location: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="เช่น Locker-A1" />
+                            <label className="text-sm font-bold text-gray-700">Storage Location (Cabinet/Slot)</label>
+                            <input type="text" value={form.location || ""} onChange={(e) => setForm({ ...form, location: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="e.g., Locker-A1" />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-700">รูปภาพอุปกรณ์</label>
+                        <label className="text-sm font-bold text-gray-700">Device Image</label>
                         <div className="flex flex-wrap items-center gap-4">
                             <label className="flex items-center gap-2 cursor-pointer bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-2xl transition-all font-bold text-sm">
-                                <ImageIcon className="w-5 h-5" /> เลือกไฟล์รูปภาพ
+                                <ImageIcon className="w-5 h-5" /> Choose Image
                                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageSelect(e.target.files?.[0] || null)} />
                             </label>
                             {imagePreview && (
@@ -216,7 +216,7 @@ export default function InventoryAdminPage() {
                     <div className="flex justify-end pt-4">
                         <button type="submit" disabled={submitting} className="bg-gray-900 text-white px-8 py-3 rounded-2xl font-black hover:bg-black transition-all shadow-lg disabled:opacity-50 flex items-center gap-2">
                             {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
-                            {submitting ? "กำลังบันทึก..." : "ยืนยันการเพิ่มอุปกรณ์"}
+                            {submitting ? "Saving..." : "Confirm Add Device"}
                         </button>
                     </div>
                 </form>

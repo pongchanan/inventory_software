@@ -40,7 +40,7 @@ export default function BorrowedPage() {
 
     return (
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">
-            <h2 className="text-3xl font-black mb-8">รายการยืมของฉัน</h2>
+            <h2 className="text-3xl font-black mb-8">My Borrowed Items</h2>
 
             <div className="space-y-4">
                 {borrowedItems.map((item: BorrowedItem) => (
@@ -61,14 +61,14 @@ export default function BorrowedPage() {
                             </div>
                             <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-sm text-gray-500">
                                 <div className="flex items-center gap-1.5"><MapPin size={14} className="text-[#ee4d2d]" /> {item.loc}</div>
-                                <div className="flex items-center gap-1.5"><History size={14} className="text-[#ee4d2d]" /> ยืมเมื่อ {item.date}</div>
+                                <div className="flex items-center gap-1.5"><History size={14} className="text-[#ee4d2d]" /> Borrowed on {item.date}</div>
                             </div>
                         </div>
                         <button
                             onClick={() => openReportModal(item)}
                             className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-orange-50 text-[#ee4d2d] text-sm font-bold rounded-2xl hover:bg-[#ee4d2d] hover:text-white transition-all shadow-sm shrink-0"
                         >
-                            <AlertTriangle size={18} /> แจ้งความเสียหาย
+                            <AlertTriangle size={18} /> Report Damage
                         </button>
                     </div>
                 ))}
@@ -76,7 +76,7 @@ export default function BorrowedPage() {
                 {borrowedItems.length === 0 && (
                     <div className="py-20 text-center bg-white rounded-3xl border-2 border-dashed border-gray-200">
                         <Package size={48} className="mx-auto mb-4 text-gray-200" />
-                        <p className="text-gray-400 font-bold">คุณยังไม่ได้ยืมอุปกรณ์ชิ้นใดเลยในขณะนี้</p>
+                        <p className="text-gray-400 font-bold">You haven't borrowed any equipment yet</p>
                     </div>
                 )}
             </div>

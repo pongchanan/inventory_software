@@ -15,42 +15,71 @@ _task: asyncio.Task | None = None
 
 
 def _check_due_dates():
+    """Check for overdue and due-tomorrow borrowings, with error handling."""
     db: Session = SessionLocal()
     try:
+        print("[DUE-CHECK] Starting due date check...")
         now = datetime.utcnow()
         tomorrow = now + timedelta(days=1)
 
         # Active borrowings (not returned)
-        borrowings = (
-            db.query(Borrowing, User, Item)
-            .join(User, Borrowing.user_id == User.id)
-            .join(Item, Borrowing.item_id == Item.id)
-            .filter(Borrowing.return_at == None)  # noqa: E711
-            .all()
-        )
+        # Note: We do NOT join all tables at once to avoid connection pool issues
+        # Instead, we query borrowings first, then fetch users/items separately
+        try:
+            borrowings_data = (
+                db.query(Borrowing)
+                .filter(Borrowing.return_at == None)  # noqa: E711
+                .all()
+            )
+            print(f"[DUE-CHECK] Found {len(borrowings_data)} active borrowings")
+        except Exception as query_error:
+            print(f"[DUE-CHECK] Error querying borrowings: {query_error}")
+            return
 
-        for borrowing, user, item in borrowings:
-            due = borrowing.due_at
+        for borrowing in borrowings_data:
+            try:
+                due = borrowing.due_at
+                
+                # Lazy-load the relationships within the try block
+                user_name = borrowing.user.name if borrowing.user else "Unknown User"
+                item_name = borrowing.item.name if borrowing.item else "Unknown Item"
+                user_email = borrowing.user.email if borrowing.user else None
 
-            if due <= now:
-                # OVERDUE — send overdue email every check cycle
-                send_email(
-                    to=user.email,
-                    subject=f'OVERDUE: Please return "{item.name}"',
-                    body=_overdue_email(user.name, item.name, due),
-                )
-            elif due <= tomorrow:
-                # DUE TOMORROW — send warning email
-                send_email(
-                    to=user.email,
-                    subject=f'Reminder: "{item.name}" is due tomorrow',
-                    body=_warning_email(user.name, item.name, due),
-                )
+                if not user_email:
+                    print(f"[DUE-CHECK] Warning: No email for borrowing {borrowing.id}")
+                    continue
+
+                if due <= now:
+                    # OVERDUE — send overdue email every check cycle
+                    print(f"[DUE-CHECK] Sending overdue email to {user_name} for {item_name}")
+                    send_email(
+                        to=user_email,
+                        subject=f'OVERDUE: Please return "{item_name}"',
+                        body=_overdue_email(user_name, item_name, due),
+                    )
+                elif due <= tomorrow:
+                    # DUE TOMORROW — send warning email
+                    print(f"[DUE-CHECK] Sending due-tomorrow email to {user_name} for {item_name}")
+                    send_email(
+                        to=user_email,
+                        subject=f'Reminder: "{item_name}" is due tomorrow',
+                        body=_warning_email(user_name, item_name, due),
+                    )
+            except Exception as borrow_error:
+                print(f"[DUE-CHECK] Error processing borrowing {borrowing.id}: {borrow_error}")
+                continue
+
+        print("[DUE-CHECK] Due date check completed successfully")
 
     except Exception as e:
-        print(f"[DUE-CHECK] Error: {e}")
+        print(f"[DUE-CHECK] Unexpected error: {type(e).__name__}: {e}")
+        # Don't re-raise, just log and continue
     finally:
-        db.close()
+        try:
+            db.close()
+            print("[DUE-CHECK] Database session closed")
+        except Exception as close_error:
+            print(f"[DUE-CHECK] Error closing database session: {close_error}")
 
 
 def _warning_email(name: str, item_name: str, due_at: datetime) -> str:

@@ -18,19 +18,12 @@ export function LoginMobileShell({
               <Package className="h-10 w-10 text-white" />
             </div>
             <h1 className="text-4xl font-black uppercase tracking-tight">Smart Inventory</h1>
-            <p className="mt-2 text-white/80">ลงชื่อเข้าใช้งานระบบ</p>
+            <p className="mt-2 text-white/80">Sign in to the system</p>
           </div>
 
           <div className="relative overflow-hidden rounded-[2rem] border border-white/50 bg-white/80 p-8 shadow-2xl backdrop-blur-xl sm:p-10">
             <div className="pointer-events-none absolute inset-0 rounded-[2rem] border-2 border-white/60" />
             {form}
-          </div>
-
-          <div className="mt-8 space-x-1 text-center text-sm">
-            <span className="font-medium text-gray-500">พบปัญหา?</span>
-            <a href="#" className="font-bold text-[#ee4d2d] hover:underline">
-              ติดต่อผู้ดูแลระบบ
-            </a>
           </div>
         </div>
       </div>

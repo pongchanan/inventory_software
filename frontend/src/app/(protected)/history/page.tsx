@@ -33,7 +33,7 @@ export default function HistoryPage() {
     }
 
     const formatDate = (date: Date) => {
-        return new Intl.DateTimeFormat('th-TH', {
+        return new Intl.DateTimeFormat('en-US', {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
@@ -68,48 +68,48 @@ export default function HistoryPage() {
 
     return (
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">
-            <h2 className="text-3xl font-black mb-2">ประวัติการใช้งาน</h2>
-            <p className="text-gray-500 font-medium mb-8">ภาพรวมสถิติและประวัติการยืม-คืนอุปกรณ์ของคุณทั้งหมด</p>
+            <h2 className="text-3xl font-black mb-2">Usage history</h2>
+            <p className="text-gray-500 font-medium mb-8">Overview of your device borrowing and returning history</p>
 
             {/* QUICK STATS DASHBOARD */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-gray-500 font-bold text-sm">การยืมทั้งหมด</span>
+                        <span className="text-gray-500 font-bold text-sm">Total Borrowings</span>
                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500"><History size={16} /></div>
                     </div>
                     <div>
-                        <span className="text-2xl font-black text-gray-900">{stats.total}</span> <span className="text-gray-400 text-sm font-medium">ครั้ง</span>
+                        <span className="text-2xl font-black text-gray-900">{stats.total}</span> <span className="text-gray-400 text-sm font-medium">times</span>
                     </div>
                 </div>
 
                 <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-blue-500 font-bold text-sm">กำลังยืมอยู่</span>
+                        <span className="text-blue-500 font-bold text-sm">Currently Borrowed</span>
                         <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500"><Clock size={16} /></div>
                     </div>
                     <div>
-                        <span className="text-2xl font-black text-blue-600">{stats.active}</span> <span className="text-blue-300 text-sm font-medium">รายการ</span>
+                        <span className="text-2xl font-black text-blue-600">{stats.active}</span> <span className="text-blue-300 text-sm font-medium">items</span>
                     </div>
                 </div>
 
                 <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-green-500 font-bold text-sm">คืนเสร็จสิ้น</span>
+                        <span className="text-green-500 font-bold text-sm">Completed Returns</span>
                         <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500"><CheckCircle2 size={16} /></div>
                     </div>
                     <div>
-                        <span className="text-2xl font-black text-green-600">{stats.returned}</span> <span className="text-green-300 text-sm font-medium">รายการ</span>
+                        <span className="text-2xl font-black text-green-600">{stats.returned}</span> <span className="text-green-300 text-sm font-medium">items</span>
                     </div>
                 </div>
 
                 <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-red-500 font-bold text-sm">เลยกำหนดคืน</span>
+                        <span className="text-red-500 font-bold text-sm">Overdue Returns</span>
                         <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500"><AlertCircle size={16} /></div>
                     </div>
                     <div>
-                        <span className="text-2xl font-black text-red-600">{stats.overdue}</span> <span className="text-red-300 text-sm font-medium">รายการ</span>
+                        <span className="text-2xl font-black text-red-600">{stats.overdue}</span> <span className="text-red-300 text-sm font-medium">items</span>
                     </div>
                 </div>
             </div>
@@ -122,7 +122,7 @@ export default function HistoryPage() {
                     </div>
                     <input
                         type="text"
-                        placeholder="ค้นหาตามชื่ออุปกรณ์..."
+                        placeholder="Search by device name..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium outline-none focus:border-[#ee4d2d] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm"
@@ -138,10 +138,10 @@ export default function HistoryPage() {
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="w-full pl-11 pr-8 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 outline-none focus:border-[#ee4d2d] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm appearance-none cursor-pointer"
                     >
-                        <option value="all">สถานะทั้งหมด</option>
-                        <option value="active">กำลังยืมอยู่</option>
-                        <option value="returned">คืนสำเร็จ</option>
-                        <option value="overdue">เลยกำหนดคืน</option>
+                        <option value="all">All Statuses</option>
+                        <option value="active">Currently Borrowed</option>
+                        <option value="returned">Completed Returns</option>
+                        <option value="overdue">Overdue Returns</option>
                     </select>
                 </div>
             </div>
@@ -150,7 +150,7 @@ export default function HistoryPage() {
             {historyLoading ? (
                 <div className="py-20 text-center flex flex-col items-center justify-center bg-white rounded-3xl shadow-sm border border-gray-50">
                     <div className="w-10 h-10 border-4 border-gray-200 border-t-[#ee4d2d] rounded-full animate-spin mb-4"></div>
-                    <p className="text-gray-500 font-bold">กำลังโหลดประวัติการใช้งาน...</p>
+                    <p className="text-gray-500 font-bold">Loading usage history...</p>
                 </div>
             ) : error ? (
                 <div className="py-6 px-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 text-center font-bold">
@@ -159,8 +159,8 @@ export default function HistoryPage() {
             ) : historyItems.length === 0 ? (
                 <div className="py-24 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
                     <History size={48} className="mx-auto mb-4 text-gray-200" />
-                    <p className="text-gray-400 font-bold text-lg mb-1">ไม่พบประวัติการใช้งาน</p>
-                    <p className="text-gray-400 text-sm">ลองเปลี่ยนเงื่อนไขการค้นหาดูอีกครั้ง</p>
+                    <p className="text-gray-400 font-bold text-lg mb-1">No usage history found.</p>
+                    <p className="text-gray-400 text-sm">Try changing the search criteria.</p>
                 </div>
             ) : (
                 <>
