@@ -14,6 +14,7 @@ from app.routes import (
     auth_router,
     borrowings_router,
     card_router,
+    damaged_reports_router,
     items_router,
     sessions_router,
     users_router,
@@ -58,6 +59,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(borrowings_router)
 app.include_router(card_router)
+app.include_router(damaged_reports_router)
 app.include_router(items_router)
 app.include_router(sessions_router)
 app.include_router(users_router)
