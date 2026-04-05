@@ -22,3 +22,18 @@ class PaginatedSessions(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class SessionImageOut(BaseModel):
+    session_id: int
+    open_at: datetime
+    close_at: datetime | None
+    url: str
+
+
+class PaginatedSessionImages(BaseModel):
+    images: list[SessionImageOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int

@@ -3,11 +3,12 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas.open_session import PaginatedSessions
+from app.schemas.open_session import PaginatedSessionImages, PaginatedSessions
 from app.services.auth_service import require_admin
 from app.services.sessions_service import (
     close_session_with_image,
     get_session_image_url,
+    get_session_images,
     get_sessions,
 )
 
@@ -23,6 +24,19 @@ def list_sessions(
     db: Session = Depends(get_db),
 ):
     return get_sessions(db, page, page_size)
+
+
+@router.get(
+    "/images",
+    response_model=PaginatedSessionImages,
+    dependencies=[Depends(require_admin)],
+)
+def list_session_images(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    return get_session_images(db, page, page_size)
 
 
 @router.post("/{session_id}/close-image")

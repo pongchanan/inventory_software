@@ -69,3 +69,40 @@ def get_session_image_url(db: Session, session_id: int) -> str:
     if not session.close_image_path:
         raise ValueError(f"Session {session_id} has no image")
     return get_presigned_url(session.close_image_path)
+
+
+def get_session_images(db: Session, page: int, page_size: int) -> dict:
+    query = db.query(OpenSession).filter(OpenSession.close_image_path.isnot(None))
+
+    total = query.count()
+    total_pages = max(1, math.ceil(total / page_size))
+
+    rows = (
+        query.order_by(OpenSession.close_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    images = []
+    for session in rows:
+        try:
+            url = get_presigned_url(session.close_image_path)
+        except Exception:
+            url = ""
+        images.append(
+            {
+                "session_id": session.id,
+                "open_at": session.open_at,
+                "close_at": session.close_at,
+                "url": url,
+            }
+        )
+
+    return {
+        "images": images,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
