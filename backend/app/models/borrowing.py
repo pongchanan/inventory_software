@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -21,3 +21,6 @@ class Borrowing(Base):
     )
     due_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     return_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    user = relationship("User", lazy="joined")
+    item = relationship("Item", lazy="joined")
