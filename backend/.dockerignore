@@ -22,7 +22,7 @@ pytest.ini
 scripts/
 
 # AI runtime artifacts (generated at runtime, not baked into image)
-ai_runtime/
+app/services/ai_pipeline_service/.ai_pipeline_runtime/
 
 # Database backups
 backups/
