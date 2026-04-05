@@ -48,7 +48,8 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/` | No | List active items (paginated). Query params: `page` (default 1), `page_size` (default 20, max 100) |
+| `GET` | `/` | No | List active items (paginated). Query params: `page` (default 1), `page_size` (default 20, max 100). Each item includes a presigned S3 URL for its first enrolled sample image |
+| `POST` | `/enroll` | Admin | Create a new item and enroll it via video upload. Multipart: `name`, `quantity`, `video` (file). Runs YOLO detection + embedding pipeline. Returns item fields plus `accepted_count`, `rejected_count`, `frames_sampled`, and first sample `image` URL |
 
 ### Borrowings — `/api/borrowings`
 
