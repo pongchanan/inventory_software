@@ -62,6 +62,20 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/` | Admin | List cabinet open/close logs (paginated). Includes user info, open_at, close_at, close_image_path |
+| `POST` | `/{session_id}/close-image` | No | (ESP32-CAM) Upload raw JPEG body to close a session and store image in S3 |
+| `GET` | `/{session_id}/image` | Admin | Redirect to 30-min presigned S3 URL for a session's close image |
+
+### Damaged Reports — `/api/damaged-reports`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | Admin | List all damage reports across all users |
+| `GET` | `/me` | JWT | List own damage reports |
+| `GET` | `/user/{user_id}` | Admin | List damage reports filed by a specific user |
+| `GET` | `/export` | Admin | Download all damage reports as an Excel file |
+| `GET` | `/{report_id}/image` | JWT | Redirect to 30-min presigned S3 URL for the report's illustration image |
+| `POST` | `/` | JWT | File a damage report for the user's currently active borrow. Multipart: `topic`, `description`, `image` (JPEG). `item_id` auto-resolved from active borrowing |
+| `POST` | `/admin` | Admin | File a damage report for any item. Multipart: `topic`, `description`, `item_id`, `image` (JPEG). Decrements item quantity by 1 |
 
 ### General
 
