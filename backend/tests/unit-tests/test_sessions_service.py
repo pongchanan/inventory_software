@@ -1,8 +1,12 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from datetime import datetime
 
-from app.services.sessions_service import get_sessions
+from app.services.sessions_service import (
+    get_sessions,
+    close_session_with_image,
+    get_session_image_url,
+)
 
 
 class TestGetSessions:
@@ -59,3 +63,86 @@ class TestGetSessions:
         assert len(result["sessions"]) == 2
         assert s1.user == sample_user
         assert s2.user == sample_user
+
+
+class TestCloseSessionWithImage:
+    @patch(
+        "app.services.sessions_service.upload_image",
+        return_value="cabinet-images/session_1_abc.jpg",
+    )
+    def test_success(self, mock_upload, mock_db, sample_session):
+        mock_db.query.return_value.filter.return_value.first.return_value = (
+            sample_session
+        )
+
+        close_session_with_image(mock_db, 1, b"jpeg_bytes")
+
+        mock_upload.assert_called_once_with(b"jpeg_bytes", 1)
+        assert sample_session.close_image_path == "cabinet-images/session_1_abc.jpg"
+        assert sample_session.close_at is not None
+        mock_db.commit.assert_called_once()
+
+    def test_session_not_found(self, mock_db):
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        with pytest.raises(ValueError, match="not found"):
+            close_session_with_image(mock_db, 99, b"jpeg_bytes")
+        mock_db.commit.assert_not_called()
+
+    def test_already_closed(self, mock_db, sample_session):
+        sample_session.close_at = datetime(2026, 3, 1, 10, 5)
+        mock_db.query.return_value.filter.return_value.first.return_value = (
+            sample_session
+        )
+
+        with pytest.raises(ValueError, match="already closed"):
+            close_session_with_image(mock_db, 1, b"jpeg_bytes")
+        mock_db.commit.assert_not_called()
+
+    @patch(
+        "app.services.sessions_service.upload_image", side_effect=Exception("S3 down")
+    )
+    def test_s3_failure_still_closes_session(
+        self, mock_upload, mock_db, sample_session
+    ):
+        mock_db.query.return_value.filter.return_value.first.return_value = (
+            sample_session
+        )
+
+        close_session_with_image(mock_db, 1, b"jpeg_bytes")
+
+        assert sample_session.close_image_path is None
+        assert sample_session.close_at is not None
+        mock_db.commit.assert_called_once()
+
+
+class TestGetSessionImageUrl:
+    @patch(
+        "app.services.sessions_service.get_presigned_url",
+        return_value="https://s3.example.com/signed",
+    )
+    def test_success(self, mock_presigned, mock_db, sample_session):
+        sample_session.close_image_path = "cabinet-images/session_1_abc.jpg"
+        mock_db.query.return_value.filter.return_value.first.return_value = (
+            sample_session
+        )
+
+        url = get_session_image_url(mock_db, 1)
+
+        mock_presigned.assert_called_once_with("cabinet-images/session_1_abc.jpg")
+        assert url == "https://s3.example.com/signed"
+
+    def test_session_not_found(self, mock_db):
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        with pytest.raises(ValueError, match="not found"):
+            get_session_image_url(mock_db, 99)
+
+    def test_no_image(self, mock_db, sample_session):
+        sample_session.close_image_path = None
+        mock_db.query.return_value.filter.return_value.first.return_value = (
+            sample_session
+        )
+
+        with pytest.raises(ValueError, match="no image"):
+            get_session_image_url(mock_db, 1)

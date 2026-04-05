@@ -122,14 +122,42 @@ Run from the `backend/` directory with the venv activated.
 
 ## Tests
 
+All tests are unit tests — no real database or network required (everything is mocked).
+
+### Setup
+
+```bash
+# From backend/ with venv activated
+pip install -r requirements.txt
+```
+
+### Run all tests
+
 ```bash
 pytest
 ```
 
-Runs all unit tests in `tests/`. Tests use `unittest.mock` — no real database required.
+### Useful options
+
+```bash
+pytest -v                          # verbose — show each test name
+pytest --tb=short                  # short traceback on failure (default)
+pytest -x                          # stop on first failure
+pytest -k "damaged"                # run only tests whose name matches "damaged"
+pytest tests/unit-tests/test_damaged_report_service.py   # run a single file
+pytest tests/unit-tests/test_damaged_report_service.py::TestCreateAdminReport  # single class
+```
+
+> Config lives in `pytest.ini` — test discovery is scoped to `tests/unit-tests/`.
 
 | Test file | Covers |
 |-----------|--------|
 | `test_auth_service.py` | Password hashing, JWT creation/decoding, user authentication |
 | `test_registration_service.py` | Register user (with and without card), duplicate checks |
 | `test_users_service.py` | List users, get by ID, update user |
+| `test_items_service.py` | List active items, pagination |
+| `test_borrowings_service.py` | User borrowings pagination, popular items ranking |
+| `test_sessions_service.py` | List sessions, close session with image (S3 success/failure), presigned URL generation |
+| `test_damaged_report_service.py` | List all/by-user reports, presigned image URL, user report creation (auto item_id), admin report creation (quantity decrement), Excel export |
+| `test_due_date_checker.py` | Overdue email, due-tomorrow reminder, no email when not due |
+| `test_email_service.py` | Skip when SMTP unconfigured, successful send, failure handling |

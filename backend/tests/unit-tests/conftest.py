@@ -6,6 +6,7 @@ from app.models.user import User
 from app.models.item import Item
 from app.models.borrowing import Borrowing
 from app.models.open_session import OpenSession
+from app.models.damaged_item_report import DamagedItemReport
 
 
 @pytest.fixture
@@ -76,3 +77,16 @@ def sample_session():
     s.open_at = datetime(2026, 3, 1, 10, 0)
     s.close_at = None
     return s
+
+
+@pytest.fixture
+def sample_damaged_report():
+    r = MagicMock(spec=DamagedItemReport)
+    r.id = 1
+    r.topic = "Cracked screen"
+    r.description = "The screen has a visible crack"
+    r.item_id = 1
+    r.report_at = datetime(2026, 4, 1, 9, 0)
+    r.report_by = 1
+    r.illustrated_path = "damaged-reports/user_1_abcd1234.jpg"
+    return r
