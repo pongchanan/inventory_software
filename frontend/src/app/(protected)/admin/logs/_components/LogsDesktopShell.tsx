@@ -29,7 +29,7 @@ export function LogsDesktopShell({
             </tr>
           ) : filteredLogs.length === 0 ? (
             <tr>
-              <td colSpan={5} className="py-20 text-center text-gray-400 font-bold">ไม่พบบันทึกกิจกรรม</td>
+              <td colSpan={5} className="py-20 text-center text-gray-400 font-bold">No activity logs found</td>
             </tr>
           ) : (
             filteredLogs.map((log) => (

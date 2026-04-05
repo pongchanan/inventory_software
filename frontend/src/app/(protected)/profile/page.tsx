@@ -27,7 +27,7 @@ export default function ProfilePage() {
     const handleLinkCard = async () => {
         setIsLinking(true);
         try {
-            await linkCardForUser(user!.id);
+            await linkCardForUser();
             setCardLinked(true);
         } catch (err) {
             console.error("Failed to link card:", err);
@@ -39,7 +39,7 @@ export default function ProfilePage() {
     const handleUnlinkCard = async () => {
         setIsUnlinking(true);
         try {
-            await unlinkCardForUser(user!.id);
+            await unlinkCardForUser();
             setCardLinked(false);
         } catch (err) {
             console.error("Failed to unlink card:", err);
@@ -92,7 +92,7 @@ export default function ProfilePage() {
                                 </div>
                                 <div>
                                     <p className={`font-bold uppercase tracking-widest text-xs ${cardLinked ? 'text-green-700' : 'text-yellow-700'}`}>
-                                        {cardLinked ? '✓ บัตร RFID ถูกผูกแล้ว' : '⚠ ยังไม่ได้ผูกบัตร RFID'}
+                                        {cardLinked ? '✓ The RFID card has been linked.' : '⚠ The RFID card is not linked.'}
                                     </p>
                                     {cardLinked && user?.nfc_card_uid && (
                                         <p className="text-xs text-gray-500 mt-1 font-mono">{user.nfc_card_uid}</p>
@@ -106,7 +106,7 @@ export default function ProfilePage() {
                                     className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg text-sm flex items-center gap-2 transition-colors"
                                 >
                                     {isLinking ? <Loader2 size={16} className="animate-spin" /> : <CreditCard size={16} />}
-                                    {isLinking ? 'กำลังผูก...' : 'ผูกบัตรตอนนี้'}
+                                    {isLinking ? 'Linking...' : 'Link Card Now'}
                                 </button>
                             ) : (
                                 <button
@@ -115,7 +115,7 @@ export default function ProfilePage() {
                                     className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg text-sm flex items-center gap-2 transition-colors"
                                 >
                                     {isUnlinking ? <Loader2 size={16} className="animate-spin" /> : <CreditCard size={16} />}
-                                    {isUnlinking ? 'กำลังยกเลิก...' : 'ยกเลิกการผูก'}
+                                    {isUnlinking ? 'Unlinking...' : 'Unlink Card'}
                                 </button>
                             )}
                         </div>
@@ -126,7 +126,7 @@ export default function ProfilePage() {
                             <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
                                 <Clock size={20} />
                             </div>
-                            ประวัติที่เคยยืมทั้งหมด
+                            All Borrowing History
                         </div>
                     </button>
 
@@ -135,7 +135,7 @@ export default function ProfilePage() {
                             <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-gray-500 group-hover:scale-110 transition-transform">
                                 <Settings size={20} />
                             </div>
-                            ตั้งค่าการแจ้งเตือน
+                            Notification Settings
                         </div>
                     </button>
 
@@ -147,7 +147,7 @@ export default function ProfilePage() {
                             <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
                                 <LogOut size={20} />
                             </div>
-                            ออกจากระบบ
+                            Sign Out
                         </div>
                     </button>
 
@@ -157,7 +157,7 @@ export default function ProfilePage() {
                                 <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
                                     <ShieldCheck size={20} />
                                 </div>
-                                เข้าสู่ระบบจัดการ Admin
+                                Admin Dashboard
                             </div>
                         </Link>
                     )}

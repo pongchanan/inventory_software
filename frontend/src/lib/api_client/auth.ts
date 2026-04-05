@@ -27,7 +27,13 @@ function normalizeAuthUser(row: {
 }
 
 export async function fetchUsers(): Promise<AuthUser[]> {
-  const res = await fetch(`${API_BASE}/api/users`, {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.warn("fetchUsers skipped - not authenticated");
+    return [];
+  }
+  
+  const res = await fetch(`${API_BASE}/api/users/`, {
     cache: "no-store",
     headers: authHeaders(),
   });
@@ -104,7 +110,7 @@ export async function register(
   name: string,
   email: string,
   password: string
-): Promise<RegistrationOut> {
+): Promise<LoginResponse> {
   const res = await fetch(`${API_BASE}/api/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -115,14 +121,27 @@ export async function register(
     throw new Error(err.detail || "Registration failed");
   }
   const payload: {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    created_at: string;
+    access_token: string;
+    token_type: string;
+    user: {
+      id: number;
+      nfc_card_uid?: string;
+      uid?: string;
+      name: string;
+      email: string | null;
+      role: string;
+      active?: boolean;
+      authorized?: boolean;
+      created_at: string;
+      updated_at: string;
+    };
   } = await res.json();
 
-  return payload;
+  return {
+    access_token: payload.access_token,
+    token_type: payload.token_type,
+    user: normalizeAuthUser(payload.user),
+  };
 }
 
 export async function registerWithCard(
@@ -184,7 +203,7 @@ export async function completeRegistration(
   return normalizeAuthUser(payload);
 }
 
-export async function linkCardForUser(userId: number): Promise<AuthUser> {
+export async function linkCardForUser(): Promise<AuthUser> {
   const res = await fetch(`${API_BASE}/api/users/me/link-card`, {
     method: "POST",
     headers: authHeaders(),
@@ -208,7 +227,7 @@ export async function linkCardForUser(userId: number): Promise<AuthUser> {
   return normalizeAuthUser(payload);
 }
 
-export async function unlinkCardForUser(userId: number): Promise<AuthUser> {
+export async function unlinkCardForUser(): Promise<AuthUser> {
   const res = await fetch(`${API_BASE}/api/users/me/unlink-card`, {
     method: "POST",
     headers: authHeaders(),

@@ -60,7 +60,7 @@ export default function LoginPage() {
 
       <div className="space-y-1.5">
         <label className="block text-sm font-bold text-gray-700 ml-1">
-          อีเมลอาจารย์ / ผู้ดูแลระบบ
+          Admin Email
         </label>
         <input
           type="email"
@@ -74,7 +74,7 @@ export default function LoginPage() {
 
       <div className="space-y-1.5">
         <label className="block text-sm font-bold text-gray-700 ml-1">
-          รหัสผ่าน
+          Password
         </label>
         <input
           type="password"
@@ -95,20 +95,20 @@ export default function LoginPage() {
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
           <>
-            เข้าสู่ระบบ
+            Sign In
             <ArrowRight className="w-5 h-5" />
           </>
         )}
       </button>
 
       <div className="text-center pt-4">
-        <span className="text-gray-500 text-sm">ยังไม่มีบัญชี? </span>
+        <span className="text-gray-500 text-sm">Don't have an account? </span>
         <button
           type="button"
           onClick={() => router.push("/register")}
           className="text-[#ee4d2d] text-sm font-bold hover:underline"
         >
-          สมัครสมาชิก
+          Sign Up
         </button>
       </div>
     </form>

@@ -6,9 +6,9 @@ export interface BorrowingRecord {
   item_id: number;
   item_name?: string;
   item_uid?: string;
-  borrowed_at: string;
+  borrow_at: string;
   due_at?: string;
-  returned_at?: string | null;
+  return_at?: string | null;
   status?: string;
 }
 

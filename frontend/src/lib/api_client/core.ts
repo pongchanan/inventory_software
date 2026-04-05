@@ -93,10 +93,85 @@ export async function fetchLocationsByUnit(unitId: number): Promise<StorageLocat
 }
 
 export async function fetchInventoryEvents(): Promise<InventoryEventApi[]> {
-  // TODO: /api/inventory/events endpoint not yet implemented in backend
-  // Returning empty array for now
-  console.warn("fetchInventoryEvents: endpoint not implemented in backend");
-  return [];
+  try {
+    console.log("fetchInventoryEvents: Starting...");
+    // Fetch current user's borrowings
+    let page = 1;
+    let hasMore = true;
+    const allBorrowings: InventoryEventApi[] = [];
+    const MAX_PAGES = 50; // Safety limit to prevent infinite loops
+    
+    while (hasMore && page <= MAX_PAGES) {
+      console.log(`fetchInventoryEvents: Fetching page ${page}...`);
+      try {
+        const borrowingsResponse = await fetch(
+          `${API_BASE}/api/borrowings/me?page=${page}&page_size=100`,
+          { headers: authHeaders() }
+        );
+        
+        if (!borrowingsResponse.ok) {
+          console.warn(`fetchInventoryEvents: HTTP ${borrowingsResponse.status} on page ${page}`);
+          break;
+        }
+        
+        const data = await borrowingsResponse.json();
+        if (!data.borrowings || !Array.isArray(data.borrowings)) {
+          console.log("fetchInventoryEvents: No borrowings in response, stopping");
+          break;
+        }
+        
+        if (data.borrowings.length === 0) {
+          console.log(`fetchInventoryEvents: Page ${page} is empty, stopping`);
+          break;
+        }
+        
+        console.log(`fetchInventoryEvents: Page ${page} has ${data.borrowings.length} items`);
+        
+        // Convert each borrowing to two events: BORROW and RETURN (if returned)
+        for (const borrowing of data.borrowings) {
+          allBorrowings.push({
+            id: borrowing.id * 2 - 1,
+            session_id: 0,
+            user_id: borrowing.user_id,
+            item_type_id: borrowing.item_id,
+            event_type: "borrow",
+            quantity: 1,
+            location_id: null,
+            observation_id: null,
+            note: null,
+            created_at: borrowing.borrow_at,
+          });
+          
+          if (borrowing.return_at) {
+            allBorrowings.push({
+              id: borrowing.id * 2,
+              session_id: 0,
+              user_id: borrowing.user_id,
+              item_type_id: borrowing.item_id,
+              event_type: "return",
+              quantity: 1,
+              location_id: null,
+              observation_id: null,
+              note: null,
+              created_at: borrowing.return_at,
+            });
+          }
+        }
+        
+        hasMore = page < (data?.total_pages || 1);
+        if (hasMore) page++;
+      } catch (pageError) {
+        console.error(`fetchInventoryEvents: Error on page ${page}:`, pageError);
+        break;
+      }
+    }
+    
+    console.log(`fetchInventoryEvents: Completed, total ${allBorrowings.length} events`);
+    return allBorrowings;
+  } catch (error) {
+    console.error("fetchInventoryEvents: error fetching from backend", error);
+    return [];
+  }
 }
 
 export async function fetchOccupancyByLocation(locationId: number): Promise<SlotOccupancyApi> {

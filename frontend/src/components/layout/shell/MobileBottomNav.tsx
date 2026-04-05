@@ -38,7 +38,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                     className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/admin/users') ? 'text-blue-500 scale-110' : 'text-gray-400'}`}
                 >
                     <Users size={22} strokeWidth={isActive('/admin/users') ? 2.5 : 2} />
-                    <span className="text-[10px] font-bold">สมาชิก</span>
+                    <span className="text-[10px] font-bold">Members</span>
                 </Link>
 
                 <Link
@@ -46,7 +46,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                     className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/admin/loans') ? 'text-orange-500 scale-110' : 'text-gray-400'}`}
                 >
                     <Wrench size={22} strokeWidth={isActive('/admin/loans') ? 2.5 : 2} />
-                    <span className="text-[10px] font-bold">ยืม-คืน</span>
+                    <span className="text-[10px] font-bold">Borrowed</span>
                 </Link>
 
                 <Link

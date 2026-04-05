@@ -19,8 +19,8 @@ export function RegisterMobileShell({
             <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-3xl border border-white/30 bg-white/20 shadow-xl backdrop-blur-md" onClick={onLogoClick}>
               <UserPlus className="h-10 w-10 text-white" />
             </div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">ลงทะเบียน</h1>
-            <p className="mt-2 text-white/80">ระบบลงทะเบียน (1/2)</p>
+            <h1 className="text-4xl font-black uppercase tracking-tight">Register</h1>
+            <p className="mt-2 text-white/80">Registration System (1/2)</p>
           </div>
 
           <div className="relative overflow-hidden rounded-[2rem] border border-white/50 bg-white/80 p-8 shadow-2xl backdrop-blur-xl sm:p-10">

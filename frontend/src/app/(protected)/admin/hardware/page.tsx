@@ -54,13 +54,13 @@ export default function HardwareAdminPage() {
                 <div>
                     <h1 className="text-3xl font-black text-gray-900 flex items-center gap-2">
                         <Cpu className="w-8 h-8 text-[#ee4d2d]" />
-                        จัดการตู้ & ฮาร์ดแวร์
+                        Manage Cabinets & Hardware
                     </h1>
-                    <p className="text-gray-500 font-medium mt-1">ตรวจสอบความร้อน สัญญาณไวไฟ และสั่งปลดล็อกตู้แบบรีโมท</p>
+                    <p className="text-gray-500 font-medium mt-1">Monitor temperature, WiFi signal, and remotely unlock cabinets</p>
                 </div>
 
                 <button className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-2xl hover:bg-black transition-all shadow-md font-bold">
-                    <RefreshCcw size={18} /> อัปเดตเฟิร์มแวร์ (OTA)
+                    <RefreshCcw size={18} /> Firmware Update (OTA)
                 </button>
             </div>
 
@@ -107,10 +107,10 @@ export default function HardwareAdminPage() {
                             <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <LayoutGrid size={16} className="text-gray-300" />
-                                    <span className="text-xs font-bold text-gray-500">ของที่อยู่ข้างใน: <span className="text-gray-900">{locker.items} ชิ้น</span></span>
+                                    <span className="text-xs font-bold text-gray-500">Contents: <span className="text-gray-900">{locker.items} items</span></span>
                                 </div>
                                 <button className="text-[10px] font-black uppercase text-blue-500 flex items-center gap-1">
-                                    รายละเอียด <Info size={12} />
+                                    Details <Info size={12} />
                                 </button>
                             </div>
                         </div>

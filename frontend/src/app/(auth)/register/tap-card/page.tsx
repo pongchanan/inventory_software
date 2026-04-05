@@ -2,33 +2,45 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Nfc, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, Nfc, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { linkCardForUser } from "@/lib/api";
 
 export default function TapCardPage() {
     const router = useRouter();
+    const { token } = useAuth();
     const [status, setStatus] = useState<"waiting" | "success" | "error">("waiting");
     const [errorMsg, setErrorMsg] = useState("");
 
     useEffect(() => {
-        // In a real scenario, this would poll the backend or use a WebSocket
-        // to listen for the hardware kiosk completing the RFID scan.
-        // For this demonstration/milestone without the active hardware WebSocket running on this screen,
-        // we'll simulate a wait time.
+        const initializeLinkCard = async () => {
+            try {
+                // Verify authentication token exists
+                if (!token) {
+                    setStatus("error");
+                    setErrorMsg("Authentication token not found. Please register again.");
+                    return;
+                }
 
-        // Simulate polling the backend...
-        const timeout = setTimeout(() => {
-            // Here we pretend the kiosk successfully read and registered the card.
-            // The backend would have returned the full auth payload.
-            setStatus("success");
+                // Call link-card endpoint - this tells IoT to enter register mode and waits for card scan
+                const user = await linkCardForUser();
+                
+                // Card successfully linked
+                setStatus("success");
 
-            // After showing success, redirect to login so they can test it out
-            setTimeout(() => {
-                router.push("/login?registered=true");
-            }, 3000);
-        }, 5000);
+                // After showing success, redirect to home
+                setTimeout(() => {
+                    router.push("/");
+                }, 2000);
+            } catch (err: any) {
+                // Card was not scanned or link failed
+                setStatus("error");
+                setErrorMsg(err.message || "Card scan timeout or failed. Please try again.");
+            }
+        };
 
-        return () => clearTimeout(timeout);
-    }, [router]);
+        initializeLinkCard();
+    }, [router, token]);
 
     return (
         <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden text-center z-10">
@@ -51,14 +63,14 @@ export default function TapCardPage() {
                             </div>
                         </div>
 
-                        <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">ยืนยันตัวตนผ่านบัตร</h1>
+                        <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Verify Your Identity</h1>
                         <p className="text-gray-500 font-medium mb-8 leading-relaxed">
-                            กรุณานำ <span className="text-[#ee4d2d] font-bold">บัตรนักศึกษา</span> ไปแตะที่เครื่องสแกนหน้าตู้ เพื่อผูกข้อมูลกับบัญชีของคุณ
+                            Please tap your <span className="text-[#ee4d2d] font-bold">student card</span> on the scanner in front of the cabinet to link your account
                         </p>
 
                         <div className="flex items-center gap-3 text-sm text-gray-500 bg-gray-50 px-6 py-3 rounded-full border border-gray-100">
                             <Loader2 className="w-5 h-5 animate-spin text-[#ee4d2d]" />
-                            กำลังรอสัญญาณจากเครื่อง...
+                            Waiting for card scan...
                         </div>
                     </div>
                 )}
@@ -68,8 +80,8 @@ export default function TapCardPage() {
                         <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-500/20">
                             <CheckCircle size={48} />
                         </div>
-                        <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">ลงทะเบียนสำเร็จ!</h1>
-                        <p className="text-gray-500 font-medium">บันทึกข้อมูลบัตรนักศึกษาเรียบร้อยแล้ว<br />กำลังพากลับไปหน้าเข้าสู่ระบบ...</p>
+                        <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Registration Successful!</h1>
+                        <p className="text-gray-500 font-medium">Card linked successfully.<br />Redirecting to home...</p>
                     </div>
                 )}
 
@@ -78,14 +90,22 @@ export default function TapCardPage() {
                         <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-red-500/20">
                             <AlertCircle size={48} />
                         </div>
-                        <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">เกิดข้อผิดพลาด</h1>
+                        <h1 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">Card Scan Failed</h1>
                         <p className="text-gray-500 font-medium mb-8 text-sm">{errorMsg}</p>
-                        <button
-                            onClick={() => router.push("/register")}
-                            className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-colors"
-                        >
-                            กลับไปลองใหม่
-                        </button>
+                        <div className="flex flex-col gap-3 w-full">
+                            <button
+                                onClick={() => router.push("/register")}
+                                className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-black transition-colors"
+                            >
+                                Try Again
+                            </button>
+                            <button
+                                onClick={() => router.push("/")}
+                                className="w-full py-3 bg-[#ee4d2d] text-white rounded-xl font-bold hover:bg-[#d63f1f] transition-colors flex items-center justify-center gap-2"
+                            >
+                                Skip to Dashboard <ArrowRight size={18} />
+                            </button>
+                        </div>
                     </div>
                 )}
 

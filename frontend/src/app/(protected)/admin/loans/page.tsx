@@ -57,7 +57,7 @@ export default function LoansAdminPage() {
     }, [loadLoans]);
 
     const formatDate = (date: string) => {
-        return new Date(date).toLocaleString('th-TH', {
+        return new Date(date).toLocaleString('en-US', {
             day: 'numeric',
             month: 'short',
             year: 'numeric',
@@ -71,20 +71,20 @@ export default function LoansAdminPage() {
             case 'returned':
                 return (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-green-50 text-green-600 border border-green-100 uppercase tracking-wider">
-                        <CheckCircle2 size={12} /> คืนสำเร็จ
+                        <CheckCircle2 size={12} /> Returned
                     </span>
                 );
             case 'overdue':
                 return (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-red-50 text-red-600 border border-red-100 uppercase tracking-wider">
-                        <AlertTriangle size={12} /> เลยกำหนดคืน
+                        <AlertTriangle size={12} /> Overdue
                     </span>
                 );
             case 'active':
             default:
                 return (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wider">
-                        <Clock size={12} /> กำลังยืม
+                        <Clock size={12} /> Active
                     </span>
                 );
         }
@@ -97,9 +97,9 @@ export default function LoansAdminPage() {
             <div>
                 <h1 className="text-3xl font-black text-gray-900 flex items-center gap-2">
                     <Wrench className="w-8 h-8 text-[#ee4d2d]" />
-                    ยืม-คืน & แจ้งซ่อม
+                    Loans & Maintenance
                 </h1>
-                <p className="text-gray-500 font-medium mt-1">ติดตามสถานะการยืมอุปกรณ์ และจัดการรายงานของชำรุดจากผู้ใช้งาน</p>
+                <p className="text-gray-500 font-medium mt-1">Track equipment borrowing status and manage maintenance reports from users</p>
             </div>
 
             {loading ? (
@@ -111,7 +111,7 @@ export default function LoansAdminPage() {
                     {/* ACTIVE LOANS SECTION */}
                     <div className="space-y-4">
                         <h3 className="text-xl font-black flex items-center gap-2 px-2">
-                            <AlertTriangle className="text-orange-500" size={24} /> รายการที่กำลังถูกยืมอยู่ ({activeLoans.length})
+                            <AlertTriangle className="text-orange-500" size={24} /> Items currently being borrowed. ({activeLoans.length})
                         </h3>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {activeLoans.map(loan => (

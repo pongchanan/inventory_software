@@ -3,17 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { RegisterDesktopShell } from "./_components/RegisterDesktopShell";
 import { RegisterMobileShell } from "./_components/RegisterMobileShell";
-import { register, registerWithCard } from "@/lib/api";
+import { register } from "@/lib/api";
 
 export default function RegisterPage() {
     const router = useRouter();
+    const { loginStore } = useAuth();
     const [formData, setFormData] = useState({
         name: "",
         email: "",
         password: "",
-        cardId: "",
     });
     const [withNFC, setWithNFC] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -25,24 +26,24 @@ export default function RegisterPage() {
         setLoading(true);
 
         try {
+            const response = await register(
+                formData.name,
+                formData.email,
+                formData.password
+            );
+
+            // Store token and user using loginStore (same as login page)
+            loginStore(response.access_token, response.user);
+
             if (withNFC) {
-                // Register with NFC card - proceed to tap-card screen to scan
-                if (!formData.cardId.trim()) {
-                    setError("กรุณาสแกนบัตร NFC");
-                    setLoading(false);
-                    return;
-                }
-                const registrationData = await registerWithCard(formData.name, formData.email, formData.password, formData.cardId);
-                sessionStorage.setItem("registrationId", registrationData.id.toString());
+                // Redirect to tap-card page to link card using /link-card endpoint
                 router.push("/register/tap-card");
             } else {
-                // Register without card - continue through explicit login flow
-                await register(formData.name, formData.email, formData.password);
-                router.push("/login");
+                // Redirect to home
+                router.push("/");
             }
         } catch (err: any) {
             setError(err.message || "An unexpected error occurred.");
-        } finally {
             setLoading(false);
         }
     };
@@ -59,7 +60,7 @@ export default function RegisterPage() {
 
             <div className="space-y-1.5">
                 <label className="block text-sm font-bold text-gray-700 ml-1">
-                    ชื่อ - นามสกุล
+                    Full Name
                 </label>
                 <input
                     type="text"
@@ -67,13 +68,13 @@ export default function RegisterPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full border-2 border-gray-100 bg-gray-50 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-[#ee4d2d] focus:bg-white transition-all"
-                    placeholder="สมชาย ใจดี"
+                    placeholder="John Doe"
                 />
             </div>
 
             <div className="space-y-1.5">
                 <label className="block text-sm font-bold text-gray-700 ml-1">
-                    รหัสนักศึกษา / อีเมล
+                    Student ID / Email
                 </label>
                 <input
                     type="text"
@@ -87,7 +88,7 @@ export default function RegisterPage() {
 
             <div className="space-y-1.5">
                 <label className="block text-sm font-bold text-gray-700 ml-1">
-                    รหัสผ่าน
+                    Password
                 </label>
                 <input
                     type="password"
@@ -108,33 +109,14 @@ export default function RegisterPage() {
                     checked={withNFC}
                     onChange={(e) => {
                         setWithNFC(e.target.checked);
-                        setFormData({ ...formData, cardId: "" });
                         setError(null);
                     }}
                     className="w-5 h-5 rounded-lg border-2 border-gray-300 cursor-pointer accent-[#ee4d2d]"
                 />
                 <label htmlFor="withNFC" className="text-sm font-bold text-gray-700 cursor-pointer">
-                    สแกนบัตร NFC ทันที
+                    Scan NFC Card Now
                 </label>
             </div>
-
-            {/* NFC Card ID Field - Only visible when checkbox is checked */}
-            {withNFC && (
-                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
-                    <label className="block text-sm font-bold text-gray-700 ml-1">
-                        รหัสบัตร NFC
-                    </label>
-                    <input
-                        type="text"
-                        required
-                        value={formData.cardId}
-                        onChange={(e) => setFormData({ ...formData, cardId: e.target.value })}
-                        className="w-full border-2 border-gray-100 bg-gray-50 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-[#ee4d2d] focus:bg-white transition-all"
-                        placeholder="กรุณาสแกนบัตร NFC"
-                        autoFocus
-                    />
-                </div>
-            )}
 
             <button
                 type="submit"
@@ -145,20 +127,20 @@ export default function RegisterPage() {
                     <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                     <>
-                        สมัครสมาชิก
+                        Sign Up
                         <ArrowRight className="w-5 h-5" />
                     </>
                 )}
             </button>
 
             <div className="text-center pt-4">
-                <span className="text-gray-500 text-sm">มีบัญชีอยู่แล้ว? </span>
+                <span className="text-gray-500 text-sm">Already have an account? </span>
                 <button
                     type="button"
                     onClick={() => router.push("/login")}
                     className="text-[#ee4d2d] text-sm font-bold hover:underline"
                 >
-                    เข้าสู่ระบบ
+                    Sign In
                 </button>
             </div>
         </form>

@@ -12,7 +12,7 @@ export function Header({ searchQuery, setSearchQuery }: HeaderProps) {
                 <Search size={18} />
                 <input
                     type="text"
-                    placeholder="ค้นหาอุปกรณ์..."
+                    placeholder="Search devices..."
                     className="bg-transparent text-sm w-full outline-none text-gray-800"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
