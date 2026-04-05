@@ -69,3 +69,17 @@ def get_presigned_url(key: str, expires_in: int = 1800) -> str:
         Params={"Bucket": _get_bucket(), "Key": key},
         ExpiresIn=expires_in,
     )
+
+
+def download_image(key: str) -> bytes:
+    """Download an S3 object and return its raw bytes.
+
+    Args:
+        key: The S3 object key.
+
+    Returns:
+        Raw bytes of the object.
+    """
+    client = _get_client()
+    response = client.get_object(Bucket=_get_bucket(), Key=key)
+    return response["Body"].read()

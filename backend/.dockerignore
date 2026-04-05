@@ -1,0 +1,36 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Local env file (secrets must come from env vars at runtime)
+.env
+
+# Test files
+test/
+tests/
+pytest.ini
+
+# Dev / migration scripts
+scripts/
+
+# AI runtime artifacts (generated at runtime, not baked into image)
+app/services/ai_pipeline_service/.ai_pipeline_runtime/
+
+# Database backups
+backups/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore

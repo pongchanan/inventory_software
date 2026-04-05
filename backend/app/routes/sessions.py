@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas.open_session import PaginatedSessionImages, PaginatedSessions
 from app.services.auth_service import require_admin
+from app.services.borrowings_service import process_close_image_diff
 from app.services.sessions_service import (
     close_session_with_image,
     get_session_image_url,
@@ -43,6 +44,7 @@ def list_session_images(
 async def close_session_image(
     session_id: int,
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     jpeg_data = await request.body()
@@ -53,6 +55,7 @@ async def close_session_image(
     except ValueError as exc:
         status = 409 if "already closed" in str(exc) else 404
         raise HTTPException(status_code=status, detail=str(exc))
+    background_tasks.add_task(process_close_image_diff, db, session_id, jpeg_data)
     return {"ok": True}
 
 
