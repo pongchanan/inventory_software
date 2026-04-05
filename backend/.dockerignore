@@ -21,8 +21,10 @@ pytest.ini
 # Dev / migration scripts
 scripts/
 
-# AI runtime artifacts (generated at runtime, not baked into image)
-app/services/ai_pipeline_service/.ai_pipeline_runtime/
+# AI runtime — exclude generated data but KEEP models/ (needed at runtime)
+app/services/ai_pipeline_service/.ai_pipeline_runtime/samples/
+app/services/ai_pipeline_service/.ai_pipeline_runtime/videos/
+app/services/ai_pipeline_service/.ai_pipeline_runtime/reports/
 
 # Database backups
 backups/
