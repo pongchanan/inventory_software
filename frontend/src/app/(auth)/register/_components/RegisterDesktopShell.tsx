@@ -35,11 +35,11 @@ export function RegisterDesktopShell({
           </div>
 
           <div className="max-w-lg">
-            <h2 className="mb-6 text-5xl font-black leading-tight">สมัครสมาชิก<br />เพื่อเริ่มต้นใช้งาน</h2>
+            <h2 className="mb-6 text-5xl font-black leading-tight">Create Account<br />to Get Started</h2>
             <ul className="space-y-3 text-lg text-gray-400">
-              <li className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-[#ee4d2d]" />ยืม-คืน อุปกรณ์อัตโนมัติ 24 ชม.</li>
-              <li className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-[#ee4d2d]" />ใช้เพียงบัตรนักศึกษาใบเดียว</li>
-              <li className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-[#ee4d2d]" />ตรวจสอบประวัติผ่านแอปพลิเคชัน</li>
+              <li className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-[#ee4d2d]" />Automatic equipment lending 24/7</li>
+              <li className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-[#ee4d2d]" />Use only your student card</li>
+              <li className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-[#ee4d2d]" />Check history via app</li>
             </ul>
           </div>
         </div>
@@ -51,8 +51,8 @@ export function RegisterDesktopShell({
 
         <div className="relative z-10 w-full max-w-md">
           <div className="mb-10">
-            <h2 className="mb-2 text-4xl font-black text-gray-900">สร้างบัญชีใหม่ ✨</h2>
-            <p className="text-gray-500">ขั้นตอนที่ 1: กรอกข้อมูลเบื้องต้น</p>
+            <h2 className="mb-2 text-4xl font-black text-gray-900">Create Your Account</h2>
+            <p className="text-gray-500">Step 1: Enter basic information</p>
           </div>
 
           <div className="relative overflow-hidden rounded-[2rem] border border-white/50 bg-white/80 p-10 shadow-2xl backdrop-blur-xl">

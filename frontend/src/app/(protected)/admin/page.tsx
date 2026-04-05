@@ -20,29 +20,34 @@ import {
   Download
 } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
-import { fetchItems, fetchActiveLoanDetails, fetchMostBorrowedItems, fetchMostDamagedItems, ItemStatistic } from "@/lib/api";
+import { fetchItems } from "@/lib/api";
 import * as XLSX from "xlsx";
+
+interface ChartItem {
+  name: string;
+  value: number;
+  color?: string;
+}
 
 const exportToExcel = (stats: any, userName: string) => {
   const now = new Date();
-  const timestamp = now.toLocaleString("th-TH");
+  const timestamp = now.toLocaleString("en-US");
   
   // Create workbook and worksheet
   const wb = XLSX.utils.book_new();
   
   // Sheet 1: Dashboard Summary
   const summaryData = [
-    ["ศูนย์ควบคุมระบบ - รายงานสรุป", "", ""],
+    ["System Control Center - Summary Report", "", ""],
     ["", "", ""],
-    ["วันที่ & เวลา", timestamp, ""],
-    ["ผู้ส่งออก", userName, ""],
+    ["Date & Time", timestamp, ""],
+    ["Exported by", userName, ""],
     ["", "", ""],
-    ["สรุปข้อมูลระบบ", "", ""],
-    ["รายการ", "ปริมาณ", "หน่วย"],
-    ["อุปกรณ์ทั้งหมด", stats.totalItems, "ชิ้น"],
-    ["กำลังถูกยืมอยู่", stats.activeLoans, "รายการ"],
-    ["เลยกำหนดคืน", stats.overdue, "รายการ"],
-    ["Health Score", "98.5", "%"],
+    ["System Data Summary", "", ""],
+    ["Item", "Quantity", "Unit"],
+    ["Total Equipment", stats.totalItems, "items"],
+    ["Currently Borrowed", stats.activeLoans, "items"],
+    ["Overdue", stats.overdue, "items"],
   ];
   
   const ws = XLSX.utils.aoa_to_sheet(summaryData);
@@ -80,8 +85,8 @@ export default function AdminDashboard() {
     overdue: 0,
     systemHealthy: true
   });
-  const [mostBorrowedItems, setMostBorrowedItems] = useState<ItemStatistic[]>([]);
-  const [mostDamagedItems, setMostDamagedItems] = useState<ItemStatistic[]>([]);
+  const [mostBorrowedItems, setMostBorrowedItems] = useState<ChartItem[]>([]);  // Backend endpoint not yet available
+  const [mostDamagedItems, setMostDamagedItems] = useState<ChartItem[]>([]);   // Backend endpoint not yet available
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -93,21 +98,14 @@ export default function AdminDashboard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [items, activeLoans, borrowed, damaged] = await Promise.all([
-          fetchItems(),
-          fetchActiveLoanDetails(),
-          fetchMostBorrowedItems(5),
-          fetchMostDamagedItems(5)
-        ]);
+        const items = await fetchItems();
 
         setStats({
           totalItems: items.length,
-          activeLoans: activeLoans.length,
-          overdue: activeLoans.filter(l => l.status === 'overdue').length,
+          activeLoans: 0,  // Backend doesn't have active loans endpoint yet
+          overdue: 0,      // Backend doesn't have overdue loans endpoint yet
           systemHealthy: true
         });
-        setMostBorrowedItems(borrowed);
-        setMostDamagedItems(damaged);
       } catch (err) {
         console.error("Failed to load dashboard stats", err);
       } finally {
@@ -120,10 +118,9 @@ export default function AdminDashboard() {
   if (authLoading || !user || !isAdmin) return null;
 
   const quickActions = [
-    { title: "จัดการอุปกรณ์", icon: Package, href: "/admin/inventory", color: "bg-orange-500", desc: "เพิ่ม/ลบ รายการครุภัณฑ์" },
-    { title: "จัดการตู้", icon: Cpu, href: "/admin/hardware", color: "bg-blue-500", desc: "เช็คสถานะเซนเซอร์และตู้" },
-    { title: "ยืม-คืน & ซ่อม", icon: Wrench, href: "/admin/loans", color: "bg-green-500", desc: "ตรวจสอบการยืมและแจ้งซ่อม" },
-    { title: "จัดการสมาชิก", icon: Users, href: "/admin/users", color: "bg-purple-500", desc: "สิทธิ์การเข้าถึงและบัตร RFID" },
+    { title: "Manage Equipment", icon: Package, href: "/admin/inventory", color: "bg-orange-500", desc: "Add/Remove Equipment Items" },
+    { title: "Loans & Maintenance", icon: Wrench, href: "/admin/loans", color: "bg-green-500", desc: "Track borrowing and report repairs" },
+    { title: "Manage Members", icon: Users, href: "/admin/users", color: "bg-purple-500", desc: "Access Rights and RFID Cards" },
   ];
 
   return (
@@ -132,9 +129,9 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
-            <LayoutDashboard size={32} className="text-[#ee4d2d]" /> ศูนย์ควบคุมระบบ (M2)
+            <LayoutDashboard size={32} className="text-[#ee4d2d]" /> System Control Center
           </h1>
-          <p className="text-gray-500 font-medium mt-1">ยินดีต้อนรับคุณ {user.name}, ข้อมูลสรุปสถานะระบบล่าสุด</p>
+          <p className="text-gray-500 font-medium mt-1">Welcome {user.name}, here is the latest system status summary</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <button
@@ -154,48 +151,38 @@ export default function AdminDashboard() {
       </div>
 
       {/* STATS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">อุปกรณ์ทั้งหมด</p>
+          <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">All equipment</p>
           <div className="flex items-end gap-2">
             <span className="text-3xl font-black text-gray-900">{stats.totalItems}</span>
-            <span className="text-gray-400 text-sm font-bold mb-1">ชิ้น</span>
+            <span className="text-gray-400 text-sm font-bold mb-1">items</span>
           </div>
           <div className="mt-4 flex items-center gap-1 text-[10px] font-bold text-blue-500">
-            <TrendingUp size={12} /> ข้อมูลล่าสุดจากฐานข้อมูล
+            <TrendingUp size={12} /> Latest data from the database
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">กำลังถูกยืมอยู่</p>
+          <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Currently borrowed</p>
           <div className="flex items-end gap-2">
             <span className="text-3xl font-black text-blue-600">{stats.activeLoans}</span>
-            <span className="text-blue-200 text-sm font-bold mb-1">รายการ</span>
+            <span className="text-blue-200 text-sm font-bold mb-1">items</span>
           </div>
-          <p className="mt-4 text-[10px] font-bold text-gray-400">พัสดุหมุนเวียน ณ ปัจจุบัน</p>
+          <p className="mt-4 text-[10px] font-bold text-gray-400">Currently circulating inventory</p>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm border-l-4 border-l-red-500">
-          <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">เลยกำหนดคืน</p>
+          <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Overdue Returns</p>
           <div className="flex items-end gap-2">
             <span className="text-3xl font-black text-red-600">{stats.overdue}</span>
-            <span className="text-red-200 text-sm font-bold mb-1">รายการ</span>
+            <span className="text-red-200 text-sm font-bold mb-1">items</span>
           </div>
           <div className="mt-4 flex items-center gap-1 text-[10px] font-bold text-red-500 uppercase">
-            <AlertCircle size={12} /> ควรรีบตรวจสอบ
+            <AlertCircle size={12} /> Should Check Immediately
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-6 rounded-3xl shadow-lg text-white">
-          <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Health Score</p>
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-black">98.5</span>
-            <span className="text-gray-400 text-sm font-bold mb-1">%</span>
-          </div>
-          <div className="mt-4 flex items-center gap-1 text-[10px] font-black text-green-400 uppercase tracking-widest">
-            <ShieldCheck size={12} /> All Sensors OK
-          </div>
-        </div>
       </div>
 
       {/* STATISTICS CHARTS */}
@@ -203,7 +190,7 @@ export default function AdminDashboard() {
         {/* Most Borrowed Items */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
           <h3 className="font-black text-gray-900 mb-6 flex items-center gap-2">
-            <Package size={20} className="text-orange-500" /> อุปกรณ์ที่ยืมมากที่สุด
+            <Package size={20} className="text-orange-500" /> Most borrowed equipment
           </h3>
           {mostBorrowedItems.length > 0 ? (
             <div className="flex flex-col items-center">
@@ -245,7 +232,7 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="h-64 flex items-center justify-center text-gray-400">
-              <p>ไม่มีข้อมูล</p>
+              <p>No Data Available</p>
             </div>
           )}
         </div>
@@ -253,7 +240,7 @@ export default function AdminDashboard() {
         {/* Most Damaged Items */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
           <h3 className="font-black text-gray-900 mb-6 flex items-center gap-2">
-            <AlertCircle size={20} className="text-red-500" /> อุปกรณ์ที่ชำรุดมากที่สุด
+            <AlertCircle size={20} className="text-red-500" /> Most damaged equipment
           </h3>
           {mostDamagedItems.length > 0 ? (
             <div className="flex flex-col items-center">
@@ -295,7 +282,7 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="h-64 flex items-center justify-center text-gray-400">
-              <p>ไม่มีข้อมูล</p>
+              <p>No Data Available</p>
             </div>
           )}
         </div>
@@ -324,10 +311,10 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 overflow-hidden">
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-black text-gray-900 flex items-center gap-2">
-            <FileText size={20} className="text-gray-400" /> กิจกรรมล่าสุดในระบบ
+            <FileText size={20} className="text-gray-400" /> Latest activity in the system
           </h3>
           <Link href="/admin/logs" className="text-[10px] font-black uppercase text-blue-500 hover:text-blue-700 flex items-center gap-1 tracking-widest">
-            ดูทั้งหมด <ArrowRight size={12} />
+            View All <ArrowRight size={12} />
           </Link>
         </div>
 
@@ -335,16 +322,16 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50/50">
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0"><Clock size={18} /></div>
             <div className="flex-grow">
-              <p className="text-xs font-bold text-gray-900">ตัวอย่าง: มีการสแกนบัตรเปิดตู้ A1</p>
-              <p className="text-[10px] text-gray-400 font-medium">15 นาทีที่ผ่านมา • โดย นายสมชาย ใจดี</p>
+              <p className="text-xs font-bold text-gray-900">Example: RFID card scanned to open drawer A1</p>
+              <p className="text-[10px] text-gray-400 font-medium">15 minutes ago • By Mr. Somchai Jaidee</p>
             </div>
             <span className="text-[10px] font-black text-green-600 uppercase">Success</span>
           </div>
           <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50/50 opacity-60">
             <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 shrink-0"><Package size={18} /></div>
             <div className="flex-grow">
-              <p className="text-xs font-bold text-gray-900">ตัวอย่าง: เพิ่มอุปกรณ์ใหม่ "Oscilloscope"</p>
-              <p className="text-[10px] text-gray-400 font-medium">1 ชั่วโมงที่ผ่านมา • โดย Admin</p>
+              <p className="text-xs font-bold text-gray-900">Example: Added new equipment "Oscilloscope"</p>
+              <p className="text-[10px] text-gray-400 font-medium">1 hour ago • By Admin</p>
             </div>
             <span className="text-[10px] font-black text-gray-400 uppercase">Audit</span>
           </div>

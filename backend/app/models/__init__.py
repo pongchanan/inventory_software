@@ -1,27 +1,19 @@
-from .user import User
-from .item_type_core import ItemType
-from .item_type_image_core import ItemTypeImage
-from .storage_unit_core import StorageUnit
-from .storage_location_core import StorageLocation
-from .access_session_core import AccessSession
-from .observation_core import Observation
-from .rfid_observation_detail_core import RfidObservationDetail
-from .vision_observation_detail_core import VisionObservationDetail
-from .inventory_event_core import InventoryEvent
-from .audit_log_core import AuditLog
-from .slot_occupancy_core import SlotOccupancy
+from app.models.user import User
+from app.models.borrowing import Borrowing
+from app.models.item import Item
+from app.models.open_session import OpenSession
+from app.models.damaged_item_report import DamagedItemReport
+from app.models.ai_label import AiLabel
+from app.models.ai_sample import AiSample
+from app.models.ai_prototype import AiPrototype
 
 __all__ = [
     "User",
-    "ItemType",
-    "ItemTypeImage",
-    "StorageUnit",
-    "StorageLocation",
-    "AccessSession",
-    "Observation",
-    "RfidObservationDetail",
-    "VisionObservationDetail",
-    "InventoryEvent",
-    "AuditLog",
-    "SlotOccupancy",
+    "Borrowing",
+    "Item",
+    "OpenSession",
+    "DamagedItemReport",
+    "AiLabel",
+    "AiSample",
+    "AiPrototype",
 ]

@@ -26,19 +26,22 @@ export const inventoryRepository = {
             if (!token) return [];
 
             const loans = await fetchActiveLoanDetails();
-            return loans.map(loan => {
-                const dateObj = new Date(loan.borrowed_at);
-                const formatter = new Intl.DateTimeFormat('th-TH', {
-                    day: 'numeric', month: 'short', year: '2-digit'
+            // Only show items that haven't been returned yet (returned_at is null)
+            return loans
+                .filter(loan => loan.returned_at === null)
+                .map(loan => {
+                    const dateObj = new Date(loan.borrowed_at);
+                    const formatter = new Intl.DateTimeFormat('th-TH', {
+                        day: 'numeric', month: 'short', year: '2-digit'
+                    });
+                    return {
+                        id: loan.id,
+                        name: loan.item_name,
+                        date: formatter.format(dateObj),
+                        loc: loan.item_category || 'Not Specified',
+                        img: getImageUrl(loan.item_image_url)
+                    };
                 });
-                return {
-                    id: loan.id,
-                    name: loan.item_name,
-                    date: formatter.format(dateObj),
-                    loc: loan.item_category || 'ตู้ไม่ระบุ',
-                    img: getImageUrl(loan.item_image_url)
-                };
-            });
         } catch (error) {
             console.warn('Failed to fetch borrowed items:', error);
             return [];

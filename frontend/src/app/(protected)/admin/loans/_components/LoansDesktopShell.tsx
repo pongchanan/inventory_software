@@ -15,10 +15,10 @@ export function LoansDesktopShell({
       <table className="w-full text-left">
         <thead className="bg-gray-50 border-b border-gray-100">
           <tr>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">ชื่อผู้ยืม</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">อุปกรณ์</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">วันยืม - วันคืน</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">สถานะ</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Borrower</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Equipment</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">Borrow Date - Return Date</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Status</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">

@@ -15,7 +15,7 @@ export function LogsMobileShell({
           <Loader2 size={24} className="animate-spin text-gray-200 mx-auto" />
         </div>
       ) : filteredLogs.length === 0 ? (
-        <div className="py-10 text-center text-gray-400 font-bold text-sm">ไม่พบบันทึก</div>
+        <div className="py-10 text-center text-gray-400 font-bold text-sm">No logs found</div>
       ) : (
         filteredLogs.map((log) => (
           <div key={log.id} className="p-4 space-y-2">

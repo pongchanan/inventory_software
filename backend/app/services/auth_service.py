@@ -1,91 +1,94 @@
-from __future__ import annotations
+import os
+from datetime import datetime, timedelta, timezone
 
-import time
-from datetime import datetime
-from typing import Dict, Optional
-
-from fastapi import HTTPException, status
+import bcrypt
+import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
-from app.auth import POWERUSER_EMAIL, POWERUSER_PASSWORD, POWERUSER_UID, create_access_token
+from app.database import get_db
 from app.models.user import User
-from app.schemas.user import KioskPrepareRequest, KioskStatusResponse, LoginRequest, TokenResponse, UserResponse
+
+JWT_SECRET = os.getenv("JWT_SECRET", "change-me")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+
+security = HTTPBearer()
 
 
-KIOSK_REGISTRATION_TIMEOUT = 120
-pending_registrations: Dict[str, dict] = {}
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
-def login(credentials: LoginRequest, db: Session) -> TokenResponse:
-    if credentials.email == POWERUSER_EMAIL and credentials.password == POWERUSER_PASSWORD:
-        mock_user = User(
-            id=0,
-            nfc_card_uid=POWERUSER_UID,
-            name="Power User",
-            email=POWERUSER_EMAIL,
-            role="admin",
-            active=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
-        )
-        token = create_access_token(data={"sub": POWERUSER_UID, "role": "admin"})
-        return TokenResponse(access_token=token, user=UserResponse.model_validate(mock_user))
-
-    user = db.query(User).filter(User.email == credentials.email).first()
-    if not user or not user.password_hash:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
-    from app.routes import auth as auth_routes
-
-    if not auth_routes.verify_password(credentials.password, user.password_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
-    if not user.authorized:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is disabled")
-
-    token = create_access_token(data={"sub": user.uid, "role": user.role})
-    return TokenResponse(access_token=token, user=UserResponse.model_validate(user))
+def verify_password(plain: str, hashed: str) -> bool:
+    if not hashed:
+        return False
+    try:
+        return bcrypt.checkpw(plain.encode(), hashed.encode())
+    except (ValueError, TypeError):
+        # Legacy or malformed hashes should fail auth, not crash the API.
+        return False
 
 
-def prepare_kiosk_registration(request: KioskPrepareRequest) -> dict:
-    from app.routes import auth as auth_routes
+def create_access_token(user_id: int, role: str) -> str:
+    payload = {
+        "sub": str(user_id),
+        "role": role,
+        "exp": datetime.now(timezone.utc)
+        + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        "iat": datetime.now(timezone.utc),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-    existing: Optional[dict] = pending_registrations.get(request.kiosk_id)
-    if existing and existing["expires_at"] > time.time() and existing["status"] == "waiting":
+
+def decode_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Kiosk {request.kiosk_id} is already in use by another pending registration.",
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )
 
-    pending_registrations[request.kiosk_id] = {
-        "name": request.name,
-        "email": request.email,
-        "password_hash": auth_routes.hash_password(request.password),
-        "expires_at": time.time() + KIOSK_REGISTRATION_TIMEOUT,
-        "status": "waiting",
-        "user": None,
-        "token": None,
-    }
-    return {
-        "message": "Pending registration created. Please scan card at kiosk.",
-        "kiosk_id": request.kiosk_id,
-    }
 
-
-def check_kiosk_registration_status(kiosk_id: str) -> KioskStatusResponse:
-    pending_data = pending_registrations.get(kiosk_id)
-    if pending_data is None:
-        return KioskStatusResponse(status="not_found")
-
-    if pending_data["expires_at"] < time.time():
-        del pending_registrations[kiosk_id]
-        return KioskStatusResponse(status="expired")
-
-    if pending_data["status"] == "success":
-        response = KioskStatusResponse(
-            status="success",
-            access_token=pending_data["token"],
-            user=UserResponse.model_validate(pending_data["user"]),
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+) -> User:
+    payload = decode_token(credentials.credentials)
+    user_id = int(payload["sub"])
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
-        del pending_registrations[kiosk_id]
-        return response
+    if user.is_blacklist:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="User is blacklisted"
+        )
+    return user
 
-    return KioskStatusResponse(status="waiting")
+
+def authenticate_user(db: Session, email: str, password: str) -> User:
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not user.password_hash or not verify_password(password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+        )
+    if user.is_blacklist:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="User is blacklisted"
+        )
+    return user
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
+        )
+    return current_user

@@ -5,68 +5,47 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
-from app import mqtt
+import app.models  # noqa: F401 — register models so create_all sees them
 from app.database import init_db
+from app.mqtt import start_mqtt, stop_mqtt
+from app.services.due_date_checker import start_due_date_checker, stop_due_date_checker
 from app.routes import (
-    access_sessions_router,
-    audit_logs_router,
     auth_router,
-    inventory_router,
-    item_types_router,
-    kiosk_router,
-    observations_router,
-    statistics_router,
-    storage_router,
+    borrowings_router,
+    card_router,
+    damaged_reports_router,
+    items_router,
+    sessions_router,
     users_router,
 )
-import app.models  # noqa: F401
-
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
-REPO_ROOT = BACKEND_DIR.parent
-UPLOAD_DIR = BACKEND_DIR / "uploads"
-
-# Load .env from the monorepo root.
-load_dotenv(REPO_ROOT / ".env", override=True)
+load_dotenv(BACKEND_DIR / ".env", override=True)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan event handler for startup and shutdown."""
     print("Initializing database...")
     init_db()
     print("Database ready")
-    mqtt.start()
+    start_mqtt()
+    print("MQTT client started")
+    start_due_date_checker()
     yield
-    mqtt.stop()
+    stop_due_date_checker()
+    stop_mqtt()
     print("Shutting down")
 
 
 app = FastAPI(
     title="Smart Inventory Management API",
-    description="Backend API for IoT Inventory System with NFC/RFID tracking",
-    version="1.0.0",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
     redirect_slashes=False,
 )
-
-# Keep serving legacy local uploads when the folder exists.
-if UPLOAD_DIR.is_dir():
-    app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
-
-origins = [
-    "http://localhost:3001",
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:3000",
-    "http://127.0.0.1:3001",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
-]
 
 app.add_middleware(
     CORSMiddleware,
@@ -76,21 +55,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 app.include_router(auth_router)
+app.include_router(borrowings_router)
+app.include_router(card_router)
+app.include_router(damaged_reports_router)
+app.include_router(items_router)
+app.include_router(sessions_router)
 app.include_router(users_router)
-app.include_router(item_types_router)
-app.include_router(audit_logs_router)
-app.include_router(kiosk_router)
-app.include_router(storage_router)
-app.include_router(access_sessions_router)
-app.include_router(observations_router)
-app.include_router(inventory_router)
-app.include_router(statistics_router)
 
 
 @app.get("/")
 def root():
-    """Health check endpoint."""
     return {
         "message": "Smart Inventory Management API",
         "status": "online",
@@ -100,7 +76,6 @@ def root():
 
 @app.get("/health")
 def health_check():
-    """Health check for monitoring."""
     return {"status": "healthy"}
 
 
@@ -108,7 +83,7 @@ def main():
     import uvicorn
 
     port = int(os.environ.get("PORT", 3000))
-    uvicorn.run("app.main:app", host="0.0.0.0", port=port)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True)
 
 
 if __name__ == "__main__":

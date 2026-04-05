@@ -24,7 +24,7 @@ export function BottomNav({ activeTab, setActiveTab, borrowedCount }: BottomNavP
                 className={`flex flex-col items-center gap-1 flex-1 relative ${activeTab === 'borrowed' ? 'text-[#ee4d2d]' : 'text-gray-300'}`}
             >
                 <Package size={22} className={activeTab === 'borrowed' ? 'fill-current' : ''} />
-                <span className="text-[10px] font-bold">ของที่ยืม</span>
+                <span className="text-[10px] font-bold">Borrowed Items</span>
                 {borrowedCount > 0 && (
                     <span className="absolute -top-1 right-5 bg-[#ee4d2d] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white">
                         {borrowedCount}
