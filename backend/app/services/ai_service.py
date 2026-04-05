@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict, is_dataclass
 
 from sqlalchemy.orm import Session
@@ -17,6 +18,8 @@ from app.services.ai_pipeline_service.ai_pipeline_helpers import (
     detect_image_bytes,
 )
 from app.services.ai_pipeline_service import ai_service_impl as impl
+
+logger = logging.getLogger(__name__)
 
 
 def _to_mapping(value):
@@ -65,16 +68,45 @@ def recognize_from_image(
     implementation layer embeds each crop and compares it with stored label
     prototypes. The result is one recognition record per detected box.
     """
+    logger.info("[ai_service][recognize] image size=%d bytes", len(payload.image_bytes))
     detections = detect_image_bytes(payload.image_bytes)
+    logger.info(
+        "[ai_service][recognize] detector returned %d detection(s)", len(detections)
+    )
+
     if not detections:
+        logger.warning("[ai_service][recognize] no detections — returning empty list")
         return []
+
+    for i, d in enumerate(detections):
+        logger.info(
+            "[ai_service][recognize] detection[%d] class=%r conf=%.4f bbox=%s",
+            i,
+            d.get("class_name"),
+            d.get("confidence"),
+            d.get("bbox"),
+        )
 
     hits = impl.recognize_from_detections(
         db=db,
         image_bytes=payload.image_bytes,
         detections=detections,
     )
-    return [RecognizeHitOutput(**_to_mapping(hit)) for hit in hits]
+    logger.info(
+        "[ai_service][recognize] recognize_from_detections returned %d hit(s)",
+        len(hits),
+    )
+    outputs = [RecognizeHitOutput(**_to_mapping(hit)) for hit in hits]
+    for i, hit in enumerate(outputs):
+        logger.info(
+            "[ai_service][recognize] hit[%d] label=%r score=%.4f margin=%.4f accepted=%s",
+            i,
+            hit.label,
+            hit.score,
+            hit.margin,
+            hit.accepted,
+        )
+    return outputs
 
 
 def enroll_from_video(db: Session, payload: EnrollFromVideoInput) -> VideoEnrollOutput:
