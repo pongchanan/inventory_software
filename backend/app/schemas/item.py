@@ -4,9 +4,9 @@ from pydantic import BaseModel
 class ItemOut(BaseModel):
     id: int
     name: str
-    image_path: str | None
     quantity: int
     is_active: bool
+    image: str | None = None
 
     model_config = {"from_attributes": True}
 
