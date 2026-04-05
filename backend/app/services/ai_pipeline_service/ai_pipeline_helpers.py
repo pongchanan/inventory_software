@@ -28,8 +28,12 @@ def iou_xyxy(a: list[int], b: list[int]) -> float:
     return inter / union if union > 0.0 else 0.0
 
 
-def nms_xyxy(detections: list[dict[str, object]], iou_threshold: float = 0.5) -> list[dict[str, object]]:
-    ordered = sorted(detections, key=lambda d: float(d.get("confidence", 0.0)), reverse=True)
+def nms_xyxy(
+    detections: list[dict[str, object]], iou_threshold: float = 0.5
+) -> list[dict[str, object]]:
+    ordered = sorted(
+        detections, key=lambda d: float(d.get("confidence", 0.0)), reverse=True
+    )
     kept: list[dict[str, object]] = []
     for det in ordered:
         box = det.get("bbox")
@@ -120,7 +124,3 @@ def build_detector():
 def detect_image_bytes(image_bytes: bytes) -> list[dict[str, object]]:
     detector = build_detector()
     return detector(image_bytes)
-
-
-def ai_db_path() -> str:
-    return str(ai_config.AI_SQLITE_PATH)

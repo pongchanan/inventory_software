@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 from PIL import Image
 
+from sqlalchemy.orm import Session
+
 from .ai_config import (
     AI_BLUR_MIN,
     AI_BRIGHTNESS_MAX,
@@ -15,19 +17,29 @@ from .ai_config import (
     AI_MIN_MARGIN,
     AI_SAMPLES_DIR,
     AI_SIMILARITY_THRESHOLD,
-    AI_SQLITE_PATH,
     ensure_ai_runtime_dirs,
 )
 from .ai_embedding_service import cosine_similarity, embed_image
-from .ai_preprocess_service import crop_by_bbox, image_sha256, is_quality_ok, normalize_bbox, save_crop_file, summarize_quality
+from .ai_preprocess_service import (
+    crop_by_bbox,
+    image_sha256,
+    is_quality_ok,
+    normalize_bbox,
+    save_crop_file,
+    summarize_quality,
+)
 from .ai_prototype_service import recompute_label_prototype
-from .ai_sqlite_store import get_or_create_label_id, init_ai_store, insert_sample, load_all_prototypes, sample_hash_exists
+from .ai_db_store import (
+    get_or_create_label_id,
+    insert_sample,
+    load_all_prototypes,
+    sample_hash_exists,
+)
 from .ai_types import Detection, EnrollResult, RecognizeHit
 
 
-def _prepare_runtime(db_path: str | Path = AI_SQLITE_PATH) -> None:
+def _prepare_runtime() -> None:
     ensure_ai_runtime_dirs()
-    init_ai_store(db_path)
 
 
 def _coerce_detection(raw_detection: Detection | dict[str, Any]) -> Detection:
@@ -38,9 +50,17 @@ def _coerce_detection(raw_detection: Detection | dict[str, Any]) -> Detection:
     if not isinstance(bbox, list):
         raise ValueError("invalid_detection_bbox")
 
-    confidence = float(raw_detection.get("confidence", 0.0)) if isinstance(raw_detection, dict) else 0.0
-    class_name = raw_detection.get("class_name") if isinstance(raw_detection, dict) else None
-    return Detection(bbox=[int(v) for v in bbox], confidence=confidence, class_name=class_name)
+    confidence = (
+        float(raw_detection.get("confidence", 0.0))
+        if isinstance(raw_detection, dict)
+        else 0.0
+    )
+    class_name = (
+        raw_detection.get("class_name") if isinstance(raw_detection, dict) else None
+    )
+    return Detection(
+        bbox=[int(v) for v in bbox], confidence=confidence, class_name=class_name
+    )
 
 
 def _bbox_area_ratio(bbox: list[int], image_width: int, image_height: int) -> float:
@@ -52,24 +72,37 @@ def _bbox_area_ratio(bbox: list[int], image_width: int, image_height: int) -> fl
 
 
 def enroll_from_detections(
-    db_path: str | Path,
+    db: Session,
     label: str,
     image_bytes: bytes,
     detections: list[Detection | dict[str, Any]],
     sample_dir: str | Path = AI_SAMPLES_DIR,
+    item_id: int | None = None,
 ) -> EnrollResult:
-    _prepare_runtime(db_path)
+    _prepare_runtime()
 
     if not image_bytes:
-        return EnrollResult(ok=False, label=label, accepted_count=0, rejected_count=0, rejected_samples=[{"reason": "empty_image"}])
+        return EnrollResult(
+            ok=False,
+            label=label,
+            accepted_count=0,
+            rejected_count=0,
+            rejected_samples=[{"reason": "empty_image"}],
+        )
 
     try:
         source_image = Image.open(BytesIO(image_bytes)).convert("RGB")
         source_width, source_height = source_image.size
     except Exception:
-        return EnrollResult(ok=False, label=label, accepted_count=0, rejected_count=0, rejected_samples=[{"reason": "decode_failed"}])
+        return EnrollResult(
+            ok=False,
+            label=label,
+            accepted_count=0,
+            rejected_count=0,
+            rejected_samples=[{"reason": "decode_failed"}],
+        )
 
-    label_id = get_or_create_label_id(db_path, label)
+    label_id = get_or_create_label_id(db, label, item_id=item_id)
     accepted_count = 0
     rejected_count = 0
     saved_samples: list[str] = []
@@ -103,37 +136,49 @@ def enroll_from_detections(
             cropped_bytes = crop_by_bbox(image_bytes, bbox)
         except Exception:
             rejected_count += 1
-            rejected_samples.append({"index": index, "bbox": bbox, "reason": "crop_failed"})
+            rejected_samples.append(
+                {"index": index, "bbox": bbox, "reason": "crop_failed"}
+            )
             continue
 
         try:
             quality = summarize_quality(cropped_bytes)
         except Exception:
             rejected_count += 1
-            rejected_samples.append({"index": index, "bbox": bbox, "reason": "quality_failed"})
+            rejected_samples.append(
+                {"index": index, "bbox": bbox, "reason": "quality_failed"}
+            )
             continue
 
-        if not is_quality_ok(quality, AI_BLUR_MIN, AI_BRIGHTNESS_MIN, AI_BRIGHTNESS_MAX):
+        if not is_quality_ok(
+            quality, AI_BLUR_MIN, AI_BRIGHTNESS_MIN, AI_BRIGHTNESS_MAX
+        ):
             rejected_count += 1
-            rejected_samples.append({"index": index, "bbox": bbox, "reason": "quality_rejected", **quality})
+            rejected_samples.append(
+                {"index": index, "bbox": bbox, "reason": "quality_rejected", **quality}
+            )
             continue
 
         crop_hash = image_sha256(cropped_bytes)
-        if sample_hash_exists(db_path, crop_hash):
+        if sample_hash_exists(db, crop_hash):
             rejected_count += 1
-            rejected_samples.append({"index": index, "bbox": bbox, "reason": "duplicate"})
+            rejected_samples.append(
+                {"index": index, "bbox": bbox, "reason": "duplicate"}
+            )
             continue
 
         try:
             embedding = embed_image(cropped_bytes)
         except Exception:
             rejected_count += 1
-            rejected_samples.append({"index": index, "bbox": bbox, "reason": "embedding_failed"})
+            rejected_samples.append(
+                {"index": index, "bbox": bbox, "reason": "embedding_failed"}
+            )
             continue
 
         file_path = save_crop_file(sample_dir, label, cropped_bytes)
         insert_sample(
-            db_path=db_path,
+            db=db,
             label_id=label_id,
             image_path=file_path,
             embedding=embedding,
@@ -147,7 +192,7 @@ def enroll_from_detections(
 
     prototype_updated = False
     if accepted_count > 0:
-        proto_result = recompute_label_prototype(db_path, label_id)
+        proto_result = recompute_label_prototype(db, label_id)
         prototype_updated = bool(proto_result.get("ok"))
 
     return EnrollResult(
@@ -162,16 +207,16 @@ def enroll_from_detections(
 
 
 def recognize_from_detections(
-    db_path: str | Path,
+    db: Session,
     image_bytes: bytes,
     detections: list[Detection | dict[str, Any]],
 ) -> list[RecognizeHit]:
-    _prepare_runtime(db_path)
+    _prepare_runtime()
 
     if not image_bytes:
         return []
 
-    prototypes = load_all_prototypes(db_path)
+    prototypes = load_all_prototypes(db)
     if not prototypes:
         return []
 
@@ -226,7 +271,10 @@ def recognize_from_detections(
                 score=float(top1_score),
                 margin=margin,
                 accepted=accepted,
-                scores=[{"label": label_name, "score": float(score)} for label_name, score in scores],
+                scores=[
+                    {"label": label_name, "score": float(score)}
+                    for label_name, score in scores
+                ],
             )
         )
 
@@ -234,7 +282,7 @@ def recognize_from_detections(
 
 
 def enroll_from_video(
-    db_path: str | Path,
+    db: Session,
     label: str,
     *,
     video_path: str | Path | None = None,
@@ -243,6 +291,7 @@ def enroll_from_video(
     max_frames: int = 0,
     sample_dir: str | Path = AI_SAMPLES_DIR,
     detector_fn: Any | None = None,
+    item_id: int | None = None,
 ) -> dict[str, Any]:
     """Extract frames from a video and run each frame through enroll_from_detections.
 
@@ -252,9 +301,11 @@ def enroll_from_video(
     try:
         import cv2  # type: ignore
     except Exception as exc:
-        raise RuntimeError("opencv-python-headless is required for enroll_from_video") from exc
+        raise RuntimeError(
+            "opencv-python-headless is required for enroll_from_video"
+        ) from exc
 
-    _prepare_runtime(db_path)
+    _prepare_runtime()
 
     if sample_interval_sec <= 0:
         sample_interval_sec = 0.3
@@ -354,11 +405,12 @@ def enroll_from_video(
                 continue
 
             frame_enroll = enroll_from_detections(
-                db_path=db_path,
+                db=db,
                 label=label,
                 image_bytes=frame_bytes,
                 detections=raw_detections,
                 sample_dir=sample_dir,
+                item_id=item_id,
             )
 
             aggregate_accepted += frame_enroll.accepted_count
@@ -395,4 +447,3 @@ def enroll_from_video(
         "saved_samples": aggregate_saved,
         "frame_results": aggregate_frame_results,
     }
-

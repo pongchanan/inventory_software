@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class EnrollFromImageInput(BaseModel):
     label: str
     image_bytes: bytes
+    item_id: int | None = None
 
 
 class EnrollFromVideoInput(BaseModel):
@@ -13,6 +14,7 @@ class EnrollFromVideoInput(BaseModel):
     video_bytes: bytes
     sample_interval_sec: float = 0.3
     max_frames: int = 0
+    item_id: int | None = None
 
 
 class RecognizeFromImageInput(BaseModel):

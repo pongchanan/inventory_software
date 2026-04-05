@@ -5,11 +5,18 @@ from pathlib import Path
 
 
 SERVICES_DIR = Path(__file__).resolve().parent
-AI_RUNTIME_DIR = Path(os.getenv("AI_RUNTIME_DIR", SERVICES_DIR / ".ai_pipeline_runtime"))
-AI_SQLITE_PATH = str(Path(os.getenv("AI_SQLITE_PATH", AI_RUNTIME_DIR / "ai_pipeline.sqlite3")).resolve())
-AI_SAMPLES_DIR = str(Path(os.getenv("AI_SAMPLES_DIR", AI_RUNTIME_DIR / "samples")).resolve())
-AI_MODELS_DIR = str(Path(os.getenv("AI_MODELS_DIR", AI_RUNTIME_DIR / "models")).resolve())
-AI_REPORTS_DIR = str(Path(os.getenv("AI_REPORTS_DIR", AI_RUNTIME_DIR / "reports")).resolve())
+AI_RUNTIME_DIR = Path(
+    os.getenv("AI_RUNTIME_DIR", SERVICES_DIR / ".ai_pipeline_runtime")
+)
+AI_SAMPLES_DIR = str(
+    Path(os.getenv("AI_SAMPLES_DIR", AI_RUNTIME_DIR / "samples")).resolve()
+)
+AI_MODELS_DIR = str(
+    Path(os.getenv("AI_MODELS_DIR", AI_RUNTIME_DIR / "models")).resolve()
+)
+AI_REPORTS_DIR = str(
+    Path(os.getenv("AI_REPORTS_DIR", AI_RUNTIME_DIR / "reports")).resolve()
+)
 
 AI_SIMILARITY_THRESHOLD = float(os.getenv("AI_SIMILARITY_THRESHOLD", "0.55"))
 AI_MIN_MARGIN = float(os.getenv("AI_MIN_MARGIN", "0.05"))
@@ -44,5 +51,4 @@ def ensure_ai_runtime_dirs() -> dict[str, str]:
         "samples_dir": str(samples_dir),
         "models_dir": str(models_dir),
         "reports_dir": str(reports_dir),
-        "sqlite_path": AI_SQLITE_PATH,
     }

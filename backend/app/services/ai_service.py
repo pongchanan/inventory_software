@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
 
+from sqlalchemy.orm import Session
+
 from app.schemas.ai_pipeline import (
     EnrollFromImageInput,
     EnrollFromVideoInput,
@@ -11,7 +13,6 @@ from app.schemas.ai_pipeline import (
     VideoEnrollOutput,
 )
 from app.services.ai_pipeline_service.ai_pipeline_helpers import (
-    ai_db_path,
     build_detector,
     detect_image_bytes,
 )
@@ -24,7 +25,7 @@ def _to_mapping(value):
     return value.__dict__
 
 
-def enroll_from_image(payload: EnrollFromImageInput) -> EnrollResultOutput:
+def enroll_from_image(db: Session, payload: EnrollFromImageInput) -> EnrollResultOutput:
     """Enroll samples from a single image.
 
     The backend runs detection on `payload.image_bytes`, then forwards the
@@ -45,16 +46,19 @@ def enroll_from_image(payload: EnrollFromImageInput) -> EnrollResultOutput:
         )
 
     result = impl.enroll_from_detections(
-        db_path=ai_db_path(),
+        db=db,
         label=payload.label,
         image_bytes=payload.image_bytes,
         detections=detections,
         sample_dir=impl.AI_SAMPLES_DIR,
+        item_id=payload.item_id,
     )
     return EnrollResultOutput(**_to_mapping(result))
 
 
-def recognize_from_image(payload: RecognizeFromImageInput) -> list[RecognizeHitOutput]:
+def recognize_from_image(
+    db: Session, payload: RecognizeFromImageInput
+) -> list[RecognizeHitOutput]:
     """Recognize labels from a single image.
 
     The backend detects objects on `payload.image_bytes` first, then the
@@ -66,14 +70,14 @@ def recognize_from_image(payload: RecognizeFromImageInput) -> list[RecognizeHitO
         return []
 
     hits = impl.recognize_from_detections(
-        db_path=ai_db_path(),
+        db=db,
         image_bytes=payload.image_bytes,
         detections=detections,
     )
     return [RecognizeHitOutput(**_to_mapping(hit)) for hit in hits]
 
 
-def enroll_from_video(payload: EnrollFromVideoInput) -> VideoEnrollOutput:
+def enroll_from_video(db: Session, payload: EnrollFromVideoInput) -> VideoEnrollOutput:
     """Enroll samples from a video source.
 
     The implementation samples frames from the video, runs the backend detector
@@ -81,7 +85,7 @@ def enroll_from_video(payload: EnrollFromVideoInput) -> VideoEnrollOutput:
     flow used by image enrollment.
     """
     result = impl.enroll_from_video(
-        db_path=ai_db_path(),
+        db=db,
         label=payload.label,
         video_path=None,
         video_bytes=payload.video_bytes,
@@ -89,5 +93,6 @@ def enroll_from_video(payload: EnrollFromVideoInput) -> VideoEnrollOutput:
         max_frames=payload.max_frames,
         sample_dir=impl.AI_SAMPLES_DIR,
         detector_fn=build_detector(),
+        item_id=payload.item_id,
     )
     return VideoEnrollOutput(**result)
