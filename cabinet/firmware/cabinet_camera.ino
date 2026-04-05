@@ -21,6 +21,7 @@
 
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include "esp_camera.h"
@@ -41,7 +42,7 @@ const char* JWT_SECRET    = "ij11kndivmplh2l9e3rmi5hrpteqbvvr";
 const char* TOPIC_SUB_CAPTURE = "cabinet/camera/capture";  // Cabinet → CAM: take picture
 
 // Backend HTTP endpoint (image upload + session close)
-const char* BACKEND_URL = "https://inventory-software-production.up.railway.app";
+const char* BACKEND_URL = "https://6b0e-161-246-146-122.ngrok-free.app";
 
 // ======================== CAMERA PINS (AI-Thinker ESP32-CAM) =====
 #define PWDN_GPIO_NUM     32
@@ -208,8 +209,11 @@ void captureAndSend(int sessionId) {
     String url = String(BACKEND_URL) + "/api/sessions/" + sessionId + "/close-image";
     Serial.printf("[HTTP] POST %s\n", url.c_str());
 
+    WiFiClientSecure secureClient;
+    secureClient.setInsecure();  // Skip cert verification (ngrok / internal use)
+
     HTTPClient http;
-    http.begin(url);
+    http.begin(secureClient, url);
     http.addHeader("Content-Type", "image/jpeg");
     http.setTimeout(15000);  // 15s — allow time for S3 upload
 
@@ -219,7 +223,8 @@ void captureAndSend(int sessionId) {
     if (httpCode == 200) {
         Serial.printf("[HTTP] Upload OK — session #%d closed\n", sessionId);
     } else {
-        Serial.printf("[HTTP] Upload FAILED — code %d\n", httpCode);
+        String body = http.getString();
+        Serial.printf("[HTTP] Upload FAILED — code %d: %s\n", httpCode, body.c_str());
     }
 
     http.end();
