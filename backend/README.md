@@ -62,6 +62,7 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/` | Admin | List cabinet open/close logs (paginated). Includes user info, open_at, close_at, close_image_path |
+| `GET` | `/images` | Admin | List all session close images as presigned S3 URLs (paginated). Query params: `page`, `page_size` |
 | `POST` | `/{session_id}/close-image` | No | (ESP32-CAM) Upload raw JPEG body to close a session and store image in S3 |
 | `GET` | `/{session_id}/image` | Admin | Redirect to 30-min presigned S3 URL for a session's close image |
 
