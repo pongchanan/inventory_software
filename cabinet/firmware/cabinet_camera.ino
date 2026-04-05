@@ -42,7 +42,7 @@ const char* JWT_SECRET    = "ij11kndivmplh2l9e3rmi5hrpteqbvvr";
 const char* TOPIC_SUB_CAPTURE = "cabinet/camera/capture";  // Cabinet → CAM: take picture
 
 // Backend HTTP endpoint (image upload + session close)
-const char* BACKEND_URL = "https://6b0e-161-246-146-122.ngrok-free.app";
+const char* BACKEND_URL = "https://inventorysoftware-dev.up.railway.app";
 
 // ======================== CAMERA PINS (AI-Thinker ESP32-CAM) =====
 #define PWDN_GPIO_NUM     32

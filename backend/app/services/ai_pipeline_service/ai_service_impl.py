@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from io import BytesIO
 import tempfile
 from pathlib import Path
@@ -40,6 +41,9 @@ from .ai_types import Detection, EnrollResult, RecognizeHit
 
 def _prepare_runtime() -> None:
     ensure_ai_runtime_dirs()
+
+
+logger = logging.getLogger(__name__)
 
 
 def _coerce_detection(raw_detection: Detection | dict[str, Any]) -> Detection:
@@ -214,21 +218,44 @@ def recognize_from_detections(
     _prepare_runtime()
 
     if not image_bytes:
+        logger.warning(
+            "[ai_impl][recognize_detections] image_bytes is empty — returning []"
+        )
         return []
 
     prototypes = load_all_prototypes(db)
     if not prototypes:
+        logger.warning(
+            "[ai_impl][recognize_detections] no prototypes loaded from DB — returning []"
+        )
         return []
 
+    logger.info(
+        "[ai_impl][recognize_detections] %d prototype(s) loaded: %s",
+        len(prototypes),
+        list(prototypes.keys()),
+    )
+    logger.info(
+        "[ai_impl][recognize_detections] thresholds: similarity=%.4f margin=%.4f",
+        AI_SIMILARITY_THRESHOLD,
+        AI_MIN_MARGIN,
+    )
+
     results: list[RecognizeHit] = []
-    for raw_detection in detections:
+    for idx, raw_detection in enumerate(detections):
         detection = _coerce_detection(raw_detection)
         bbox = detection.bbox
+        logger.info("[ai_impl][recognize_detections] detection[%d] bbox=%s", idx, bbox)
 
         try:
             cropped_bytes = crop_by_bbox(image_bytes, bbox)
             query = embed_image(cropped_bytes)
-        except Exception:
+        except Exception as e:
+            logger.warning(
+                "[ai_impl][recognize_detections] detection[%d] crop/embed failed: %s",
+                idx,
+                e,
+            )
             results.append(
                 RecognizeHit(
                     bbox=bbox,
@@ -263,6 +290,18 @@ def recognize_from_detections(
         top2_score = scores[1][1] if len(scores) > 1 else 0.0
         margin = float(top1_score - top2_score)
         accepted = top1_score >= AI_SIMILARITY_THRESHOLD and margin >= AI_MIN_MARGIN
+
+        logger.info(
+            "[ai_impl][recognize_detections] detection[%d] top1=%r score=%.4f margin=%.4f "
+            "accepted=%s (need score>=%.4f margin>=%.4f)",
+            idx,
+            top1_label,
+            top1_score,
+            margin,
+            accepted,
+            AI_SIMILARITY_THRESHOLD,
+            AI_MIN_MARGIN,
+        )
 
         results.append(
             RecognizeHit(
