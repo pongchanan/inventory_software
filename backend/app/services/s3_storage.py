@@ -53,11 +53,23 @@ def upload_image(data: bytes, session_id: int, content_type: str = "image/jpeg")
     return key
 
 
+def _normalize_key(key: str) -> str:
+    """Strip s3://bucket/ prefix if present, returning a bare object key."""
+    if key.startswith("s3://"):
+        # s3://bucket-name/path/to/object → path/to/object
+        without_scheme = key[len("s3://") :]
+        # drop the bucket name segment
+        slash = without_scheme.find("/")
+        if slash != -1:
+            return without_scheme[slash + 1 :]
+    return key
+
+
 def get_presigned_url(key: str, expires_in: int = 1800) -> str:
     """Generate a presigned URL for an S3 object.
 
     Args:
-        key: The S3 object key.
+        key: The S3 object key (bare key or full s3://bucket/key URI).
         expires_in: URL validity in seconds (default 30 min).
 
     Returns:
@@ -66,7 +78,7 @@ def get_presigned_url(key: str, expires_in: int = 1800) -> str:
     client = _get_client()
     return client.generate_presigned_url(
         "get_object",
-        Params={"Bucket": _get_bucket(), "Key": key},
+        Params={"Bucket": _get_bucket(), "Key": _normalize_key(key)},
         ExpiresIn=expires_in,
     )
 
