@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class UserBasic(BaseModel):
     """Basic user info for loan display"""
+
     id: int
     name: str
     email: str | None = None
@@ -15,9 +16,11 @@ class UserBasic(BaseModel):
 
 class ItemBasic(BaseModel):
     """Basic item info for loan display"""
+
     id: int
     name: str
     image_path: str | None = None
+    image_url: str | None = None  # presigned URL for first sample image
 
     model_config = {"from_attributes": True}
 

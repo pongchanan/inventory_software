@@ -16,6 +16,7 @@ class ItemBasic(BaseModel):
     id: int
     name: str
     image_path: str | None = None
+    image_url: str | None = None  # presigned URL for first sample image
 
     model_config = {"from_attributes": True}
 
@@ -30,6 +31,7 @@ class DamagedItemReportOut(BaseModel):
     report_by: int
     user: UserBasic | None = None
     illustrated_path: str
+    illustrated_url: str | None = None  # presigned URL for the illustration image
     approved: bool
     approved_by: int | None
     admin_comment: str | None

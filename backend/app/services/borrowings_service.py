@@ -11,9 +11,21 @@ from app.models.borrowing import Borrowing
 from app.models.item import Item
 from app.models.open_session import OpenSession
 from app.schemas.ai_pipeline import RecognizeFromImageInput
-from app.services.s3_storage import download_image
+from app.services.items_service import _first_image_for_items
+from app.services.s3_storage import download_image, get_presigned_url
 
 logger = logging.getLogger(__name__)
+
+
+def _enrich_borrowings(db: Session, borrowings: list) -> list:
+    """Attach item.image_url (presigned) to each borrowing's item."""
+    item_ids = list({b.item_id for b in borrowings})
+    sample_map = _first_image_for_items(db, item_ids)
+    for b in borrowings:
+        if b.item:
+            key = sample_map.get(b.item_id)
+            b.item.image_url = get_presigned_url(key) if key else None
+    return borrowings
 
 
 def get_user_borrowings(db: Session, user_id: int, page: int, page_size: int) -> dict:
@@ -33,7 +45,7 @@ def get_user_borrowings(db: Session, user_id: int, page: int, page_size: int) ->
     )
 
     return {
-        "borrowings": borrowings,
+        "borrowings": _enrich_borrowings(db, borrowings),
         "total": total,
         "page": page,
         "page_size": page_size,
@@ -44,21 +56,21 @@ def get_user_borrowings(db: Session, user_id: int, page: int, page_size: int) ->
 def get_all_borrowings_admin(db: Session, page: int, page_size: int) -> dict:
     """Get all borrowings with user info (admin view) - optimized single query"""
     from app.models.user import User
-    
+
     query = db.query(Borrowing).join(User, Borrowing.user_id == User.id)
-    
+
     total = query.count()
     total_pages = max(1, math.ceil(total / page_size))
-    
+
     borrowings = (
         query.order_by(Borrowing.borrow_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
         .all()
     )
-    
+
     return {
-        "borrowings": borrowings,
+        "borrowings": _enrich_borrowings(db, borrowings),
         "total": total,
         "page": page,
         "page_size": page_size,
