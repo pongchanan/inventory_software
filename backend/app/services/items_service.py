@@ -25,6 +25,19 @@ def _first_image_for_items(db: Session, item_ids: list[int]) -> dict[int, str | 
     return result
 
 
+def update_item_quantity(db: Session, item_id: int, delta: int) -> Item:
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        raise ValueError(f"Item {item_id} not found")
+    new_qty = item.quantity + delta
+    if new_qty < 0:
+        raise ValueError(f"Cannot remove {abs(delta)} — only {item.quantity} in stock")
+    item.quantity = new_qty
+    db.commit()
+    db.refresh(item)
+    return item
+
+
 def get_active_items(db: Session, page: int, page_size: int) -> dict:
     query = db.query(Item).filter(Item.is_active == True)  # noqa: E712
 
