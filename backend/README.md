@@ -81,6 +81,25 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 | `POST` | `/admin` | Admin | File a damage report for any item. Multipart: `topic`, `description`, `item_id`, `image` (JPEG). Decrements item quantity by 1 |
 | `POST` | `/{report_id}/approve` | Admin | Approve a damage report. Optional JSON body: `{ "admin_comment": "..." }`. Sets `approved=true`, closes the borrowing backdated to `report_at`, returns updated report |
 
+### Activity Log — `/api/activity-log` (admin only)
+
+Single endpoint that returns a unified, time-sorted event stream across all significant operations.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | Admin | Return all events newest-first. Each entry has `event_type`, `timestamp`, `reference_id`, `user_id`, `user_name`, `item_id`, `item_name`, `detail` |
+
+**`event_type` values:**
+
+| Value | Triggered by |
+|-------|-------------|
+| `session_open` | Cabinet opened via NFC |
+| `session_close` | Door magnet detected closed |
+| `borrowing` | Item borrowing recorded |
+| `borrowing_return` | Borrowing closed (item returned) |
+| `damage_report` | User or admin filed a damage report |
+| `damage_report_approved` | Admin approved a damage report |
+
 ### General
 
 | Method | Path | Description |

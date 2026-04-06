@@ -23,4 +23,7 @@ class DamagedItemReport(Base):
     )
     illustrated_path: Mapped[str] = mapped_column(String, nullable=False)
     approved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    approved_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
     admin_comment: Mapped[str | None] = mapped_column(String, nullable=True)

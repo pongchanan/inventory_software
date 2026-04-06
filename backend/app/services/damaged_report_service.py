@@ -148,7 +148,10 @@ def create_admin_report(
 
 
 def approve_report(
-    db: Session, report_id: int, admin_comment: str | None = None
+    db: Session,
+    report_id: int,
+    approved_by: int,
+    admin_comment: str | None = None,
 ) -> DamagedItemReport:
     """Approve a user-submitted damage report (admin action).
 
@@ -170,6 +173,7 @@ def approve_report(
         return report  # idempotent
 
     report.approved = True
+    report.approved_by = approved_by
     if admin_comment is not None:
         report.admin_comment = admin_comment
 

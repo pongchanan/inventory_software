@@ -91,10 +91,11 @@ async def submit_user_report(
 def approve_damaged_report(
     report_id: int,
     body: ApproveReportRequest = ApproveReportRequest(),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     try:
-        return approve_report(db, report_id, body.admin_comment)
+        return approve_report(db, report_id, current_user.id, body.admin_comment)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
 
