@@ -18,17 +18,23 @@ export default function BorrowedPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('date-desc');
     const [showFilters, setShowFilters] = useState(false);
+    const [statusFilter, setStatusFilter] = useState('all');
+
+    const hasActiveBorrowings = borrowedItems && borrowedItems.length > 0;
 
     const {
         isReportModalOpen,
         selectedItem,
-        reportImage,
+        reportImagePreview,
         reportDetail,
         setReportDetail,
+        isSubmitting,
+        error,
         openReportModal,
         closeReportModal,
         handleImageChange,
         handleRemoveImage,
+        clearError,
         submitReport
     } = useDamageReport();
 
@@ -39,10 +45,11 @@ export default function BorrowedPage() {
     }, [user, authLoading, router]);
 
     // Filter and sort borrowed items
-    const filteredItems = borrowedItems
+    let filteredItems = borrowedItems
         .filter((item: BorrowedItem) =>
-            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.loc?.toLowerCase().includes(searchQuery.toLowerCase())
+            (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.loc?.toLowerCase().includes(searchQuery.toLowerCase())) &&
+            (statusFilter === 'all' || item.status === statusFilter)
         )
         .sort((a: BorrowedItem, b: BorrowedItem) => {
             switch (sortBy) {
@@ -62,6 +69,13 @@ export default function BorrowedPage() {
     if (authLoading || !user) {
         return null;
     }
+
+    const statusOptions = ['active', 'overdue', 'returning'];
+    const statusLabels: Record<string, string> = {
+        active: 'Active',
+        overdue: 'Overdue',
+        returning: 'Returning'
+    };
 
     return (
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">
@@ -102,7 +116,7 @@ export default function BorrowedPage() {
                     </button>
                 </div>
 
-                {/* Filter Badge - Shows active search */}
+                {/* Filter Badge - Shows active filters */}
                 {searchQuery && (
                     <div className="flex flex-wrap gap-2">
                         <div className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full flex items-center gap-2">
@@ -113,6 +127,40 @@ export default function BorrowedPage() {
                             >
                                 ✕
                             </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Advanced Filters */}
+                {showFilters && (
+                    <div className="bg-gradient-to-br from-orange-50 to-white p-4 rounded-2xl border border-orange-100 space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Status</label>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => setStatusFilter('all')}
+                                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                                        statusFilter === 'all'
+                                            ? 'bg-[#ee4d2d] text-white'
+                                            : 'bg-white border border-gray-200 text-gray-700 hover:border-[#ee4d2d]'
+                                    }`}
+                                >
+                                    All
+                                </button>
+                                {statusOptions.map(status => (
+                                    <button
+                                        key={status}
+                                        onClick={() => setStatusFilter(status)}
+                                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                                            statusFilter === status
+                                                ? 'bg-[#ee4d2d] text-white'
+                                                : 'bg-white border border-gray-200 text-gray-700 hover:border-[#ee4d2d]'
+                                        }`}
+                                    >
+                                        {statusLabels[status]}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -142,7 +190,13 @@ export default function BorrowedPage() {
                         </div>
                         <button
                             onClick={() => openReportModal(item)}
-                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-orange-50 text-[#ee4d2d] text-sm font-bold rounded-2xl hover:bg-[#ee4d2d] hover:text-white transition-all shadow-sm shrink-0"
+                            disabled={!hasActiveBorrowings}
+                            title={!hasActiveBorrowings ? "No active borrowings to report" : ""}
+                            className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold rounded-2xl shrink-0 transition-all shadow-sm ${
+                                hasActiveBorrowings
+                                    ? 'bg-orange-50 text-[#ee4d2d] hover:bg-[#ee4d2d] hover:text-white'
+                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                            }`}
                         >
                             <AlertTriangle size={18} /> Report Damage
                         </button>
@@ -162,13 +216,16 @@ export default function BorrowedPage() {
             <ReportModal
                 isOpen={isReportModalOpen}
                 selectedItem={selectedItem}
-                reportImage={reportImage}
+                reportImagePreview={reportImagePreview}
                 reportDetail={reportDetail}
                 onClose={closeReportModal}
                 onImageChange={handleImageChange}
                 onRemoveImage={handleRemoveImage}
                 setReportDetail={setReportDetail}
                 onSubmit={submitReport}
+                isSubmitting={isSubmitting}
+                error={error}
+                onClearError={clearError}
             />
         </div>
     );

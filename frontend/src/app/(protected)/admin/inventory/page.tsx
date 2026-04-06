@@ -38,7 +38,6 @@ const emptyForm: ItemCreate = {
     category: "",
     quantity: 1,
     available: true,
-    location: "",
 };
 
 export default function InventoryAdminPage() {
@@ -195,20 +194,12 @@ export default function InventoryAdminPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">UID / RFID *</label>
-                            <input type="text" required value={form.uid} onChange={(e) => setForm({ ...form, uid: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="Tap card or enter RFID number" />
-                        </div>
-                        <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-700">Device Name *</label>
                             <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="e.g., Arduino Uno R3" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-700">Category</label>
                             <input type="text" value={form.category || ""} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="e.g., Electronics, Tools" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Storage Location (Cabinet/Slot)</label>
-                            <input type="text" value={form.location || ""} onChange={(e) => setForm({ ...form, location: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="e.g., Locker-A1" />
                         </div>
                     </div>
 

@@ -13,6 +13,7 @@ export interface BorrowedItem {
     date: string;
     loc: string;
     img: string;
+    status?: 'active' | 'overdue' | 'returning';
 }
 
 export interface User {

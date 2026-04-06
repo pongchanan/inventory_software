@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
 import { fetchItems, fetchMostBorrowedItems, fetchMostDamagedItems } from "@/lib/api";
+import { fetchCabinetAccessLogs } from "@/lib/api_client/audit";
+import { AuditLogDetail } from "@/lib/api_client/types";
 import * as XLSX from "xlsx";
 
 interface ChartItem {
@@ -87,6 +89,7 @@ export default function AdminDashboard() {
   });
   const [mostBorrowedItems, setMostBorrowedItems] = useState<ChartItem[]>([]);
   const [mostDamagedItems, setMostDamagedItems] = useState<ChartItem[]>([]);
+  const [latestActivity, setLatestActivity] = useState<AuditLogDetail[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -101,6 +104,7 @@ export default function AdminDashboard() {
         const items = await fetchItems();
         const borrowed = await fetchMostBorrowedItems(5);
         const damaged = await fetchMostDamagedItems(5);
+        const activityResult = await fetchCabinetAccessLogs(1);
 
         setStats({
           totalItems: items.length,
@@ -111,6 +115,7 @@ export default function AdminDashboard() {
 
         setMostBorrowedItems(borrowed as ChartItem[]);
         setMostDamagedItems(damaged as ChartItem[]);
+        setLatestActivity(activityResult.logs.slice(0, 3)); // Show latest 3 activities
       } catch (err) {
         console.error("Failed to load dashboard stats", err);
       } finally {
@@ -174,15 +179,13 @@ export default function AdminDashboard() {
           <p className="mt-4 text-[10px] font-bold text-gray-400">Currently circulating inventory</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm border-l-4 border-l-red-500">
+        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
           <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Overdue Returns</p>
           <div className="flex items-end gap-2">
             <span className="text-3xl font-black text-red-600">{stats.overdue}</span>
             <span className="text-red-200 text-sm font-bold mb-1">items</span>
           </div>
-          <div className="mt-4 flex items-center gap-1 text-[10px] font-bold text-red-500 uppercase">
-            <AlertCircle size={12} /> Should Check Immediately
-          </div>
+          <p className="mt-4 text-[10px] font-bold text-gray-400">Items past return date</p>
         </div>
 
       </div>
@@ -321,22 +324,36 @@ export default function AdminDashboard() {
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50/50">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0"><Clock size={18} /></div>
-            <div className="flex-grow">
-              <p className="text-xs font-bold text-gray-900">Example: RFID card scanned to open drawer A1</p>
-              <p className="text-[10px] text-gray-400 font-medium">15 minutes ago • By Mr. Somchai Jaidee</p>
+          {latestActivity.length > 0 ? (
+            latestActivity.map((log) => {
+              const timestamp = new Date(log.timestamp);
+              const now = new Date();
+              const diffMs = now.getTime() - timestamp.getTime();
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMs / 3600000);
+              const timeAgo = diffMins < 1 ? "just now" : diffMins < 60 ? `${diffMins}m ago` : `${diffHours}h ago`;
+              
+              const statusColor = log.status === "completed" ? "text-green-600" : "text-blue-600";
+              const bgColor = log.status === "completed" ? "bg-green-100" : "bg-blue-100";
+              
+              return (
+                <div key={log.id} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50/50">
+                  <div className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center ${statusColor} shrink-0`}>
+                    {log.type.includes("close") || log.type.includes("return") ? <CheckCircle2 size={18} /> : <Clock size={18} />}
+                  </div>
+                  <div className="flex-grow">
+                    <p className="text-xs font-bold text-gray-900">{log.message || `${log.type}: ${log.item || ""}`}</p>
+                    <p className="text-[10px] text-gray-400 font-medium">{timeAgo} • By {log.user_name || "System"}</p>
+                  </div>
+                  <span className={`text-[10px] font-black ${statusColor} uppercase`}>{log.status}</span>
+                </div>
+              );
+            })
+          ) : (
+            <div className="py-8 text-center text-gray-400">
+              <p className="text-sm font-bold">No activity recorded yet</p>
             </div>
-            <span className="text-[10px] font-black text-green-600 uppercase">Success</span>
-          </div>
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50/50 opacity-60">
-            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 shrink-0"><Package size={18} /></div>
-            <div className="flex-grow">
-              <p className="text-xs font-bold text-gray-900">Example: Added new equipment "Oscilloscope"</p>
-              <p className="text-[10px] text-gray-400 font-medium">1 hour ago • By Admin</p>
-            </div>
-            <span className="text-[10px] font-black text-gray-400 uppercase">Audit</span>
-          </div>
+          )}
         </div>
       </div>
     </div>

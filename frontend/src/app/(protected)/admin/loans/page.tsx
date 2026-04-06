@@ -135,8 +135,8 @@ export default function LoansAdminPage() {
                                             <h4 className="font-bold text-gray-900 leading-tight">{loan.item_name}</h4>
                                             <StatusBadge status={loan.status} />
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-3">
-                                            <User size={12} /> {loan.user_name} ({loan.user_uid})
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-600 mb-3">
+                                            <User size={12} /> {loan.user_name}
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-50">
                                             <div>

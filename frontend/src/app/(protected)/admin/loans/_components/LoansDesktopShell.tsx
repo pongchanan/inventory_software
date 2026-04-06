@@ -25,8 +25,7 @@ export function LoansDesktopShell({
           {loans.slice(0, 50).map((loan) => (
             <tr key={loan.id} className="hover:bg-gray-50/50 transition-colors">
               <td className="px-6 py-4">
-                <p className="font-bold text-gray-900 leading-none mb-1">{loan.user_name}</p>
-                <p className="text-[10px] text-gray-400 font-bold tracking-tight">{loan.user_email || loan.user_uid}</p>
+                <p className="font-bold text-gray-900 leading-none">{loan.user_name}</p>
               </td>
               <td className="px-6 py-4 font-bold text-sm text-gray-700">{loan.item_name}</td>
               <td className="px-6 py-4 text-center">
