@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Home, Package, User, History, Cpu, Users, LayoutDashboard, Wrench, FileText, Box } from 'lucide-react';
+import { Home, Package, User, History, Cpu, Users, LayoutDashboard, Wrench, FileText, Box, AlertTriangle } from 'lucide-react';
 import { useInventory } from '../../../services/hooks/useInventory';
 import { useAuth } from '@/context/AuthContext';
 import { useAdminMode } from '@/context/AdminModeContext';
@@ -60,6 +60,14 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                 >
                     <Wrench size={22} strokeWidth={isActive('/admin/loans') ? 2.5 : 2} />
                     <span className="text-[9px] font-bold whitespace-nowrap">Borrowed</span>
+                </Link>
+
+                <Link
+                    href="/admin/damaged-reports"
+                    className={`flex flex-col items-center gap-1 transition-all duration-300 px-3 py-2 ${isActive('/admin/damaged-reports') ? 'text-amber-500 scale-110' : 'text-gray-400'}`}
+                >
+                    <AlertTriangle size={22} strokeWidth={isActive('/admin/damaged-reports') ? 2.5 : 2} />
+                    <span className="text-[9px] font-bold whitespace-nowrap">Damage</span>
                 </Link>
 
                 <Link

@@ -122,7 +122,7 @@ export default function LoansAdminPage() {
                     {/* ACTIVE LOANS SECTION */}
                     <div className="space-y-4">
                         <h3 className="text-xl font-black flex items-center gap-2 px-2">
-                            <AlertTriangle className="text-orange-500" size={24} /> Items currently being borrowed. ({activeLoans.length})
+                            <AlertTriangle className="text-orange-500" size={24} /> Items currently being borrowed ({activeLoans.length})
                         </h3>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {activeLoans.map(loan => (

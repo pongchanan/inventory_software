@@ -54,3 +54,42 @@ export async function fetchMyDamageReports(): Promise<DamagedItemReportOut[]> {
   if (!res.ok) throw new Error("Failed to fetch damage reports");
   return res.json();
 }
+
+/**
+ * Get all damage reports (admin only)
+ */
+export async function fetchAllDamageReports(): Promise<DamagedItemReportOut[]> {
+  const res = await fetch(`${API_BASE}/api/damaged-reports/`, {
+    cache: "no-store",
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch damage reports");
+  return res.json();
+}
+
+/**
+ * Approve a damage report (admin only)
+ * @param reportId - The ID of the report to approve
+ * @param adminComment - Optional comment from admin
+ */
+export async function approveDamageReport(
+  reportId: number,
+  adminComment: string = ""
+): Promise<DamagedItemReportOut> {
+  const res = await fetch(`${API_BASE}/api/damaged-reports/${reportId}/approve`, {
+    method: "POST",
+    headers: {
+      ...authHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ admin_comment: adminComment }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: "Failed to approve report" }));
+    throw new Error(error.detail || "Failed to approve report");
+  }
+
+  return res.json();
+}

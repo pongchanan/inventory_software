@@ -11,7 +11,8 @@ import {
     Cpu,
     Wrench,
     Users,
-    FileText
+    FileText,
+    AlertTriangle
 } from 'lucide-react';
 import { AuthUser } from '../../../lib/api';
 
@@ -86,6 +87,13 @@ export function DesktopSidebar({ currentUser, onLogout, currentPath }: DesktopSi
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/loans') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
                         >
                             <Wrench size={20} /> Loans & Maintenance
+                        </Link>
+
+                        <Link
+                            href="/admin/damaged-reports"
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${isActive('/admin/damaged-reports') ? 'bg-orange-50 text-[#ee4d2d]' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'}`}
+                        >
+                            <AlertTriangle size={20} /> Damage Reports
                         </Link>
 
                         <Link

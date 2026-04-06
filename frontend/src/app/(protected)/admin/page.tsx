@@ -130,6 +130,7 @@ export default function AdminDashboard() {
   const quickActions = [
     { title: "Manage Equipment", icon: Package, href: "/admin/inventory", color: "bg-orange-500", desc: "Add/Remove Equipment Items" },
     { title: "Loans & Maintenance", icon: Wrench, href: "/admin/loans", color: "bg-green-500", desc: "Track borrowing and report repairs" },
+    { title: "Damage Reports", icon: AlertCircle, href: "/admin/damaged-reports", color: "bg-amber-500", desc: "Review broken item reports" },
     { title: "Manage Members", icon: Users, href: "/admin/users", color: "bg-purple-500", desc: "Access Rights and RFID Cards" },
   ];
 
