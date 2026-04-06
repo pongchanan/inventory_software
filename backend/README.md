@@ -24,9 +24,8 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `POST` | `/login` | No | Authenticate with email + password, returns JWT |
+| `POST` | `/login` | No | Authenticate with email + password, returns JWT and user object |
 | `POST` | `/register` | No | Register a new user. Set `register_card_now: true` to trigger IoT card scan and wait for link |
-| `POST` | `/register/with-card` | No | Register with card_id provided directly (no IoT scan) |
 | `GET` | `/me` | JWT | Get current authenticated user |
 
 ### Users — `/api/users` (admin only)
@@ -41,63 +40,69 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `POST` | `/link-card` | JWT | Tell IoT to enter register mode, wait for card scan, link card to current user |
-| `POST` | `/unlink-card` | JWT | Remove the linked card from the current user |
+| `POST` | `/link-card` | JWT | Tell IoT to enter register mode, wait up to 15s for card scan, link card to current user. Returns `408` on timeout, `409` if already linked |
+| `POST` | `/unlink-card` | JWT | Remove the linked NFC card from current user |
 
 ### Items — `/api/items`
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/` | No | List active items (paginated). Query params: `page` (default 1), `page_size` (default 20, max 100). Each item includes a presigned S3 URL for its first enrolled sample image |
-| `POST` | `/enroll` | Admin | Create a new item and enroll it via video upload. Multipart: `name`, `quantity`, `video` (file). Runs YOLO detection + embedding pipeline. Returns item fields plus `accepted_count`, `rejected_count`, `frames_sampled`, and first sample `image` URL |
-| `PATCH` | `/{item_id}/quantity` | Admin | Adjust stock quantity by a delta. Body: `{ "delta": <int> }`. Positive = add stock, negative = remove. Returns `400` if result would go below 0 |
+| `GET` | `/` | No | List active items (paginated). Query: `page`, `page_size` (max 100). `image` field is a 30-min presigned S3 URL ready for `<img src>` |
+| `POST` | `/enroll` | Admin | Enroll a new item via video upload. Multipart: `name`, `quantity`, `video` (file). Runs YOLO + embedding pipeline. Returns item fields plus `accepted_count`, `rejected_count`, `frames_sampled`, `image` |
+| `PATCH` | `/{item_id}/quantity` | Admin | Adjust stock. Body: `{ "delta": <int> }`. Positive = add, negative = remove. Returns `400` if result goes below 0 |
 
 ### Borrowings — `/api/borrowings`
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/me` | JWT | List current user's active borrowings (paginated) |
-| `GET` | `/users/{user_id}` | Admin | List a specific user's active borrowings (paginated) |
-
-### Sessions — `/api/sessions` (admin only)
+Each borrowing response includes nested `user` (id, name, email, card_id) and `item` (id, name, image_url as presigned S3 URL).
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/` | Admin | List cabinet open/close logs (paginated). Includes user info, open_at, close_at, close_image_path |
-| `GET` | `/images` | Admin | List all session close images as presigned S3 URLs (paginated). Query params: `page`, `page_size` |
-| `POST` | `/{session_id}/close-image` | No | (ESP32-CAM) Upload raw JPEG body to close a session and store image in S3 |
+| `GET` | `/me` | JWT | Paginated list of current user's active (unreturned) borrowings |
+| `GET` | `/admin/all` | Admin | Paginated list of all borrowings across all users |
+| `GET` | `/users/{user_id}` | Admin | Paginated list of a specific user's active borrowings |
+| `GET` | `/popular` | Admin | Paginated list of most-borrowed items ranked by borrow count |
+
+### Sessions — `/api/sessions`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | Admin | Paginated cabinet open/close log. Includes user info, `open_at`, `close_at`, `close_image_path` |
+| `GET` | `/images` | Admin | Paginated list of session close images as presigned S3 URLs |
+| `POST` | `/{session_id}/close-image` | No | (ESP32-CAM) Upload raw JPEG body to close a session and store image in S3. Triggers AI diff in background |
 | `GET` | `/{session_id}/image` | Admin | Redirect to 30-min presigned S3 URL for a session's close image |
 
 ### Damaged Reports — `/api/damaged-reports`
 
+Each report response includes nested `user` (reporter info) and `item` (with `image_url` presigned), plus `illustrated_url` — a presigned URL for the damage photo, ready for `<img src>`.
+
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/` | Admin | List all damage reports across all users |
+| `GET` | `/` | Admin | List all damage reports, newest first |
 | `GET` | `/me` | JWT | List own damage reports |
 | `GET` | `/user/{user_id}` | Admin | List damage reports filed by a specific user |
-| `GET` | `/export` | Admin | Download all damage reports as an Excel file |
+| `GET` | `/export` | Admin | Download all reports as an Excel file |
 | `GET` | `/{report_id}/image` | JWT | Redirect to 30-min presigned S3 URL for the report's illustration image |
-| `POST` | `/` | JWT | File a damage report for the user's currently active borrow. Multipart: `topic`, `description`, `image` (JPEG). `item_id` auto-resolved from active borrowing |
-| `POST` | `/admin` | Admin | File a damage report for any item. Multipart: `topic`, `description`, `item_id`, `image` (JPEG). Decrements item quantity by 1 |
-| `POST` | `/{report_id}/approve` | Admin | Approve a damage report. Optional JSON body: `{ "admin_comment": "..." }`. Sets `approved=true`, closes the borrowing backdated to `report_at`, returns updated report |
+| `POST` | `/` | JWT | File a damage report. Multipart: `topic`, `description`, `image` (JPEG). `item_id` auto-resolved from active borrowing |
+| `POST` | `/admin` | Admin | File a damage report for any item. Multipart: `topic`, `description`, `item_id`, `image` (JPEG). Auto-approved, decrements item quantity by 1 |
+| `POST` | `/{report_id}/approve` | Admin | Approve a user report. Optional body: `{ "admin_comment": "..." }`. Records `approved_by`, closes the linked borrowing backdated to `report_at` |
 
 ### Activity Log — `/api/activity-log` (admin only)
 
-Single endpoint that returns a unified, time-sorted event stream across all significant operations.
+Unified time-sorted event stream across sessions, borrowings, and damage reports.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `GET` | `/` | Admin | Return all events newest-first. Each entry has `event_type`, `timestamp`, `reference_id`, `user_id`, `user_name`, `item_id`, `item_name`, `detail` |
+| `GET` | `/` | Admin | All events newest-first. Each entry: `event_type`, `timestamp`, `reference_id`, `user_id`, `user_name`, `item_id`, `item_name`, `detail` |
 
 **`event_type` values:**
 
-| Value | Triggered by |
-|-------|-------------|
+| Value | Source |
+|-------|--------|
 | `session_open` | Cabinet opened via NFC |
-| `session_close` | Door magnet detected closed |
+| `session_close` | Door magnet detected close |
 | `borrowing` | Item borrowing recorded |
 | `borrowing_return` | Borrowing closed (item returned) |
-| `damage_report` | User or admin filed a damage report |
+| `damage_report` | Damage report filed |
 | `damage_report_approved` | Admin approved a damage report |
 
 ### General
