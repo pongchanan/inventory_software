@@ -1,7 +1,8 @@
 "use client";
 
 import { useAuth } from '@/context/AuthContext';
-import { User, Mail, LogOut, Clock, ShieldCheck, Settings, CreditCard, Loader2 } from 'lucide-react';
+import { useAdminMode } from '@/context/AdminModeContext';
+import { User, Mail, LogOut, Clock, ShieldCheck, Settings, CreditCard, Loader2, ToggleRight, ToggleLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -9,6 +10,7 @@ import { linkCardForUser, unlinkCardForUser, fetchMe } from '@/lib/api';
 
 export default function ProfilePage() {
     const { user, isAdmin, logout, updateUser, token, loading: authLoading } = useAuth();
+    const { isAdminMode, toggleAdminMode } = useAdminMode();
     const router = useRouter();
     const [isLinking, setIsLinking] = useState(false);
     const [isUnlinking, setIsUnlinking] = useState(false);
@@ -193,6 +195,26 @@ export default function ProfilePage() {
                             Notification Settings
                         </div>
                     </button>
+
+                    {isAdmin && (
+                        <button
+                            onClick={toggleAdminMode}
+                            className="md:hidden w-full flex items-center justify-between p-4 bg-purple-50 hover:bg-purple-100 rounded-2xl transition-colors group"
+                        >
+                            <div className="flex items-center gap-3 text-purple-700 font-medium">
+                                <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                                    {isAdminMode ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+                                </div>
+                                <div className="text-left">
+                                    <div>Admin Mode</div>
+                                    <div className="text-xs text-purple-500">{isAdminMode ? 'Admin Navbar' : 'User Navbar'}</div>
+                                </div>
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-xs font-bold ${isAdminMode ? 'bg-purple-200 text-purple-700' : 'bg-purple-100 text-purple-600'}`}>
+                                {isAdminMode ? 'ON' : 'OFF'}
+                            </div>
+                        </button>
+                    )}
 
                     <button
                         onClick={logout}

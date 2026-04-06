@@ -6,8 +6,10 @@ import {
     createItemAuth,
     deleteItemAuth,
     uploadItemImageAuth,
+    enrollItem,
     Item,
     ItemCreate,
+    ItemEnrollOut,
     fetchImageUrl,
 } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -24,6 +26,7 @@ import {
     X,
     ImageIcon,
     Package,
+    Film,
 } from "lucide-react";
 import { InventoryDesktopShell } from "./_components/InventoryDesktopShell";
 import { InventoryMobileShell } from "./_components/InventoryMobileShell";
@@ -48,6 +51,7 @@ export default function InventoryAdminPage() {
     const [form, setForm] = useState<ItemCreate>({ ...emptyForm });
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [videoFile, setVideoFile] = useState<File | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -85,6 +89,10 @@ export default function InventoryAdminPage() {
         }
     };
 
+    const handleVideoSelect = (file: File | null) => {
+        setVideoFile(file);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
@@ -92,14 +100,20 @@ export default function InventoryAdminPage() {
         setSuccessMsg(null);
 
         try {
-            const created = await createItemAuth(form);
-            if (imageFile) {
-                await uploadItemImageAuth(created.uid, imageFile);
+            if (!videoFile) {
+                setSubmitError("Video file is required");
+                setSubmitting(false);
+                return;
             }
-            setSuccessMsg(`Added device "${created.name}" successfully!`);
+
+            const quantity = parseInt(form.quantity?.toString() || "1", 10);
+            const result = await enrollItem(form.name, quantity, videoFile);
+            
+            setSuccessMsg(`Added device "${result.name}" successfully! (Accepted: ${result.accepted_count}/${result.frames_sampled})`);
             setForm({ ...emptyForm });
             setImageFile(null);
             setImagePreview(null);
+            setVideoFile(null);
             setShowForm(false);
             loadItems();
         } catch (err) {
@@ -199,7 +213,36 @@ export default function InventoryAdminPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-700">Device Image</label>
+                        <label className="text-sm font-bold text-gray-700">Device Video (for AI Training) *</label>
+                        <div className="flex flex-col gap-3">
+                            <label className="flex items-center gap-2 cursor-pointer bg-blue-100 hover:bg-blue-200 px-6 py-3 rounded-2xl transition-all font-bold text-sm text-blue-700">
+                                <Film className="w-5 h-5" /> Upload Video
+                                <input 
+                                    type="file" 
+                                    accept="video/*" 
+                                    className="hidden" 
+                                    onChange={(e) => handleVideoSelect(e.target.files?.[0] || null)}
+                                    required
+                                />
+                            </label>
+                            {videoFile && (
+                                <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-2xl border border-blue-200">
+                                    <CheckCircle className="w-5 h-5 text-blue-600" />
+                                    <span className="text-sm font-medium text-blue-700">{videoFile.name}</span>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setVideoFile(null)}
+                                        className="ml-auto text-blue-400 hover:text-blue-600"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-700">Device Image (Optional)</label>
                         <div className="flex flex-wrap items-center gap-4">
                             <label className="flex items-center gap-2 cursor-pointer bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-2xl transition-all font-bold text-sm">
                                 <ImageIcon className="w-5 h-5" /> Choose Image

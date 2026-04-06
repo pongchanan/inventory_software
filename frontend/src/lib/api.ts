@@ -41,7 +41,9 @@ export {
   updateItem,
   uploadItemImage,
   uploadItemImageAuth,
+  enrollItem,
 } from "./api_client/items";
+export type { ItemEnrollOut } from "./api_client/items";
 export {
   createLoan,
   fetchActiveLoanDetails,

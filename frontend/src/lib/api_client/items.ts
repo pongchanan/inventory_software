@@ -9,6 +9,17 @@ import {
 } from "./core";
 import { Item, ItemCreate, ItemTypeApi } from "./types";
 
+export interface ItemEnrollOut {
+  id: number;
+  name: string;
+  quantity: number;
+  is_active: boolean;
+  image: string | null;
+  accepted_count: number;
+  rejected_count: number;
+  frames_sampled: number;
+}
+
 export async function fetchItems(available?: boolean): Promise<Item[]> {
   const itemTypes = await fetchItemTypes();
   const mapped = itemTypes.map(mapItemTypeToItem);
@@ -71,4 +82,28 @@ export async function deleteItemAuth(uid: string): Promise<void> {
 
 export async function uploadItemImageAuth(uid: string, file: File): Promise<Item> {
   throw new Error("POST /api/item-types/{id}/images endpoint not yet implemented in backend. Please implement image upload endpoint.");
+}
+
+export async function enrollItem(
+  name: string,
+  quantity: number,
+  video: File
+): Promise<ItemEnrollOut> {
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("quantity", quantity.toString());
+  formData.append("video", video);
+
+  const res = await fetch(`${API_BASE}/api/items/enroll`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to enroll item" }));
+    throw new Error(err.detail || "Failed to enroll item");
+  }
+
+  return await res.json();
 }
