@@ -88,7 +88,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                 className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400'}`}
             >
                 <Home size={22} strokeWidth={isActive('/') ? 2.5 : 2} />
-                <span className="text-[10px] font-bold">ของในตู้</span>
+                <span className="text-[10px] font-bold">Items</span>
             </Link>
 
             <Link
@@ -96,7 +96,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                 className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative ${isActive('/borrowed') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400'}`}
             >
                 <Package size={22} strokeWidth={isActive('/borrowed') ? 2.5 : 2} />
-                <span className="text-[10px] font-bold">ยืม-คืน</span>
+                <span className="text-[10px] font-bold">Borrowed</span>
                 {borrowedCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-[#ee4d2d] text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
                         {borrowedCount}
