@@ -30,7 +30,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                     className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/admin') && currentPath === '/admin' ? 'text-gray-900 scale-110' : 'text-gray-400'}`}
                 >
                     <LayoutDashboard size={22} strokeWidth={isActive('/admin') && currentPath === '/admin' ? 2.5 : 2} />
-                    <span className="text-[10px] font-bold">Summary]</span>
+                    <span className="text-[10px] font-bold">Summary</span>
                 </Link>
 
                 <Link

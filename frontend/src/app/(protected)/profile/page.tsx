@@ -5,14 +5,13 @@ import { User, Mail, LogOut, Clock, ShieldCheck, Settings, CreditCard, Loader2 }
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { linkCardForUser, unlinkCardForUser } from '@/lib/api';
+import { linkCardForUser, unlinkCardForUser, fetchMe } from '@/lib/api';
 
 export default function ProfilePage() {
-    const { user, isAdmin, logout, loading: authLoading } = useAuth();
+    const { user, isAdmin, logout, updateUser, token, loading: authLoading } = useAuth();
     const router = useRouter();
     const [isLinking, setIsLinking] = useState(false);
     const [isUnlinking, setIsUnlinking] = useState(false);
-    const [cardLinked, setCardLinked] = useState(!!user?.nfc_card_uid);
     const [error, setError] = useState<string | null>(null);
     const [errorType, setErrorType] = useState<'error' | 'info' | null>(null);
 
@@ -22,27 +21,38 @@ export default function ProfilePage() {
         }
     }, [user, authLoading, router]);
 
+    // Fetch latest user data when page loads
     useEffect(() => {
-        // Check if card is linked when user data loads
-        setCardLinked(!!user?.nfc_card_uid);
-        // Clear any previous errors when page data refreshes
-        setError(null);
-        setErrorType(null);
-    }, [user?.nfc_card_uid]);
+        const loadLatestUserData = async () => {
+            if (!token) return;
+            try {
+                const latestUser = await fetchMe(token);
+                updateUser(latestUser);
+            } catch (err) {
+                console.error('Failed to fetch latest user data:', err);
+            }
+        };
+
+        if (user && !authLoading) {
+            loadLatestUserData();
+        }
+    }, []); // Run once on mount
+
+    // Derive cardLinked directly from user object
+    const cardLinked = !!user?.nfc_card_uid;
 
     const handleLinkCard = async () => {
         setIsLinking(true);
         setError(null);
         try {
-            await linkCardForUser();
-            setCardLinked(true);
+            const updatedUser = await linkCardForUser();
+            updateUser(updatedUser);
             setErrorType(null);
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : "Failed to link card";
             
-            // If card is already linked, show info message and set cardLinked to true
+            // If card is already linked, show info message
             if (errorMsg.includes("You already have a card linked")) {
-                setCardLinked(true);
                 setError(errorMsg);
                 setErrorType('info');
             } else {
@@ -58,8 +68,8 @@ export default function ProfilePage() {
         setIsUnlinking(true);
         setError(null);
         try {
-            await unlinkCardForUser();
-            setCardLinked(false);
+            const updatedUser = await unlinkCardForUser();
+            updateUser(updatedUser);
             setErrorType(null);
         } catch (err) {
             const errorMsg = err instanceof Error ? err.message : "Failed to unlink card";
@@ -69,6 +79,12 @@ export default function ProfilePage() {
             setIsUnlinking(false);
         }
     };
+
+    // Clear error when user data changes
+    useEffect(() => {
+        setError(null);
+        setErrorType(null);
+    }, [user?.nfc_card_uid]);
 
     if (authLoading || !user) {
         return null;

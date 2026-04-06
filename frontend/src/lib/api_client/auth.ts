@@ -4,6 +4,7 @@ import { AuthUser, LoginResponse, RegistrationOut } from "./types";
 function normalizeAuthUser(row: {
   id: number;
   nfc_card_uid?: string;
+  card_id?: string;
   uid?: string;
   name: string;
   email: string | null;
@@ -16,7 +17,7 @@ function normalizeAuthUser(row: {
   return {
     id: row.id,
     uid: row.uid ?? "",
-    nfc_card_uid: row.nfc_card_uid,
+    nfc_card_uid: row.nfc_card_uid ?? row.card_id,
     name: row.name,
     email: row.email,
     role: row.role,
@@ -40,7 +41,9 @@ export async function fetchUsers(): Promise<AuthUser[]> {
   if (!res.ok) throw new Error("Failed to fetch users");
   const rows: Array<{
     id: number;
-    nfc_card_uid: string;
+    nfc_card_uid?: string;
+    card_id?: string;
+    uid?: string;
     name: string;
     email: string | null;
     role: string;
@@ -68,6 +71,7 @@ export async function login(email: string, password: string): Promise<LoginRespo
     user: {
       id: number;
       nfc_card_uid?: string;
+      card_id?: string;
       uid?: string;
       name: string;
       email: string | null;
@@ -94,6 +98,7 @@ export async function fetchMe(token: string): Promise<AuthUser> {
   const payload: {
     id: number;
     nfc_card_uid?: string;
+    card_id?: string;
     uid?: string;
     name: string;
     email: string | null;
@@ -126,6 +131,7 @@ export async function register(
     user: {
       id: number;
       nfc_card_uid?: string;
+      card_id?: string;
       uid?: string;
       name: string;
       email: string | null;
@@ -162,6 +168,7 @@ export async function registerWithCard(
   const payload: {
     id: number;
     nfc_card_uid?: string;
+    card_id?: string;
     uid?: string;
     name: string;
     email: string | null;
@@ -190,6 +197,7 @@ export async function completeRegistration(
   const payload: {
     id: number;
     nfc_card_uid?: string;
+    card_id?: string;
     uid?: string;
     name: string;
     email: string | null;
@@ -215,6 +223,7 @@ export async function linkCardForUser(): Promise<AuthUser> {
   const payload: {
     id: number;
     nfc_card_uid?: string;
+    card_id?: string;
     uid?: string;
     name: string;
     email: string | null;
@@ -239,6 +248,7 @@ export async function unlinkCardForUser(): Promise<AuthUser> {
   const payload: {
     id: number;
     nfc_card_uid?: string;
+    card_id?: string;
     uid?: string;
     name: string;
     email: string | null;
