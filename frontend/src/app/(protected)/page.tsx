@@ -9,11 +9,20 @@ import { Search, Filter } from 'lucide-react';
 export default function HomePage() {
   const { sortedItems, searchQuery, setSearchQuery, sortBy, setSortBy } = useInventory();
   const [showFilters, setShowFilters] = useState(false);
+  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'in-stock' | 'out-of-stock'>('all');
 
-  // Filter items by search query
-  const filteredItems = sortedItems.filter((item: Item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter items by search query and availability
+  const filteredItems = sortedItems.filter((item: Item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (availabilityFilter === 'in-stock') {
+      return matchesSearch && item.qty > 0;
+    } else if (availabilityFilter === 'out-of-stock') {
+      return matchesSearch && item.qty === 0;
+    }
+    
+    return matchesSearch;
+  });
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -64,16 +73,70 @@ export default function HomePage() {
         </div>
 
         {/* Filter Badge - Shows active filters */}
-        {searchQuery && (
+        {(searchQuery || availabilityFilter !== 'all') && (
           <div className="flex flex-wrap gap-2">
-            <div className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full flex items-center gap-2">
-              Search: "{searchQuery}"
-              <button
-                onClick={() => setSearchQuery('')}
-                className="ml-1 text-blue-500 hover:text-blue-800"
-              >
-                ✕
-              </button>
+            {searchQuery && (
+              <div className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full flex items-center gap-2">
+                Search: "{searchQuery}"
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="ml-1 text-blue-500 hover:text-blue-800"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            {availabilityFilter !== 'all' && (
+              <div className="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded-full flex items-center gap-2">
+                {availabilityFilter === 'in-stock' ? 'In Stock' : 'Out of Stock'}
+                <button
+                  onClick={() => setAvailabilityFilter('all')}
+                  className="ml-1 text-purple-500 hover:text-purple-800"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Advanced Filters */}
+        {showFilters && (
+          <div className="bg-gradient-to-br from-orange-50 to-white p-4 rounded-2xl border border-orange-100 space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Availability</label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setAvailabilityFilter('all')}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                    availabilityFilter === 'all'
+                      ? 'bg-[#ee4d2d] text-white'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:border-[#ee4d2d]'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setAvailabilityFilter('in-stock')}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                    availabilityFilter === 'in-stock'
+                      ? 'bg-[#ee4d2d] text-white'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:border-[#ee4d2d]'
+                  }`}
+                >
+                  In Stock
+                </button>
+                <button
+                  onClick={() => setAvailabilityFilter('out-of-stock')}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                    availabilityFilter === 'out-of-stock'
+                      ? 'bg-[#ee4d2d] text-white'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:border-[#ee4d2d]'
+                  }`}
+                >
+                  Out of Stock
+                </button>
+              </div>
             </div>
           </div>
         )}

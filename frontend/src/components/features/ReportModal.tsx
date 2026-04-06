@@ -102,6 +102,7 @@ export function ReportModal({
                                 src={reportImagePreview}
                                 alt="Evidence Preview"
                                 fill
+                                unoptimized
                                 style={{ objectFit: 'contain' }}
                                 className="opacity-90"
                             />

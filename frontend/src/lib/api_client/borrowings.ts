@@ -11,6 +11,7 @@ export interface ItemBasic {
   id: number;
   name: string;
   image_path?: string | null;
+  image_url?: string | null;
 }
 
 export interface BorrowingRecord {

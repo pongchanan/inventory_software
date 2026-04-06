@@ -37,8 +37,7 @@ export const inventoryRepository = {
                     id: loan.id,
                     name: loan.item?.name || `Item ${loan.item_id}`,
                     date: formatter.format(dateObj),
-                    loc: 'Not Specified',
-                    img: '',
+                    img: loan.item?.image_url || '',
                     status: (loan.status || 'active') as 'active' | 'overdue' | 'returning' | 'damage_reported' | 'damage_approved'
                 };
             });

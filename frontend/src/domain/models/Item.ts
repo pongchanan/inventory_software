@@ -11,7 +11,6 @@ export interface BorrowedItem {
     id: number;
     name: string;
     date: string;
-    loc: string;
     img: string;
     status?: 'active' | 'overdue' | 'returning' | 'damage_reported' | 'damage_approved';
 }

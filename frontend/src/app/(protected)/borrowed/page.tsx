@@ -6,7 +6,7 @@ import { useDamageReport } from '../../../services/hooks/useDamageReport';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Package, MapPin, History, AlertTriangle, Search, Filter } from 'lucide-react';
+import { Package, History, AlertTriangle, Search, Filter } from 'lucide-react';
 import Image from 'next/image';
 import { ReportModal } from '../../../components/features/ReportModal';
 import { BorrowedItem } from '../../../domain/models/Item';
@@ -46,17 +46,16 @@ export default function BorrowedPage() {
 
     // Filter and sort borrowed items
     let filteredItems = borrowedItems
-        .filter((item: BorrowedItem) =>
-            (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.loc?.toLowerCase().includes(searchQuery.toLowerCase())) &&
-            (statusFilter === 'all' || item.status === statusFilter)
-        )
+        .filter((item: BorrowedItem) => {
+            const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+            
+            return matchesSearch && matchesStatus;
+        })
         .sort((a: BorrowedItem, b: BorrowedItem) => {
             switch (sortBy) {
                 case 'name':
                     return a.name.localeCompare(b.name);
-                case 'location':
-                    return (a.loc || '').localeCompare(b.loc || '');
                 case 'date-desc':
                     return new Date(b.date).getTime() - new Date(a.date).getTime();
                 case 'date-asc':
@@ -105,7 +104,6 @@ export default function BorrowedPage() {
                         <option value="date-desc">Newest First</option>
                         <option value="date-asc">Oldest First</option>
                         <option value="name">Name (A-Z)</option>
-                        <option value="location">Location (A-Z)</option>
                     </select>
 
                     <button
@@ -117,17 +115,30 @@ export default function BorrowedPage() {
                 </div>
 
                 {/* Filter Badge - Shows active filters */}
-                {searchQuery && (
+                {(searchQuery || statusFilter !== 'all') && (
                     <div className="flex flex-wrap gap-2">
-                        <div className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full flex items-center gap-2">
-                            Search: "{searchQuery}"
-                            <button
-                                onClick={() => setSearchQuery('')}
-                                className="ml-1 text-blue-500 hover:text-blue-800"
-                            >
-                                ✕
-                            </button>
-                        </div>
+                        {searchQuery && (
+                            <div className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full flex items-center gap-2">
+                                Search: "{searchQuery}"
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="ml-1 text-blue-500 hover:text-blue-800"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+                        {statusFilter !== 'all' && (
+                            <div className="px-3 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full flex items-center gap-2">
+                                Status: {statusLabels[statusFilter]}
+                                <button
+                                    onClick={() => setStatusFilter('all')}
+                                    className="ml-1 text-green-500 hover:text-green-800"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -175,6 +186,7 @@ export default function BorrowedPage() {
                                     src={item.img}
                                     alt={item.name}
                                     fill
+                                    unoptimized
                                     style={{ objectFit: 'cover' }}
                                     sizes="(max-width: 640px) 4rem, 6rem"
                                 />
@@ -188,7 +200,6 @@ export default function BorrowedPage() {
                                 <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded uppercase">Status: Borrowed</span>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-sm text-gray-500">
-                                <div className="flex items-center gap-1.5"><MapPin size={14} className="text-[#ee4d2d]" /> {item.loc}</div>
                                 <div className="flex items-center gap-1.5"><History size={14} className="text-[#ee4d2d]" /> Borrowed on {item.date}</div>
                             </div>
                         </div>
