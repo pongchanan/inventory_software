@@ -30,7 +30,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                     className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/admin') && currentPath === '/admin' ? 'text-gray-900 scale-110' : 'text-gray-400'}`}
                 >
                     <LayoutDashboard size={22} strokeWidth={isActive('/admin') && currentPath === '/admin' ? 2.5 : 2} />
-                    <span className="text-[10px] font-bold">สรุปผล</span>
+                    <span className="text-[10px] font-bold">Summary]</span>
                 </Link>
 
                 <Link
@@ -54,7 +54,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                     className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/profile') ? 'text-gray-900 scale-110' : 'text-gray-400'}`}
                 >
                     <User size={22} strokeWidth={isActive('/profile') ? 2.5 : 2} />
-                    <span className="text-[10px] font-bold">ตั้งค่า</span>
+                    <span className="text-[10px] font-bold">Profile</span>
                 </Link>
             </div>
         );
@@ -88,7 +88,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                 className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/history') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400'}`}
             >
                 <History size={22} strokeWidth={isActive('/history') ? 2.5 : 2} />
-                <span className="text-[10px] font-bold">ประวัติ</span>
+                <span className="text-[10px] font-bold">History</span>
             </Link>
 
             <Link
@@ -96,7 +96,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                 className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${isActive('/profile') ? 'text-[#ee4d2d] scale-110' : 'text-gray-400'}`}
             >
                 <User size={22} strokeWidth={isActive('/profile') ? 2.5 : 2} />
-                <span className="text-[10px] font-bold">โปรไฟล์</span>
+                <span className="text-[10px] font-bold">Profile</span>
             </Link>
         </div>
     );

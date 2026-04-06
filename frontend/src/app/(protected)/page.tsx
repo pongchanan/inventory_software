@@ -1,15 +1,23 @@
 "use client";
 
+import { useState } from 'react';
 import { useInventory } from '../../services/hooks/useInventory';
 import { ItemCard } from '../../components/inventory/ItemCard';
 import { Item } from '../../domain/models/Item';
+import { Search, Filter } from 'lucide-react';
 
 export default function HomePage() {
-  const { sortedItems } = useInventory();
+  const { sortedItems, searchQuery, setSearchQuery, sortBy, setSortBy } = useInventory();
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filter items by search query
+  const filteredItems = sortedItems.filter((item: Item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-      <div className="flex items-end justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-black mb-1">All Devices</h2>
           <p className="text-gray-500 text-sm">Browse the available equipment for loan in the Smart Inventory cabinet.</p>
@@ -21,11 +29,61 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Search and Filter Bar */}
+      <div className="space-y-3 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+              <Search size={18} />
+            </div>
+            <input
+              type="text"
+              placeholder="Search devices..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium outline-none focus:border-[#ee4d2d] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm"
+            />
+          </div>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="px-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium outline-none focus:border-[#ee4d2d] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm w-full sm:w-auto"
+          >
+            <option value="name">Name (A-Z)</option>
+            <option value="qty-desc">Highest Stock</option>
+            <option value="qty-asc">Low Stock</option>
+          </select>
+
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="px-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-medium hover:bg-gray-50 transition-all shadow-sm w-full sm:w-auto flex items-center justify-center gap-2"
+          >
+            <Filter size={18} /> {showFilters ? 'Hide' : 'Show'}
+          </button>
+        </div>
+
+        {/* Filter Badge - Shows active filters */}
+        {searchQuery && (
+          <div className="flex flex-wrap gap-2">
+            <div className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full flex items-center gap-2">
+              Search: "{searchQuery}"
+              <button
+                onClick={() => setSearchQuery('')}
+                className="ml-1 text-blue-500 hover:text-blue-800"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 pb-24">
-        {sortedItems.map((item: Item) => (
+        {filteredItems.map((item: Item) => (
           <ItemCard key={item.id} item={item} />
         ))}
-        {sortedItems.length === 0 && (
+        {filteredItems.length === 0 && (
           <div className="col-span-full py-20 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-200">
             No devices found matching your search
           </div>

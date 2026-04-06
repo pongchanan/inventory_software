@@ -11,7 +11,7 @@ export const inventoryRepository = {
                 name: item.name,
                 qty: item.quantity,
                 total: item.quantity,
-                cabinet: item.location || 'ไม่ระบุ',
+                cabinet: item.location || 'Unspecified',
                 img: getImageUrl(item.image_url)
             }));
         } catch (error) {

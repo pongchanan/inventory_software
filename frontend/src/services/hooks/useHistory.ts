@@ -96,7 +96,7 @@ export function useHistory() {
                             dueAt: new Date(loan.due_at),
                             status: loan.status,
                             img: getImageUrl(loan.item_image_url),
-                            category: loan.item_category || 'ไม่ระบุ'
+                            category: loan.item_category || 'Unspecified'
                         };
                         if (index === 0) console.log("useHistory: First transformed item:", item);
                         return item;

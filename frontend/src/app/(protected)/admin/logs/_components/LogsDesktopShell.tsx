@@ -13,11 +13,11 @@ export function LogsDesktopShell({
       <table className="w-full text-left">
         <thead className="bg-gray-50 border-b border-gray-100">
           <tr>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">วัน-เวลา</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">ผู้ใช้งาน</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">ประเภทกิจกรรม</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">สถานะ</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">รายละเอียด</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Date & Time</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">User</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Activity Type</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Details</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">

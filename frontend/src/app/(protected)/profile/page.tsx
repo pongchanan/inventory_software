@@ -13,6 +13,8 @@ export default function ProfilePage() {
     const [isLinking, setIsLinking] = useState(false);
     const [isUnlinking, setIsUnlinking] = useState(false);
     const [cardLinked, setCardLinked] = useState(!!user?.nfc_card_uid);
+    const [error, setError] = useState<string | null>(null);
+    const [errorType, setErrorType] = useState<'error' | 'info' | null>(null);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -21,16 +23,32 @@ export default function ProfilePage() {
     }, [user, authLoading, router]);
 
     useEffect(() => {
+        // Check if card is linked when user data loads
         setCardLinked(!!user?.nfc_card_uid);
+        // Clear any previous errors when page data refreshes
+        setError(null);
+        setErrorType(null);
     }, [user?.nfc_card_uid]);
 
     const handleLinkCard = async () => {
         setIsLinking(true);
+        setError(null);
         try {
             await linkCardForUser();
             setCardLinked(true);
+            setErrorType(null);
         } catch (err) {
-            console.error("Failed to link card:", err);
+            const errorMsg = err instanceof Error ? err.message : "Failed to link card";
+            
+            // If card is already linked, show info message and set cardLinked to true
+            if (errorMsg.includes("You already have a card linked")) {
+                setCardLinked(true);
+                setError(errorMsg);
+                setErrorType('info');
+            } else {
+                setError(errorMsg);
+                setErrorType('error');
+            }
         } finally {
             setIsLinking(false);
         }
@@ -38,11 +56,15 @@ export default function ProfilePage() {
 
     const handleUnlinkCard = async () => {
         setIsUnlinking(true);
+        setError(null);
         try {
             await unlinkCardForUser();
             setCardLinked(false);
+            setErrorType(null);
         } catch (err) {
-            console.error("Failed to unlink card:", err);
+            const errorMsg = err instanceof Error ? err.message : "Failed to unlink card";
+            setError(errorMsg);
+            setErrorType('error');
         } finally {
             setIsUnlinking(false);
         }
@@ -54,7 +76,24 @@ export default function ProfilePage() {
 
     return (
         <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 pb-24">
-            <h2 className="text-3xl font-black mb-8">โปรไฟล์ส่วนตัว</h2>
+            <h2 className="text-3xl font-black mb-8">Profile</h2>
+
+            {/* Error/Info Alert */}
+            {error && (
+                <div className={`mb-6 p-4 rounded-2xl border-2 flex items-center justify-between ${
+                    errorType === 'info'
+                        ? 'bg-blue-50 border-blue-200 text-blue-800'
+                        : 'bg-red-50 border-red-200 text-red-800'
+                }`}>
+                    <p className="font-medium text-sm">{error}</p>
+                    <button
+                        onClick={() => setError(null)}
+                        className="text-lg font-bold hover:opacity-70"
+                    >
+                        ✕
+                    </button>
+                </div>
+            )}
 
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="h-32 bg-gradient-to-r from-[#ee4d2d] to-[#ff7355]"></div>

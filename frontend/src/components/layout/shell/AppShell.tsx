@@ -3,7 +3,6 @@
 import { useMediaQuery } from "../../../services/hooks/useMediaQuery";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { MobileBottomNav } from "./MobileBottomNav";
-import { TopHeader } from "./TopHeader";
 
 import { useAuth } from "../../../context/AuthContext";
 import { usePathname } from "next/navigation";
@@ -37,7 +36,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           currentPath={pathname}
         />
         <div className="flex-grow flex flex-col h-full overflow-hidden relative">
-          <TopHeader />
           <main className="flex-grow overflow-y-auto w-full no-scrollbar relative z-10">
             {children}
           </main>

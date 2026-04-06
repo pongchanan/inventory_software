@@ -146,7 +146,7 @@ export default function LoansAdminPage() {
                     {/* FULL HISTORY TABLE */}
                     <div className="space-y-4 pt-4">
                         <h3 className="text-xl font-black flex items-center gap-2 px-2">
-                            <History className="text-gray-400" size={24} /> ประวัติการยืม-คืนทั้งหมด
+                            <History className="text-gray-400" size={24} /> Complete Borrowing and Return History
                         </h3>
                         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                             <LoansDesktopShell loans={loans} formatDate={formatDate} StatusBadge={StatusBadge} />
