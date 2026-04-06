@@ -10,7 +10,7 @@ export interface HistoryItem {
     dueAt: Date;
     status: string;
     img: string;
-    category: string;
+    category?: string;
 }
 
 export function useHistory() {
@@ -96,7 +96,6 @@ export function useHistory() {
                             dueAt: new Date(loan.due_at),
                             status: loan.status,
                             img: getImageUrl(loan.item_image_url),
-                            category: loan.item_category || 'Unspecified'
                         };
                         if (index === 0) console.log("useHistory: First transformed item:", item);
                         return item;

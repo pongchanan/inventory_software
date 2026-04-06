@@ -11,7 +11,6 @@ export const inventoryRepository = {
                 name: item.name,
                 qty: item.quantity,
                 total: item.quantity,
-                cabinet: item.location || 'Unspecified',
                 img: getImageUrl(item.image_url)
             }));
         } catch (error) {
@@ -40,7 +39,7 @@ export const inventoryRepository = {
                     date: formatter.format(dateObj),
                     loc: 'Not Specified',
                     img: '',
-                    status: (loan.status || 'active') as 'active' | 'overdue' | 'returning'
+                    status: (loan.status || 'active') as 'active' | 'overdue' | 'returning' | 'damage_reported' | 'damage_approved'
                 };
             });
         } catch (error) {

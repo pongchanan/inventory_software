@@ -20,6 +20,7 @@ export interface DamagedItemReportOut {
   topic: string;
   description: string;
   illustrated_path: string;
+  illustrated_url?: string;
   user?: UserBasic;
   item?: ItemBasic;
   report_at: string;

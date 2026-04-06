@@ -15,7 +15,6 @@ import {
   Download,
 } from "lucide-react";
 import { fetchAllDamageReports, approveDamageReport, DamagedItemReportOut } from "@/lib/api_client/damaged_reports";
-import { API_BASE, authHeaders } from "@/lib/api_client/core";
 import * as XLSX from "xlsx";
 
 type ReportStatus = "all" | "pending" | "approved";
@@ -136,10 +135,10 @@ function ReportCard({ report, onApprove }: { report: DamagedItemReportOut; onApp
         )}
 
         {/* Image thumbnail */}
-        {report.illustrated_path && (
+        {report.illustrated_url && (
           <div className="relative h-32 sm:h-40 bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
             <Image
-              src={`${API_BASE}/api/damaged-reports/${report.id}/image`}
+              src={report.illustrated_url}
               alt="Damage report image"
               fill
               className="object-cover"
