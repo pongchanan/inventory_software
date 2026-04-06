@@ -3,13 +3,32 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class UserBasic(BaseModel):
+    id: int
+    name: str
+    email: str | None = None
+    card_id: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class ItemBasic(BaseModel):
+    id: int
+    name: str
+    image_path: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
 class DamagedItemReportOut(BaseModel):
     id: int
     topic: str
     description: str
     item_id: int
+    item: ItemBasic | None = None
     report_at: datetime
     report_by: int
+    user: UserBasic | None = None
     illustrated_path: str
     approved: bool
     approved_by: int | None

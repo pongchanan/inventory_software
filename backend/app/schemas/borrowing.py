@@ -8,7 +8,7 @@ class UserBasic(BaseModel):
     id: int
     name: str
     email: str | None = None
-    uid: str | None = None
+    card_id: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -17,8 +17,7 @@ class ItemBasic(BaseModel):
     """Basic item info for loan display"""
     id: int
     name: str
-    category: str | None = None
-    image_url: str | None = None
+    image_path: str | None = None
 
     model_config = {"from_attributes": True}
 

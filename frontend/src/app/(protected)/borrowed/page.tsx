@@ -169,14 +169,18 @@ export default function BorrowedPage() {
             <div className="space-y-4">
                 {filteredItems.map((item: BorrowedItem) => (
                     <div key={item.id} className="bg-white p-4 sm:p-6 rounded-3xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 border border-gray-50 hover:border-orange-100 transition-colors">
-                        <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-50 rounded-2xl overflow-hidden flex-shrink-0 border relative">
-                            <Image
-                                src={item.img}
-                                alt={item.name}
-                                fill
-                                style={{ objectFit: 'cover' }}
-                                sizes="(max-width: 640px) 4rem, 6rem"
-                            />
+                        <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-50 rounded-2xl overflow-hidden flex-shrink-0 border relative flex items-center justify-center">
+                            {item.img ? (
+                                <Image
+                                    src={item.img}
+                                    alt={item.name}
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                    sizes="(max-width: 640px) 4rem, 6rem"
+                                />
+                            ) : (
+                                <Package size={32} className="text-gray-300" />
+                            )}
                         </div>
                         <div className="flex-grow">
                             <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -190,12 +194,12 @@ export default function BorrowedPage() {
                         </div>
                         <button
                             onClick={() => openReportModal(item)}
-                            disabled={!hasActiveBorrowings}
-                            title={!hasActiveBorrowings ? "No active borrowings to report" : ""}
+                            disabled={item.status === 'damage_reported' || item.status === 'damage_approved'}
+                            title={item.status === 'damage_reported' ? "This item has already been reported as damaged (pending admin review)" : item.status === 'damage_approved' ? "This item has been approved for damage and is no longer available to borrow" : "Report damage for this item"}
                             className={`w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold rounded-2xl shrink-0 transition-all shadow-sm ${
-                                hasActiveBorrowings
-                                    ? 'bg-orange-50 text-[#ee4d2d] hover:bg-[#ee4d2d] hover:text-white'
-                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                                item.status === 'damage_reported' || item.status === 'damage_approved'
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50'
+                                    : 'bg-orange-50 text-[#ee4d2d] hover:bg-[#ee4d2d] hover:text-white'
                             }`}
                         >
                             <AlertTriangle size={18} /> Report Damage

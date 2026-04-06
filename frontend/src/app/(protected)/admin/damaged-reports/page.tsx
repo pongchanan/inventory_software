@@ -18,7 +18,7 @@ import { fetchAllDamageReports, approveDamageReport, DamagedItemReportOut } from
 import { API_BASE, authHeaders } from "@/lib/api_client/core";
 import * as XLSX from "xlsx";
 
-type ReportStatus = "all" | "pending" | "approved" | "rejected";
+type ReportStatus = "all" | "pending" | "approved";
 
 interface ApprovalModalProps {
   report: DamagedItemReportOut | null;
@@ -103,11 +103,7 @@ function ReportCard({ report, onApprove }: { report: DamagedItemReportOut; onApp
     rejected: <AlertTriangle size={14} />,
   };
 
-  const statusLabel = report.status as keyof typeof statusColors;
-  const created = new Date(report.created_at);
-  const now = new Date();
-  const diffHours = Math.floor((now.getTime() - created.getTime()) / 3600000);
-  const timeAgo = diffHours < 1 ? "Just now" : diffHours === 1 ? "1 hour ago" : `${diffHours}h ago`;
+  const statusLabel = report.approved ? "approved" : "pending";
 
   return (
     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
@@ -116,7 +112,9 @@ function ReportCard({ report, onApprove }: { report: DamagedItemReportOut; onApp
         <div className="flex items-start justify-between gap-4">
           <div className="flex-grow">
             <h3 className="font-black text-gray-900 text-sm sm:text-base">{report.topic}</h3>
-            <p className="text-xs text-gray-400 font-bold mt-1">{timeAgo}</p>
+            <p className="text-xs text-gray-400 font-bold mt-1">
+              {report.item?.name || `Item ${report.item_id}`} • Reported by <span className="text-gray-600">{report.user?.name || 'Unknown'}</span>
+            </p>
           </div>
           <span className={`px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5 shrink-0 ${statusColors[statusLabel as keyof typeof statusColors]}`}>
             {statusIcons[statusLabel as keyof typeof statusIcons]}
@@ -138,7 +136,7 @@ function ReportCard({ report, onApprove }: { report: DamagedItemReportOut; onApp
         )}
 
         {/* Image thumbnail */}
-        {report.image_key && (
+        {report.illustrated_path && (
           <div className="relative h-32 sm:h-40 bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
             <Image
               src={`${API_BASE}/api/damaged-reports/${report.id}/image`}
@@ -151,7 +149,7 @@ function ReportCard({ report, onApprove }: { report: DamagedItemReportOut; onApp
         )}
 
         {/* Actions */}
-        {report.status === "pending" && (
+        {!report.approved && (
           <button
             onClick={() => onApprove(report)}
             className="w-full px-4 py-2 text-xs sm:text-sm font-black text-white bg-green-500 rounded-xl hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
@@ -213,7 +211,7 @@ export default function DamagedReportsAdminPage() {
         setReports((prev) =>
           prev.map((r) =>
             r.id === selectedReport.id
-              ? { ...r, status: "approved", admin_comment: comment }
+              ? { ...r, approved: true, admin_comment: comment }
               : r
           )
         );
@@ -237,8 +235,9 @@ export default function DamagedReportsAdminPage() {
       "Report ID": r.id,
       "Topic": r.topic,
       "Description": r.description,
-      "Status": r.status,
-      "Submitted": new Date(r.created_at).toLocaleDateString(),
+      "Item": r.item?.name || `Item ${r.item_id}`,
+      "Status": r.approved ? "Approved" : "Pending",
+      "Submitted": new Date(r.report_at).toLocaleDateString(),
       "Admin Comment": r.admin_comment || "-",
     }));
 
@@ -247,6 +246,7 @@ export default function DamagedReportsAdminPage() {
       { wch: 12 },
       { wch: 15 },
       { wch: 30 },
+      { wch: 20 },
       { wch: 12 },
       { wch: 15 },
       { wch: 30 }
@@ -259,14 +259,16 @@ export default function DamagedReportsAdminPage() {
 
   const filteredReports = reports.filter((r) => {
     if (statusFilter === "all") return true;
-    return r.status === statusFilter;
+    if (statusFilter === "pending") return !r.approved;
+    if (statusFilter === "approved") return r.approved;
+    return false;
   });
 
   const stats = {
     total: reports.length,
-    pending: reports.filter((r) => r.status === "pending").length,
-    approved: reports.filter((r) => r.status === "approved").length,
-    rejected: reports.filter((r) => r.status === "rejected").length,
+    pending: reports.filter((r) => !r.approved).length,
+    approved: reports.filter((r) => r.approved && !r.admin_comment).length,
+    rejected: reports.filter((r) => r.admin_comment && r.approved).length,
   };
 
   if (authLoading || !user || !isAdmin) return null;
@@ -290,7 +292,7 @@ export default function DamagedReportsAdminPage() {
       </div>
 
       {/* STATS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
         <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
           <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Total Reports</p>
           <div className="flex items-end gap-2">
@@ -317,15 +319,6 @@ export default function DamagedReportsAdminPage() {
           </div>
           <p className="mt-4 text-[10px] font-bold text-gray-400">Reviewed damage items</p>
         </div>
-
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <p className="text-gray-400 text-xs font-black uppercase tracking-widest mb-2">Rejected</p>
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-black text-red-600">{stats.rejected}</span>
-            <span className="text-red-200 text-sm font-bold mb-1">dismissed</span>
-          </div>
-          <p className="mt-4 text-[10px] font-bold text-gray-400">Invalid reports</p>
-        </div>
       </div>
 
       {/* ERROR MESSAGE */}
@@ -341,7 +334,6 @@ export default function DamagedReportsAdminPage() {
           { label: "All Reports", value: "all" as ReportStatus },
           { label: "Pending", value: "pending" as ReportStatus },
           { label: "Approved", value: "approved" as ReportStatus },
-          { label: "Rejected", value: "rejected" as ReportStatus },
         ].map((tab) => (
           <button
             key={tab.value}

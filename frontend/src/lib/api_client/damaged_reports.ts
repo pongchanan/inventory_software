@@ -1,14 +1,31 @@
 import { API_BASE, authHeaders } from "./core";
 
+export interface UserBasic {
+  id: number;
+  name: string;
+  email?: string | null;
+  card_id?: string | null;
+}
+
+export interface ItemBasic {
+  id: number;
+  name: string;
+  image_path?: string | null;
+}
+
 export interface DamagedItemReportOut {
   id: number;
   user_id: number;
   item_id: number;
   topic: string;
   description: string;
-  image_key: string;
-  status: string;
-  created_at: string;
+  illustrated_path: string;
+  user?: UserBasic;
+  item?: ItemBasic;
+  report_at: string;
+  report_by: number;
+  approved: boolean;
+  approved_by?: number | null;
   admin_comment?: string;
 }
 
@@ -28,9 +45,15 @@ export async function submitDamageReport(
   formData.append("description", description);
   formData.append("image", imageFile);
 
+  const headers: Record<string, string> = {};
+  const token = localStorage.getItem('token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const res = await fetch(`${API_BASE}/api/damaged-reports/`, {
     method: "POST",
-    headers: authHeaders(),
+    headers,
     body: formData,
   });
 

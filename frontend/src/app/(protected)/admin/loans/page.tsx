@@ -91,6 +91,24 @@ export default function LoansAdminPage() {
                         <AlertTriangle size={12} /> Overdue
                     </span>
                 );
+            case 'damage_reported':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-red-50 text-red-600 border border-red-100 uppercase tracking-wider">
+                        <AlertTriangle size={12} /> Damage Reported
+                    </span>
+                );
+            case 'damage_approved':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-orange-50 text-orange-600 border border-orange-100 uppercase tracking-wider">
+                        <AlertTriangle size={12} /> Damage Approved
+                    </span>
+                );
+            case 'returning':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-purple-50 text-purple-600 border border-purple-100 uppercase tracking-wider">
+                        <Clock size={12} /> Returning
+                    </span>
+                );
             case 'active':
             default:
                 return (

@@ -36,7 +36,7 @@ export const inventoryRepository = {
                 });
                 return {
                     id: loan.id,
-                    name: loan.item_name || `Item ${loan.item_id}`,
+                    name: loan.item?.name || `Item ${loan.item_id}`,
                     date: formatter.format(dateObj),
                     loc: 'Not Specified',
                     img: '',
