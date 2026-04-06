@@ -56,7 +56,7 @@ export function InventoryMobileShell({
               </div>
               <p className="text-[10px] text-gray-400 font-mono font-bold mt-1 uppercase tracking-wider">{item.uid}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {item.category} • Cabinet: {item.location}
+                Cabinet: {item.location}
               </p>
 
               <div className="flex items-center gap-3 mt-3">

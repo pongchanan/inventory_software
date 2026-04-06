@@ -48,7 +48,7 @@ export function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                             Damage
                         </Link>
                         <Link href="/admin/logs" onClick={() => setMoreOpen(false)}
-                            className={`flex items-center gap-3 px-4 py-2.5 text-sm ${isActive('/admin/logs') ? 'text-green-500' : 'text-gray-500'}`}>
+                            className={`flex items-center gap-3 px-4 py-2.5 text-sm ${isActive('/admin/logs') ? 'text-[#ee4d2d]' : 'text-gray-500'}`}>
                             <FileText size={18} strokeWidth={isActive('/admin/logs') ? 2.5 : 2} />
                             Activity
                         </Link>

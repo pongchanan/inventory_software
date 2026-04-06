@@ -35,7 +35,6 @@ const emptyForm: ItemCreate = {
     uid: "",
     name: "",
     description: "",
-    category: "",
     quantity: 1,
     available: true,
 };
@@ -196,10 +195,6 @@ export default function InventoryAdminPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-700">Device Name *</label>
                             <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="e.g., Arduino Uno R3" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Category</label>
-                            <input type="text" value={form.category || ""} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="e.g., Electronics, Tools" />
                         </div>
                     </div>
 
