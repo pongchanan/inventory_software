@@ -12,6 +12,7 @@ from app.database import init_db
 from app.mqtt import start_mqtt, stop_mqtt
 from app.services.due_date_checker import start_due_date_checker, stop_due_date_checker
 from app.routes import (
+    activity_log_router,
     auth_router,
     borrowings_router,
     card_router,
@@ -62,6 +63,7 @@ app.add_middleware(
 )
 
 
+app.include_router(activity_log_router)
 app.include_router(auth_router)
 app.include_router(borrowings_router)
 app.include_router(card_router)

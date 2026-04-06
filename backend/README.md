@@ -50,6 +50,7 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 |--------|------|------|-------------|
 | `GET` | `/` | No | List active items (paginated). Query params: `page` (default 1), `page_size` (default 20, max 100). Each item includes a presigned S3 URL for its first enrolled sample image |
 | `POST` | `/enroll` | Admin | Create a new item and enroll it via video upload. Multipart: `name`, `quantity`, `video` (file). Runs YOLO detection + embedding pipeline. Returns item fields plus `accepted_count`, `rejected_count`, `frames_sampled`, and first sample `image` URL |
+| `PATCH` | `/{item_id}/quantity` | Admin | Adjust stock quantity by a delta. Body: `{ "delta": <int> }`. Positive = add stock, negative = remove. Returns `400` if result would go below 0 |
 
 ### Borrowings — `/api/borrowings`
 
@@ -78,6 +79,26 @@ Server starts on `http://localhost:3000` with auto-reload. Docs at `/docs`.
 | `GET` | `/{report_id}/image` | JWT | Redirect to 30-min presigned S3 URL for the report's illustration image |
 | `POST` | `/` | JWT | File a damage report for the user's currently active borrow. Multipart: `topic`, `description`, `image` (JPEG). `item_id` auto-resolved from active borrowing |
 | `POST` | `/admin` | Admin | File a damage report for any item. Multipart: `topic`, `description`, `item_id`, `image` (JPEG). Decrements item quantity by 1 |
+| `POST` | `/{report_id}/approve` | Admin | Approve a damage report. Optional JSON body: `{ "admin_comment": "..." }`. Sets `approved=true`, closes the borrowing backdated to `report_at`, returns updated report |
+
+### Activity Log — `/api/activity-log` (admin only)
+
+Single endpoint that returns a unified, time-sorted event stream across all significant operations.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | Admin | Return all events newest-first. Each entry has `event_type`, `timestamp`, `reference_id`, `user_id`, `user_name`, `item_id`, `item_name`, `detail` |
+
+**`event_type` values:**
+
+| Value | Triggered by |
+|-------|-------------|
+| `session_open` | Cabinet opened via NFC |
+| `session_close` | Door magnet detected closed |
+| `borrowing` | Item borrowing recorded |
+| `borrowing_return` | Borrowing closed (item returned) |
+| `damage_report` | User or admin filed a damage report |
+| `damage_report_approved` | Admin approved a damage report |
 
 ### General
 

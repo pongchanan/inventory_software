@@ -28,3 +28,7 @@ class PaginatedItems(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class UpdateItemQuantityRequest(BaseModel):
+    delta: int  # positive = add stock, negative = remove stock

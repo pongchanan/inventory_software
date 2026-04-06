@@ -46,12 +46,13 @@ const char* TOPIC_PUB_REGISTER_SCAN = "cabinet/card/scanned"; // IoT → Backend
 const char* TOPIC_SUB_REGISTER_RESULT = "cabinet/card/registered"; // Backend → IoT: confirmation
 
 // ======================== PINS ==========================
-#define LED_PIN     2       // Built-in LED (green = open mode)
-#define LED_REG_PIN 4       // Registration mode LED (yellow — change pin as needed)
-#define DOOR_SWITCH_PIN 25  // Magnetic contact switch (LOW = closed, HIGH = open)
-#define PN532_SDA   17      // I2C SDA
-#define PN532_SCL   16      // I2C SCL
-#define SOLENOID_LOCK_PIN 26
+#define LED_PIN          2   // Built-in LED (green = open mode)
+#define LED_REG_PIN      4   // Registration mode LED (yellow — change pin as needed)
+#define DOOR_SWITCH_PIN 25   // Magnetic contact switch (LOW = closed, HIGH = open)
+#define PN532_SDA       17   // I2C SDA
+#define PN532_SCL       16   // I2C SCL
+#define BUZZER_PIN      26   // Passive buzzer
+#define RELAY_PIN       27   // Relay IN — controls solenoid lock (LOW = lock open)
 
 // ======================== OBJECTS ========================
 // I2C constructor: (irq, reset) — use -1 for polling without IRQ/RESET
@@ -172,9 +173,9 @@ void onMessage(const char* topic, byte* payload, unsigned int length) {
             cabinetState = CABINET_OPENED;
             Serial.print("[CABINET] Opened — session #");
             Serial.println(currentSessionId);
-            digitalWrite(LED_PIN, HIGH);
-            ledActive = true;
-            ledOnTime = millis();
+            digitalWrite(LED_PIN, HIGH);    // stays HIGH until door closes
+            digitalWrite(RELAY_PIN, LOW);   // LOW = relay ON = solenoid powered = lock open
+            tone(BUZZER_PIN, 1000, 300);    // beep to confirm valid access
         }
     }
     else if (t == TOPIC_SUB_REGISTER) {
@@ -336,8 +337,9 @@ void setup() {
     pinMode(LED_REG_PIN, OUTPUT);
     digitalWrite(LED_REG_PIN, LOW);
     pinMode(DOOR_SWITCH_PIN, INPUT_PULLUP); // Magnetic switch: LOW = closed
-    pinMode(SOLENOID_LOCK_PIN, OUTPUT);
-    // digitalWrite(SOLENOID_LOCK_PIN, HIGH); // (LOW for test) Ensure solenoid lock is diseng
+    pinMode(BUZZER_PIN, OUTPUT);
+    pinMode(RELAY_PIN, OUTPUT);
+    digitalWrite(RELAY_PIN, HIGH);          // HIGH = relay off = lock engaged (active-LOW relay)
 
     // NFC (I2C) — set custom SDA/SCL pins before nfc.begin()
     Wire.begin(PN532_SDA, PN532_SCL);
@@ -412,12 +414,12 @@ void loop() {
             cabinetState = CABINET_CLOSED;
             currentSessionId = -1;
             digitalWrite(LED_PIN, LOW);
+            digitalWrite(RELAY_PIN, HIGH);  // HIGH = relay OFF = solenoid unpowered = lock engaged
             ledActive = false;
             // Beep solenoid lock to confirm close (adjust frequency/duration as needed)
-            tone(SOLENOID_LOCK_PIN, 1000, 200); // Beep solenoid lock to confirm close (adjust as needed)
+            tone(BUZZER_PIN, 1000, 200); // Beep buzzer to confirm door close
             delay(5000);
-            noTone(SOLENOID_LOCK_PIN);
-            // digitalWrite(SOLENOID_LOCK_PIN, LOW); // (TEST high first) Ensure solenoid lock is disengaged
+            noTone(BUZZER_PIN);
             delay(1000); // debounce door
         }
         return; // Block NFC scans while cabinet is open

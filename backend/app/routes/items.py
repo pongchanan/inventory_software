@@ -2,10 +2,15 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas.item import ItemEnrollOut, ItemOut, PaginatedItems
+from app.schemas.item import (
+    ItemEnrollOut,
+    ItemOut,
+    PaginatedItems,
+    UpdateItemQuantityRequest,
+)
 from app.services.auth_service import require_admin
 from app.services.item_enroll_service import enroll_item
-from app.services.items_service import get_active_items
+from app.services.items_service import get_active_items, update_item_quantity
 
 router = APIRouter(prefix="/api/items", tags=["Items"])
 
@@ -17,6 +22,22 @@ def list_active_items(
     db: Session = Depends(get_db),
 ):
     return get_active_items(db, page, page_size)
+
+
+@router.patch(
+    "/{item_id}/quantity",
+    response_model=ItemOut,
+    dependencies=[Depends(require_admin)],
+)
+def adjust_item_quantity(
+    item_id: int,
+    body: UpdateItemQuantityRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        return update_item_quantity(db, item_id, body.delta)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @router.post(

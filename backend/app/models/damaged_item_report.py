@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -22,3 +22,8 @@ class DamagedItemReport(Base):
         Integer, ForeignKey("users.id"), nullable=False
     )
     illustrated_path: Mapped[str] = mapped_column(String, nullable=False)
+    approved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    approved_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
+    admin_comment: Mapped[str | None] = mapped_column(String, nullable=True)

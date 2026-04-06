@@ -97,6 +97,7 @@ def create_user_report(
         report_at=datetime.utcnow(),
         report_by=user_id,
         illustrated_path=image_key,
+        approved=False,
     )
     db.add(report)
     db.commit()
@@ -129,11 +130,65 @@ def create_admin_report(
         report_at=datetime.utcnow(),
         report_by=admin_id,
         illustrated_path=image_key,
+        approved=True,
     )
     db.add(report)
 
     if item.quantity > 0:
         item.quantity -= 1
+
+    db.commit()
+    db.refresh(report)
+    return report
+
+
+# ---------------------------------------------------------------------------
+# Approve
+# ---------------------------------------------------------------------------
+
+
+def approve_report(
+    db: Session,
+    report_id: int,
+    approved_by: int,
+    admin_comment: str | None = None,
+) -> DamagedItemReport:
+    """Approve a user-submitted damage report (admin action).
+
+    - Sets approved=True and stores the optional admin comment.
+    - Closes the borrowing for the reported item/user by setting return_at to
+      the time the report was originally created (not now).
+    - Does NOT change item.quantity — the item was returned directly to admin,
+      not placed back into the cabinet.
+
+    Raises ValueError if the report is not found.
+    """
+    report = (
+        db.query(DamagedItemReport).filter(DamagedItemReport.id == report_id).first()
+    )
+    if not report:
+        raise ValueError(f"Report {report_id} not found")
+
+    if report.approved:
+        return report  # idempotent
+
+    report.approved = True
+    report.approved_by = approved_by
+    if admin_comment is not None:
+        report.admin_comment = admin_comment
+
+    # Close the active borrowing for this item/user without touching quantity.
+    borrowing = (
+        db.query(Borrowing)
+        .filter(
+            Borrowing.item_id == report.item_id,
+            Borrowing.user_id == report.report_by,
+            Borrowing.return_at == None,  # noqa: E711
+        )
+        .first()
+    )
+    if borrowing:
+        borrowing.return_at = report.report_at
 
     db.commit()
     db.refresh(report)

@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.damaged_item_report import DamagedItemReportOut
+from app.schemas.damaged_item_report import ApproveReportRequest, DamagedItemReportOut
 from app.services.auth_service import get_current_user, require_admin
 from app.services.damaged_report_service import (
+    approve_report,
     create_admin_report,
     create_user_report,
     export_reports_excel,
@@ -80,6 +81,23 @@ async def submit_user_report(
         return create_user_report(db, current_user.id, topic, description, image_data)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.post(
+    "/{report_id}/approve",
+    response_model=DamagedItemReportOut,
+    dependencies=[Depends(require_admin)],
+)
+def approve_damaged_report(
+    report_id: int,
+    body: ApproveReportRequest = ApproveReportRequest(),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return approve_report(db, report_id, current_user.id, body.admin_comment)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
 
 @router.post(

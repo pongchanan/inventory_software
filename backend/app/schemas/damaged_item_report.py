@@ -11,8 +11,15 @@ class DamagedItemReportOut(BaseModel):
     report_at: datetime
     report_by: int
     illustrated_path: str
+    approved: bool
+    approved_by: int | None
+    admin_comment: str | None
 
     model_config = {"from_attributes": True}
+
+
+class ApproveReportRequest(BaseModel):
+    admin_comment: str | None = None
 
 
 class DamagedItemReportCreate(BaseModel):

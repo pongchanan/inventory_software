@@ -185,18 +185,19 @@ void setupCamera() {
 void captureAndSend(int sessionId) {
     Serial.println("[CAM] Capturing image...");
 
-    // Flash LED on briefly for illumination
+    // Flash LED on — hold long enough for auto-exposure to settle
     digitalWrite(FLASH_LED_PIN, HIGH);
-    delay(150);
+    delay(800);  // 800 ms warm-up: AE adjusts to lit scene
 
-    // Discard first frame (often has auto-exposure artifacts)
+    // Discard first frame (stale buffer from before flash)
     camera_fb_t* discard = esp_camera_fb_get();
     if (discard) esp_camera_fb_return(discard);
-    delay(100);
+    delay(300);  // extra settle time after discard
 
-    // Take the actual photo
+    // Capture with flash still ON → properly exposed frame
     camera_fb_t* fb = esp_camera_fb_get();
-    digitalWrite(FLASH_LED_PIN, LOW);
+    delay(200);  // short delay to ensure flash captures the image before turning off
+    digitalWrite(FLASH_LED_PIN, LOW);  // flash off after capture
 
     if (!fb) {
         Serial.println("[CAM] Capture failed");
