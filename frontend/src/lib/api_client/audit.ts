@@ -23,38 +23,48 @@ export interface PaginatedSessions {
 }
 
 /**
- * Fetch cabinet access logs from /api/sessions
- * Transforms session data into audit log format
- * Returns 10 latest sessions per page
+ * Fetch activity logs from /api/activity-log/
+ * Transforms activity log entries into audit log format
  */
 export async function fetchCabinetAccessLogs(page: number = 1): Promise<{ logs: AuditLogDetail[]; total: number; page: number; page_size: number }> {
-  const res = await fetch(`${API_BASE}/api/sessions/?page=${page}&page_size=10`, {
+  const res = await fetch(`${API_BASE}/api/activity-log/`, {
     cache: "no-store",
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error("Failed to fetch cabinet access logs");
+  if (!res.ok) throw new Error("Failed to fetch activity logs");
   
-  const data: PaginatedSessions = await res.json();
+  const entries: Array<{
+    event_type: string;
+    timestamp: string;
+    reference_id: number;
+    user_id: number | null;
+    user_name: string | null;
+    item_id: number | null;
+    item_name: string | null;
+    detail: string | null;
+  }> = await res.json();
   
-  // Transform sessions into audit log format, sorted by latest first
-  const logs = data.sessions
-    .sort((a, b) => new Date(b.open_at).getTime() - new Date(a.open_at).getTime())
-    .map(session => ({
-      id: session.id,
-      timestamp: session.open_at,
-      type: "unlock",
-      user: session.user.uid,
-      user_name: session.user.name,
-      item: null,
-      status: session.close_at ? "closed" : "open",
-      message: `Cabinet ${session.close_at ? "closed" : "opened"} by ${session.user.name}`,
+  // Transform activity log entries into audit log format, sorted by latest first
+  const logs = entries
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice((page - 1) * 10, page * 10)
+    .map((entry, index) => ({
+      // Create unique ID from combination of fields (reference_id + event_type + timestamp + index for stability)
+      id: `${entry.reference_id}_${entry.event_type}_${new Date(entry.timestamp).getTime()}_${index}`,
+      timestamp: entry.timestamp,
+      type: entry.event_type,
+      user: entry.user_id?.toString() || "unknown",
+      user_name: entry.user_name,
+      item: entry.item_name,
+      status: entry.event_type.includes("close") || entry.event_type.includes("return") || entry.event_type === "damage_report_approved" ? "completed" : "active",
+      message: `${entry.event_type}: ${entry.detail || ""}`,
       ip_address: null,
     }));
   
   return {
     logs,
-    total: data.total,
-    page: data.page,
-    page_size: data.page_size,
+    total: entries.length,
+    page: page,
+    page_size: 10,
   };
 }

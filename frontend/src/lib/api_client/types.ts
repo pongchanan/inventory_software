@@ -139,7 +139,7 @@ export interface LoanDetail {
 }
 
 export interface AuditLogDetail {
-  id: number;
+  id: string | number;
   timestamp: string;
   type: string;
   user: string;

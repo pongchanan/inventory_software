@@ -5,7 +5,11 @@ from app.database import get_db
 from app.models.user import User
 from app.schemas.borrowing import PaginatedBorrowings, PaginatedPopularItems
 from app.services.auth_service import get_current_user, require_admin
-from app.services.borrowings_service import get_popular_items, get_user_borrowings
+from app.services.borrowings_service import (
+    get_all_borrowings_admin,
+    get_popular_items,
+    get_user_borrowings,
+)
 
 router = APIRouter(prefix="/api/borrowings", tags=["Borrowings"])
 
@@ -18,6 +22,20 @@ def my_borrowings(
     db: Session = Depends(get_db),
 ):
     return get_user_borrowings(db, current_user.id, page, page_size)
+
+
+@router.get(
+    "/admin/all",
+    response_model=PaginatedBorrowings,
+    dependencies=[Depends(require_admin)],
+)
+def all_borrowings_admin(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """Get all borrowings for admin view - optimized single query"""
+    return get_all_borrowings_admin(db, page, page_size)
 
 
 @router.get(

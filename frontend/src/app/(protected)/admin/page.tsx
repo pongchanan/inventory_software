@@ -20,7 +20,7 @@ import {
   Download
 } from "lucide-react";
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts";
-import { fetchItems } from "@/lib/api";
+import { fetchItems, fetchMostBorrowedItems, fetchMostDamagedItems } from "@/lib/api";
 import * as XLSX from "xlsx";
 
 interface ChartItem {
@@ -85,8 +85,8 @@ export default function AdminDashboard() {
     overdue: 0,
     systemHealthy: true
   });
-  const [mostBorrowedItems, setMostBorrowedItems] = useState<ChartItem[]>([]);  // Backend endpoint not yet available
-  const [mostDamagedItems, setMostDamagedItems] = useState<ChartItem[]>([]);   // Backend endpoint not yet available
+  const [mostBorrowedItems, setMostBorrowedItems] = useState<ChartItem[]>([]);
+  const [mostDamagedItems, setMostDamagedItems] = useState<ChartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -99,6 +99,8 @@ export default function AdminDashboard() {
     const loadStats = async () => {
       try {
         const items = await fetchItems();
+        const borrowed = await fetchMostBorrowedItems(5);
+        const damaged = await fetchMostDamagedItems(5);
 
         setStats({
           totalItems: items.length,
@@ -106,6 +108,9 @@ export default function AdminDashboard() {
           overdue: 0,      // Backend doesn't have overdue loans endpoint yet
           systemHealthy: true
         });
+
+        setMostBorrowedItems(borrowed as ChartItem[]);
+        setMostDamagedItems(damaged as ChartItem[]);
       } catch (err) {
         console.error("Failed to load dashboard stats", err);
       } finally {
@@ -140,9 +145,6 @@ export default function AdminDashboard() {
           >
             <Download size={14} /> Export Excel
           </button>
-          <Link href="/" className="sm:hidden flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-xl text-[10px] font-black uppercase tracking-wider">
-            ไปยังหน้ายืมของ <ArrowRight size={12} />
-          </Link>
           <div className="hidden sm:flex items-center gap-2 bg-green-50 px-4 py-2 rounded-2xl border border-green-100">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-green-700 text-xs font-black uppercase tracking-widest">System Online</span>

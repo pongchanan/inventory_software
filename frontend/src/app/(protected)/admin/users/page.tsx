@@ -185,22 +185,22 @@ export default function UsersAdminPage() {
 
             {/* USER HISTORY MODAL */}
             {selectedUser && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 sm:slide-in-from-center">
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+                    <div className="bg-white w-full sm:w-full sm:max-w-4xl h-screen sm:h-auto sm:max-h-[90vh] rounded-t-3xl sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 sm:slide-in-from-center">
                         {/* Header */}
-                        <div className="border-b border-gray-100 p-6 flex items-center justify-between sticky top-0 bg-white">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-[#ee4d2d] to-[#ff7355] rounded-2xl flex items-center justify-center text-white font-black text-lg uppercase">
+                        <div className="border-b border-gray-100 p-4 sm:p-6 flex items-center justify-between sticky top-0 bg-white">
+                            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                                <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gradient-to-br from-[#ee4d2d] to-[#ff7355] rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-black text-sm sm:text-lg uppercase flex-shrink-0">
                                     {selectedUser.name[0]}
                                 </div>
-                                <div>
-                                    <h2 className="text-xl font-black text-gray-900">{selectedUser.name}</h2>
-                                    <p className="text-sm text-gray-500 font-medium">{selectedUser.email}</p>
+                                <div className="min-w-0">
+                                    <h2 className="text-lg sm:text-xl font-black text-gray-900 truncate">{selectedUser.name}</h2>
+                                    <p className="text-xs sm:text-sm text-gray-500 font-medium truncate">{selectedUser.email}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setSelectedUser(null)}
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400"
+                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 flex-shrink-0"
                             >
                                 <X size={24} />
                             </button>
@@ -285,20 +285,20 @@ export default function UsersAdminPage() {
 
                             {/* Mobile view - cards format */}
                             {!loadingHistory && userHistory.length > 0 && (
-                                <div className="md:hidden space-y-3 p-6">
+                                <div className="md:hidden space-y-3 p-4">
                                     {paginatedHistory.map((record) => (
                                         <div key={record.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                            <div className="flex items-start justify-between mb-3">
-                                                <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                                                    <Package size={16} className="text-[#ee4d2d]" />
-                                                    {record.item_name || `Item #${record.item_id}`}
+                                            <div className="flex items-start justify-between mb-3 gap-2">
+                                                <h4 className="font-bold text-gray-900 flex items-center gap-2 flex-grow min-w-0">
+                                                    <Package size={16} className="text-[#ee4d2d] flex-shrink-0" />
+                                                    <span className="truncate">{record.item_name || `Item #${record.item_id}`}</span>
                                                 </h4>
                                                 {record.return_at ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-100">
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600 border border-green-100 flex-shrink-0 whitespace-nowrap">
                                                         <Check size={12} /> Returned
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100">
+                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 flex-shrink-0 whitespace-nowrap">
                                                         <Clock size={12} /> Active
                                                     </span>
                                                 )}
@@ -329,7 +329,7 @@ export default function UsersAdminPage() {
 
                         {/* Pagination Footer */}
                         {userHistory.length > 0 && (
-                            <div className="border-t border-gray-100 p-6 flex items-center justify-between bg-gray-50">
+                            <div className="border-t border-gray-100 p-4 sm:p-6 flex items-center justify-between bg-gray-50">
                                 <button
                                     onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
                                     disabled={historyPage === 1}
@@ -337,8 +337,8 @@ export default function UsersAdminPage() {
                                 >
                                     <ChevronLeft size={20} />
                                 </button>
-                                <span className="text-sm font-bold text-gray-600">
-                                    Page {historyPage} of {totalHistoryPages} • {userHistory.length} total items
+                                <span className="text-xs sm:text-sm font-bold text-gray-600 text-center px-2">
+                                    Page {historyPage} of {totalHistoryPages} • {userHistory.length} items
                                 </span>
                                 <button
                                     onClick={() => setHistoryPage(p => Math.min(totalHistoryPages, p + 1))}

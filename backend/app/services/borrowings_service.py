@@ -41,6 +41,31 @@ def get_user_borrowings(db: Session, user_id: int, page: int, page_size: int) ->
     }
 
 
+def get_all_borrowings_admin(db: Session, page: int, page_size: int) -> dict:
+    """Get all borrowings with user info (admin view) - optimized single query"""
+    from app.models.user import User
+    
+    query = db.query(Borrowing).join(User, Borrowing.user_id == User.id)
+    
+    total = query.count()
+    total_pages = max(1, math.ceil(total / page_size))
+    
+    borrowings = (
+        query.order_by(Borrowing.borrow_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    
+    return {
+        "borrowings": borrowings,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
+
+
 def get_popular_items(db: Session, page: int, page_size: int) -> dict:
     query = (
         db.query(

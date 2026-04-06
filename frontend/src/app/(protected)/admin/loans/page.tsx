@@ -27,6 +27,9 @@ export default function LoansAdminPage() {
     const { user, isAdmin, loading: authLoading } = useAuth();
     const router = useRouter();
     const [loans, setLoans] = useState<LoanDetail[]>([]);
+    const [loansTotal, setLoansTotal] = useState(0);
+    const [loansTotalPages, setLoansTotalPages] = useState(0);
+    const [loansCurrentPage, setLoansCurrentPage] = useState(1);
     const [activeLoans, setActiveLoans] = useState<LoanDetail[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -38,14 +41,17 @@ export default function LoansAdminPage() {
         }
     }, [authLoading, user, isAdmin, router]);
 
-    const loadLoans = useCallback(() => {
+    const loadLoans = useCallback((page: number = 1) => {
         setLoading(true);
         Promise.all([
-            fetchLoanDetails(),
+            fetchLoanDetails(page),
             fetchActiveLoanDetails()
         ])
-            .then(([allLoans, active]) => {
-                setLoans(allLoans);
+            .then(([allLoansResult, active]) => {
+                setLoans(allLoansResult.borrowings);
+                setLoansTotal(allLoansResult.total);
+                setLoansTotalPages(allLoansResult.total_pages);
+                setLoansCurrentPage(allLoansResult.page);
                 setActiveLoans(active);
             })
             .catch((e) => setError(e.message))
@@ -55,6 +61,11 @@ export default function LoansAdminPage() {
     useEffect(() => {
         loadLoans();
     }, [loadLoans]);
+
+    const handlePageChange = (newPage: number) => {
+        loadLoans(newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const formatDate = (date: string) => {
         return new Date(date).toLocaleString('en-US', {
@@ -152,6 +163,46 @@ export default function LoansAdminPage() {
                             <LoansDesktopShell loans={loans} formatDate={formatDate} StatusBadge={StatusBadge} />
                             <LoansMobileShell loans={loans} formatDate={formatDate} StatusBadge={StatusBadge} />
                         </div>
+
+                        {/* PAGINATION CONTROLS */}
+                        {loansTotalPages > 1 && (
+                            <div className="flex items-center justify-between mt-6 px-2">
+                                <p className="text-sm font-bold text-gray-600">
+                                    Page {loansCurrentPage} of {loansTotalPages} • Total: {loansTotal} loans
+                                </p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handlePageChange(loansCurrentPage - 1)}
+                                        disabled={loansCurrentPage === 1}
+                                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-bold text-gray-700"
+                                    >
+                                        ← Previous
+                                    </button>
+                                    <div className="flex gap-1">
+                                        {Array.from({ length: loansTotalPages }, (_, i) => i + 1).map((p) => (
+                                            <button
+                                                key={p}
+                                                onClick={() => handlePageChange(p)}
+                                                className={`w-10 h-10 rounded-lg font-bold ${
+                                                    loansCurrentPage === p
+                                                        ? 'bg-orange-500 text-white'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                            >
+                                                {p}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button
+                                        onClick={() => handlePageChange(loansCurrentPage + 1)}
+                                        disabled={loansCurrentPage === loansTotalPages}
+                                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-bold text-gray-700"
+                                    >
+                                        Next →
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </>
             )}
