@@ -73,6 +73,10 @@ bool ledActive = false;
 unsigned long ledOnTime = 0;
 const unsigned long LED_DURATION = 3000;  // LED on for 3 seconds
 
+// Door arm delay — don't check door switch for this long after opening
+const unsigned long DOOR_ARM_DELAY = 3000; // 3 seconds for user to pull door open
+unsigned long cabinetOpenedAt = 0;
+
 // Registration mode state
 unsigned long registerModeStart = 0;
 const unsigned long REGISTER_TIMEOUT = 10000; // 10 seconds to scan card
@@ -171,6 +175,7 @@ void onMessage(const char* topic, byte* payload, unsigned int length) {
         if (doc.containsKey("session_id")) {
             currentSessionId = doc["session_id"].as<int>();
             cabinetState = CABINET_OPENED;
+            cabinetOpenedAt = millis();     // start arm-delay timer
             Serial.print("[CABINET] Opened — session #");
             Serial.println(currentSessionId);
             digitalWrite(LED_PIN, HIGH);    // stays HIGH until door closes
@@ -397,6 +402,11 @@ void loop() {
 
     // --- DOOR SWITCH: detect close while OPENED ---
     if (cabinetState == CABINET_OPENED) {
+        // Wait for arm delay before reading door switch (door needs time to open)
+        if (millis() - cabinetOpenedAt < DOOR_ARM_DELAY) {
+            return;
+        }
+
         if (digitalRead(DOOR_SWITCH_PIN) == LOW) { // magnet engaged = door closed
             Serial.println("[CABINET] Door closed (magnet detected)");
 
