@@ -13,11 +13,10 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 
-// Mock Next.js image
+// Mock Next.js image — strip all Next.js-only props so React doesn't warn
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props: any) => {
-    const { fill, ...rest } = props
+  default: ({ fill, unoptimized, priority, sizes, quality, placeholder, blurDataURL, loader, ...rest }: any) => {
     return React.createElement('img', rest)
   },
 }))

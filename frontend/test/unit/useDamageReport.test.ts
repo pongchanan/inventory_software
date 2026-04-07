@@ -26,8 +26,20 @@ const mockItem: BorrowedItem = {
 };
 
 describe("useDamageReport", () => {
+  let consoleErrorSpy: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    // Suppress expected error logs from error-path tests (the hook logs the caught error).
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation((...args) => {
+      const msg = String(args[0] ?? '');
+      if (msg.includes('Damage report submission error:')) return;
+      process.stderr.write(args.join(' ') + '\n');
+    });
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   describe("Initial state", () => {
