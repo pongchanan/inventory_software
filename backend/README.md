@@ -152,6 +152,8 @@ Run from the `backend/` directory with the venv activated.
 
 All tests are unit tests — no real database or network required (everything is mocked).
 
+Test files live in `tests/unit-tests/`. Shared fixtures (`mock_db`, `sample_user`, `sample_admin`, `sample_item`, `sample_borrowing`, `sample_session`, `sample_damaged_report`) are defined in `tests/unit-tests/conftest.py`.
+
 ### Setup
 
 ```bash
@@ -165,27 +167,84 @@ pip install -r requirements.txt
 pytest
 ```
 
+`pytest.ini` sets `-v --tb=short` as defaults, so output is already verbose with short tracebacks.
+
 ### Useful options
 
 ```bash
-pytest -v                          # verbose — show each test name
-pytest --tb=short                  # short traceback on failure (default)
 pytest -x                          # stop on first failure
 pytest -k "damaged"                # run only tests whose name matches "damaged"
-pytest tests/unit-tests/test_damaged_report_service.py   # run a single file
+pytest tests/unit-tests/test_damaged_report_service.py          # run a single file
 pytest tests/unit-tests/test_damaged_report_service.py::TestCreateAdminReport  # single class
 ```
 
-> Config lives in `pytest.ini` — test discovery is scoped to `tests/unit-tests/`.
+### Test coverage
 
-| Test file | Covers |
-|-----------|--------|
-| `test_auth_service.py` | Password hashing, JWT creation/decoding, user authentication |
-| `test_registration_service.py` | Register user (with and without card), duplicate checks |
-| `test_users_service.py` | List users, get by ID, update user |
-| `test_items_service.py` | List active items, pagination |
-| `test_borrowings_service.py` | User borrowings pagination, popular items ranking |
-| `test_sessions_service.py` | List sessions, close session with image (S3 success/failure), presigned URL generation |
-| `test_damaged_report_service.py` | List all/by-user reports, presigned image URL, user report creation (auto item_id), admin report creation (quantity decrement), Excel export |
-| `test_due_date_checker.py` | Overdue email, due-tomorrow reminder, no email when not due |
-| `test_email_service.py` | Skip when SMTP unconfigured, successful send, failure handling |
+#### `test_auth_service.py`
+
+| Class | Cases |
+|-------|-------|
+| `TestHashPassword` | Returns a string; different passwords produce different hashes; same password produces different hashes (bcrypt salt) |
+| `TestVerifyPassword` | Correct password → `True`; wrong password → `False` |
+| `TestCreateAccessToken` | Returns string; decoded payload contains `sub`, `role`, `exp`, `iat` |
+| `TestDecodeToken` | Valid token decodes correctly; invalid token → 401; expired token → 401 with "expired" in detail |
+| `TestAuthenticateUser` | Valid credentials returns user; wrong password → 401; user not found → 401; blacklisted user → 403 |
+
+#### `test_registration_service.py`
+
+| Class | Cases |
+|-------|-------|
+| `TestCreateRegistration` | Happy path — adds user, commits, refreshes; duplicate email → 409 |
+| `TestRegisterWithCard` | Happy path with card_id; duplicate email → 409; card already linked to another user → 409 |
+
+#### `test_users_service.py`
+
+| Class | Cases |
+|-------|-------|
+| `TestGetAllUsers` | Returns list of users; empty DB returns `[]` |
+| `TestGetUserById` | Found returns user; not found → 404 |
+| `TestUpdateUser` | Updates a single field; updates multiple fields at once; `None` values are skipped (not overwritten); user not found → 404 |
+
+#### `test_items_service.py`
+
+| Class | Cases |
+|-------|-------|
+| `TestGetActiveItems` | Returns items with correct structure; empty result; total_pages rounds up correctly; page/offset/limit params forwarded to query |
+
+#### `test_borrowings_service.py`
+
+| Class | Cases |
+|-------|-------|
+| `TestGetUserBorrowings` | Returns paginated borrowings for a user; empty result; offset calculated correctly for page > 1 |
+| `TestGetPopularItems` | Returns ranked items with `item_id`, `name`, `borrow_count`; empty result; pagination; order preserved (highest borrow_count first) |
+
+#### `test_sessions_service.py`
+
+| Class | Cases |
+|-------|-------|
+| `TestGetSessions` | Returns sessions with nested user; empty result; pagination offsets; multiple sessions |
+| `TestCloseSessionWithImage` | Success — sets `close_image_path` and `close_at`, commits; session not found → `ValueError`; already closed → `ValueError`; S3 upload failure still closes session (`close_at` set, `close_image_path` stays `None`) |
+| `TestGetSessionImageUrl` | Returns presigned URL from S3 key; session not found → `ValueError` |
+
+#### `test_damaged_report_service.py`
+
+| Class | Cases |
+|-------|-------|
+| `TestGetAllReports` | Returns list; empty list |
+| `TestGetReportsByUser` | Returns reports filtered by user_id; empty for unknown user |
+| `TestGetReportImageUrl` | Calls `get_presigned_url` with correct key, returns URL; report not found → `ValueError` |
+| `TestCreateUserReport` | Resolves `item_id` from active borrowing, uploads image, adds report, commits; no active borrowing → `ValueError` |
+| `TestCreateAdminReport` | Decrements item quantity by 1 on success; quantity stays at 0 if already zero (floor guard); item not found → `ValueError` |
+| `TestExportReportsExcel` | Returns non-empty `bytes`; output is a valid Excel file with correct headers |
+
+#### `test_due_date_checker.py`
+
+| Class | Cases |
+|-------|-------|
+| `TestCheckDueDates` | Overdue borrowing → `send_email` called with `OVERDUE` in subject; due within 24 h → email with `Reminder` in subject; due > 24 h away → no email sent |
+
+#### `test_email_service.py`
+
+| Class | Cases |
+|-------|-------|
+| `TestSendEmail` | Returns `False` and skips SMTP when credentials are empty; successful send → calls `starttls`, `login`, `send_message`, returns `True`; SMTP exception → returns `False` |
