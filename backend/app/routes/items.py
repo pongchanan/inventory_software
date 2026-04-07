@@ -1,15 +1,18 @@
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas.item import (
-    ItemEnrollOut,
+    EnrollJobAccepted,
+    EnrollJobStatus,
     ItemOut,
     PaginatedItems,
     UpdateItemQuantityRequest,
 )
 from app.services.auth_service import require_admin
-from app.services.item_enroll_service import enroll_item
+from app.services.enroll_job_store import create_job, get_job, submit_job
+from app.services.item_enroll_service import create_item_record
 from app.services.items_service import get_active_items, update_item_quantity
 
 router = APIRouter(prefix="/api/items", tags=["Items"])
@@ -41,7 +44,10 @@ def adjust_item_quantity(
 
 
 @router.post(
-    "/enroll", response_model=ItemEnrollOut, dependencies=[Depends(require_admin)]
+    "/enroll",
+    response_model=EnrollJobAccepted,
+    status_code=202,
+    dependencies=[Depends(require_admin)],
 )
 async def enroll_item_route(
     name: str = Form(...),
@@ -49,19 +55,52 @@ async def enroll_item_route(
     video: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
+    """Start a background enrollment job.
+
+    1. Creates the Item row immediately (fast DB write).
+    2. Queues the heavy ML pipeline in a background thread.
+    3. Returns **202 Accepted** with a ``job_id`` the frontend can poll.
+
+    Poll ``GET /api/items/enroll/jobs/{job_id}`` until ``status`` is
+    ``"done"`` or ``"failed"``.
+    """
     video_bytes = await video.read()
     if not video_bytes:
         raise HTTPException(status_code=400, detail="video file is empty")
 
-    result = enroll_item(db, name=name, quantity=quantity, video_bytes=video_bytes)
-    item = result["item"]
-    return ItemEnrollOut(
-        id=item.id,
-        name=item.name,
-        quantity=item.quantity,
-        is_active=item.is_active,
-        image=result["images"][0] if result["images"] else None,
-        accepted_count=result["accepted_count"],
-        rejected_count=result["rejected_count"],
-        frames_sampled=result["frames_sampled"],
+    # Synchronous part — create the DB record now so the item is visible
+    # in the list immediately (status will show "processing").
+    item = create_item_record(db, name=name, quantity=quantity)
+
+    job_id = create_job(item_id=item.id, name=item.name, quantity=item.quantity)
+    submit_job(job_id, video_bytes)
+
+    return JSONResponse(
+        status_code=202,
+        content=EnrollJobAccepted(
+            job_id=job_id,
+            status="pending",
+            item_id=item.id,
+        ).model_dump(),
     )
+
+
+@router.get(
+    "/enroll/jobs/{job_id}",
+    response_model=EnrollJobStatus,
+    dependencies=[Depends(require_admin)],
+)
+def get_enroll_job_status(job_id: str):
+    """Poll the status of a background enrollment job.
+
+    Possible ``status`` values:
+
+    * ``pending``  — queued, not yet started
+    * ``running``  — ML pipeline is processing the video
+    * ``done``     — complete; ``accepted_count``, ``image``, etc. are populated
+    * ``failed``   — pipeline error; ``error`` field contains the message
+    """
+    job = get_job(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    return EnrollJobStatus(**job)

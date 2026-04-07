@@ -9,28 +9,40 @@ from app.schemas.ai_pipeline import EnrollFromVideoInput
 from app.services.ai_service import enroll_from_video
 
 
-def enroll_item(
-    db: Session,
-    name: str,
-    quantity: int,
-    video_bytes: bytes,
-) -> dict:
+def create_item_record(db: Session, name: str, quantity: int) -> Item:
+    """Create the Item row in the database and return it.
+
+    This is the fast, synchronous part of enrollment — it completes before
+    the background ML pipeline starts so the frontend can display the new
+    item immediately.
+    """
     item = Item(name=name.strip(), quantity=quantity, is_active=True)
     db.add(item)
     db.commit()
     db.refresh(item)
+    return item
 
+
+def run_enroll_pipeline(
+    db: Session,
+    item_id: int,
+    name: str,
+    video_bytes: bytes,
+) -> dict:
+    """Run the slow AI enrollment pipeline for an already-created item.
+
+    Intended to be called from a background thread with its own DB session.
+    Returns a dict with accepted_count, rejected_count, frames_sampled, images.
+    """
     payload = EnrollFromVideoInput(
         label=name.strip(),
         video_bytes=video_bytes,
-        item_id=item.id,
+        item_id=item_id,
     )
     enroll_result = enroll_from_video(db, payload)
-
-    image_paths = _get_item_image_paths(db, item.id)
+    image_paths = _get_item_image_paths(db, item_id)
 
     return {
-        "item": item,
         "accepted_count": enroll_result.accepted_count,
         "rejected_count": enroll_result.rejected_count,
         "frames_sampled": enroll_result.frames_sampled,
