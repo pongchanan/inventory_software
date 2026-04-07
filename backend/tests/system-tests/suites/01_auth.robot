@@ -56,10 +56,11 @@ Get Me With Valid Token Returns Current User
     Dictionary Should Contain Key    ${json}    id
     Dictionary Should Contain Key    ${json}    role
 
-Get Me Without Token Returns 401
+Get Me Without Token Returns 403
     [Tags]    auth    negative
-    ${resp}=    GET On Session    api    /api/auth/me    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    /api/auth/me    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 Get Me With Invalid Token Returns 401
     [Tags]    auth    negative

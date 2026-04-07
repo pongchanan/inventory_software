@@ -13,10 +13,11 @@ ${ACTIVITY_LOG_PATH}    /api/activity-log/
 
 *** Test Cases ***
 
-Get Activity Log Without Auth Returns 401
+Get Activity Log Without Auth Returns 403
     [Tags]    activity-log    negative
-    ${resp}=    GET On Session    api    ${ACTIVITY_LOG_PATH}    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    ${ACTIVITY_LOG_PATH}    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 Get Activity Log As Admin Returns 200
     [Tags]    activity-log    smoke

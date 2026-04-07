@@ -36,10 +36,11 @@ List Users Returns User Fields
     Dictionary Should Contain Key    ${first}    email
     Dictionary Should Contain Key    ${first}    role
 
-List Users Without Auth Returns 401
+List Users Without Auth Returns 403
     [Tags]    users    negative
-    ${resp}=    GET On Session    api    ${USERS_PATH}    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    ${USERS_PATH}    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 Get User By Id As Admin Returns 200
     [Tags]    users    smoke

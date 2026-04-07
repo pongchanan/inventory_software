@@ -15,10 +15,11 @@ ${SESSIONS_PATH}    /api/sessions/
 
 *** Test Cases ***
 
-List Sessions Without Auth Returns 401
+List Sessions Without Auth Returns 403
     [Tags]    sessions    negative
-    ${resp}=    GET On Session    api    ${SESSIONS_PATH}    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    ${SESSIONS_PATH}    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 List Sessions As Admin Returns Paginated Response
     [Tags]    sessions    smoke
@@ -46,10 +47,11 @@ List Sessions Custom Page Size Respected
     Response Should Be OK    ${resp}
     Should Be Equal As Integers    ${resp.json()}[page_size]    5
 
-List Session Images Without Auth Returns 401
+List Session Images Without Auth Returns 403
     [Tags]    sessions    negative
-    ${resp}=    GET On Session    api    ${SESSIONS_PATH}images    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    ${SESSIONS_PATH}images    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 List Session Images As Admin Returns Paginated Response
     [Tags]    sessions    smoke

@@ -59,15 +59,13 @@ List Active Items Each Item Has Required Fields
         Dictionary Should Contain Key    ${first}    image
     END
 
-Adjust Item Quantity Without Auth Returns 401
+Adjust Item Quantity Without Auth Returns 403
     [Tags]    items    negative
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
     ${body}=    Create Dictionary    delta=1
-    ${resp}=    POST On Session    api    /api/items/1/quantity
-    ...    json=${body}    expected_status=any
-    # endpoint is PATCH — use the correct method
     ${resp}=    PATCH On Session    api    /api/items/1/quantity
-    ...    json=${body}    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    ...    json=${body}    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 Adjust Item Quantity As Non-Admin Returns 403
     [Tags]    items    negative

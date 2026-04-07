@@ -37,15 +37,17 @@ List All Reports Response Has Required Fields
     Dictionary Should Contain Key    ${first}    approved
     Dictionary Should Contain Key    ${first}    illustrated_path
 
-List All Reports Without Auth Returns 401
+List All Reports Without Auth Returns 403
     [Tags]    damaged-reports    negative
-    ${resp}=    GET On Session    api    ${REPORTS_PATH}    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    ${REPORTS_PATH}    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
-Get My Reports Without Auth Returns 401
+Get My Reports Without Auth Returns 403
     [Tags]    damaged-reports    negative
-    ${resp}=    GET On Session    api    ${REPORTS_PATH}me    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    ${REPORTS_PATH}me    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 Get My Reports As Admin Returns 200
     [Tags]    damaged-reports    smoke
@@ -68,7 +70,8 @@ Get Reports By Non-Existent User Returns Empty List
     ${headers}=    Admin Auth Header
     ${resp}=    GET On Session    api    ${REPORTS_PATH}user/999999    headers=${headers}
     Response Should Be OK    ${resp}
-    Should Be Equal    ${resp.json()}    ${EMPTY LIST}
+    ${count}=    Get Length    ${resp.json()}
+    Should Be Equal As Integers    ${count}    0
 
 Get Image Of Non-Existent Report Returns 404
     [Tags]    damaged-reports    negative
@@ -85,12 +88,13 @@ Approve Non-Existent Report Returns 404
     ...    json=${body}    headers=${headers}    expected_status=404
     Response Should Be Not Found    ${resp}
 
-Approve Report Without Auth Returns 401
+Approve Report Without Auth Returns 403
     [Tags]    damaged-reports    negative
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
     ${body}=    Create Dictionary    admin_comment=test
     ${resp}=    POST On Session    api    ${REPORTS_PATH}1/approve
-    ...    json=${body}    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    ...    json=${body}    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 Approve Report As Admin With Comment Returns 200 When Report Exists
     [Tags]    damaged-reports
@@ -144,10 +148,8 @@ Export Reports As Admin Returns Excel File
     Should Contain    ${resp.headers}[Content-Type]
     ...    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
 
-Export Reports Without Auth Returns 401
+Export Reports Without Auth Returns 403
     [Tags]    damaged-reports    negative
-    ${resp}=    GET On Session    api    ${REPORTS_PATH}export    expected_status=401
-    Response Should Be Unauthorized    ${resp}
-
-*** Variables ***
-${EMPTY LIST}    @{[]}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    ${REPORTS_PATH}export    expected_status=403
+    Response Should Be Forbidden    ${resp}

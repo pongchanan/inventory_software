@@ -16,10 +16,11 @@ ${BORROWINGS_PATH}    /api/borrowings/
 
 *** Test Cases ***
 
-Get My Borrowings Without Auth Returns 401
+Get My Borrowings Without Auth Returns 403
     [Tags]    borrowings    negative
-    ${resp}=    GET On Session    api    ${BORROWINGS_PATH}me    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    ${BORROWINGS_PATH}me    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 Get My Borrowings As Admin Returns Paginated Response
     [Tags]    borrowings    smoke
@@ -39,10 +40,11 @@ Get My Borrowings Default Page Is 1
     ${resp}=    GET On Session    api    ${BORROWINGS_PATH}me    headers=${headers}
     Should Be Equal As Integers    ${resp.json()}[page]    1
 
-Get All Borrowings Admin Without Auth Returns 401
+Get All Borrowings Admin Without Auth Returns 403
     [Tags]    borrowings    negative
-    ${resp}=    GET On Session    api    ${BORROWINGS_PATH}admin/all    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    ${BORROWINGS_PATH}admin/all    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 Get All Borrowings Admin Returns Paginated Response
     [Tags]    borrowings    smoke
@@ -70,10 +72,11 @@ Get Borrowings By Non-Existent User Returns Paginated Empty
     Response Should Be OK    ${resp}
     Should Be Equal As Integers    ${resp.json()}[total]    0
 
-Get Popular Items Without Auth Returns 401
+Get Popular Items Without Auth Returns 403
     [Tags]    borrowings    negative
-    ${resp}=    GET On Session    api    ${BORROWINGS_PATH}popular    expected_status=401
-    Response Should Be Unauthorized    ${resp}
+    [Documentation]    FastAPI HTTPBearer returns 403 when no Authorization header is present.
+    ${resp}=    GET On Session    api    ${BORROWINGS_PATH}popular    expected_status=403
+    Response Should Be Forbidden    ${resp}
 
 Get Popular Items As Admin Returns Paginated Response
     [Tags]    borrowings    smoke
