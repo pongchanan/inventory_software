@@ -8,7 +8,8 @@ import {
   StorageUnitApi,
 } from "./types";
 
-export const API_BASE = "http://localhost:3000";
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export function toItemUid(itemTypeId: number): string {
   return `TYPE-${itemTypeId}`;
