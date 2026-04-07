@@ -36,6 +36,29 @@ async def lifespan(app: FastAPI):
     print("Initializing database...")
     init_db()
     print("Database ready")
+
+    # On every startup, any item still marked "processing" was interrupted by a
+    # crash or power cut before the ML pipeline finished.  Mark them "failed" so
+    # the frontend can surface an error and the admin can re-upload the video.
+    from sqlalchemy import update as sa_update
+    from app.database import SessionLocal
+    from app.models.item import Item as _Item
+
+    _db = SessionLocal()
+    try:
+        affected = _db.execute(
+            sa_update(_Item)
+            .where(_Item.enroll_status == "processing")
+            .values(enroll_status="failed")
+        ).rowcount
+        _db.commit()
+        if affected:
+            print(
+                f"[startup] reset {affected} interrupted enrollment job(s) to 'failed'"
+            )
+    finally:
+        _db.close()
+
     start_mqtt()
     print("MQTT client started")
     start_due_date_checker()

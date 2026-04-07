@@ -20,7 +20,10 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
+from sqlalchemy import update as sa_update
+
 from app.database import SessionLocal
+from app.models.item import Item
 from app.services.item_enroll_service import run_enroll_pipeline
 
 logger = logging.getLogger(__name__)
@@ -101,6 +104,11 @@ def _run_job(job_id: str, video_bytes: bytes) -> None:
         result = run_enroll_pipeline(
             db, item_id=item_id, name=name, video_bytes=video_bytes
         )
+        # Persist success status to DB so it survives a future server restart.
+        db.execute(
+            sa_update(Item).where(Item.id == item_id).values(enroll_status="done")
+        )
+        db.commit()
         with _lock:
             _store[job_id].update(
                 {
@@ -120,6 +128,14 @@ def _run_job(job_id: str, video_bytes: bytes) -> None:
         )
     except Exception as exc:
         logger.exception("[enroll_job] %s — pipeline failed: %s", job_id, exc)
+        # Persist failure to DB so orphaned items are detectable after a restart.
+        try:
+            db.execute(
+                sa_update(Item).where(Item.id == item_id).values(enroll_status="failed")
+            )
+            db.commit()
+        except Exception:
+            pass
         with _lock:
             _store[job_id].update({"status": "failed", "error": str(exc)})
     finally:

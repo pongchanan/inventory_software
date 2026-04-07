@@ -14,9 +14,12 @@ def create_item_record(db: Session, name: str, quantity: int) -> Item:
 
     This is the fast, synchronous part of enrollment — it completes before
     the background ML pipeline starts so the frontend can display the new
-    item immediately.
+    item immediately.  ``enroll_status`` is set to ``"processing"`` so that
+    a server crash can be detected on the next startup.
     """
-    item = Item(name=name.strip(), quantity=quantity, is_active=True)
+    item = Item(
+        name=name.strip(), quantity=quantity, is_active=True, enroll_status="processing"
+    )
     db.add(item)
     db.commit()
     db.refresh(item)
