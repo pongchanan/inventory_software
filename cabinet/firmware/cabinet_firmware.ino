@@ -73,10 +73,19 @@ bool ledActive = false;
 unsigned long ledOnTime = 0;
 const unsigned long LED_DURATION = 3000;  // LED on for 3 seconds
 
+// Door arm delay — don't check door switch for this long after opening
+const unsigned long DOOR_ARM_DELAY = 3000; // 3 seconds for user to pull door open
+unsigned long cabinetOpenedAt = 0;
+
 // Registration mode state
 unsigned long registerModeStart = 0;
 const unsigned long REGISTER_TIMEOUT = 10000; // 10 seconds to scan card
 int registerUserId = -1;
+
+// Warning beep — periodic alert when cabinet left open too long
+const unsigned long OPEN_WARNING_MS    = 3UL * 60UL * 1000UL; // 3 minutes
+const unsigned long WARN_BEEP_INTERVAL = 1000;                  // beep every 1 second
+unsigned long lastWarnBeep = 0;
 
 // WiFi reconnect state
 unsigned long lastWifiAttempt = 0;
@@ -171,11 +180,19 @@ void onMessage(const char* topic, byte* payload, unsigned int length) {
         if (doc.containsKey("session_id")) {
             currentSessionId = doc["session_id"].as<int>();
             cabinetState = CABINET_OPENED;
+            cabinetOpenedAt = millis();     // start arm-delay timer
+            lastWarnBeep = 0;               // reset warning beep timer
             Serial.print("[CABINET] Opened — session #");
             Serial.println(currentSessionId);
             digitalWrite(LED_PIN, HIGH);    // stays HIGH until door closes
             digitalWrite(RELAY_PIN, LOW);   // LOW = relay ON = solenoid powered = lock open
             tone(BUZZER_PIN, 1000, 300);    // beep to confirm valid access
+        } else {
+            // Access denied by backend — 2 low beeps
+            Serial.println("[CABINET] Access denied");
+            tone(BUZZER_PIN, 400, 200);
+            delay(300);
+            tone(BUZZER_PIN, 400, 200);
         }
     }
     else if (t == TOPIC_SUB_REGISTER) {
@@ -204,6 +221,10 @@ void onMessage(const char* topic, byte* payload, unsigned int length) {
         const char* st = doc["status"] | "";
         if (strcmp(st, "ok") == 0) {
             Serial.println("[MQTT] Card registered successfully");
+            // Double beep to confirm card link success
+            tone(BUZZER_PIN, 1500, 150);
+            delay(200);
+            tone(BUZZER_PIN, 1500, 150);
             // Blink green LED to confirm
             digitalWrite(LED_PIN, HIGH);
             ledActive = true;
@@ -397,6 +418,19 @@ void loop() {
 
     // --- DOOR SWITCH: detect close while OPENED ---
     if (cabinetState == CABINET_OPENED) {
+        // Wait for arm delay before reading door switch (door needs time to open)
+        if (millis() - cabinetOpenedAt < DOOR_ARM_DELAY) {
+            return;
+        }
+
+        // Warning beep: cabinet left open past OPEN_WARNING_MS (3 min)
+        if (millis() - cabinetOpenedAt >= OPEN_WARNING_MS) {
+            if (millis() - lastWarnBeep >= WARN_BEEP_INTERVAL) {
+                tone(BUZZER_PIN, 800, 300); // short warning tone every second
+                lastWarnBeep = millis();
+            }
+        }
+
         if (digitalRead(DOOR_SWITCH_PIN) == LOW) { // magnet engaged = door closed
             Serial.println("[CABINET] Door closed (magnet detected)");
 
