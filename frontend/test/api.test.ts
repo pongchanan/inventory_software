@@ -11,37 +11,42 @@ global.fetch = jest.fn()
 
 describe('API Functions', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    ;(global.fetch as jest.Mock).mockClear()
+    jest.resetAllMocks()
   })
 
   describe('fetchItems', () => {
     it('fetches item types and maps to item contract', async () => {
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => [
-          {
-            id: 1,
-            name: 'Item 1',
-            active: true,
-            created_at: '2026-03-01T00:00:00.000Z',
-            updated_at: '2026-03-01T00:00:00.000Z',
-            images: [],
-          },
-          {
-            id: 2,
-            name: 'Item 2',
-            active: false,
-            created_at: '2026-03-01T00:00:00.000Z',
-            updated_at: '2026-03-01T00:00:00.000Z',
-            images: [],
-          },
-        ],
+        json: async () => ({
+          items: [
+            {
+              id: 1,
+              name: 'Item 1',
+              is_active: true,
+              quantity: 5,
+              image: null,
+              created_at: '2026-03-01T00:00:00.000Z',
+              updated_at: '2026-03-01T00:00:00.000Z',
+            },
+            {
+              id: 2,
+              name: 'Item 2',
+              is_active: false,
+              quantity: 0,
+              image: null,
+              created_at: '2026-03-01T00:00:00.000Z',
+              updated_at: '2026-03-01T00:00:00.000Z',
+            },
+          ],
+          total: 2,
+          page: 1,
+        }),
       })
 
       const result = await fetchItems()
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/item-types', { cache: 'no-store' })
+      expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/items/', { cache: 'no-store' })
       expect(result).toHaveLength(2)
       expect(result[0].uid).toBe('TYPE-1')
       expect(result[1].uid).toBe('TYPE-2')
@@ -50,24 +55,30 @@ describe('API Functions', () => {
     it('filters by available status after mapping', async () => {
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => [
-          {
-            id: 1,
-            name: 'Item 1',
-            active: true,
-            created_at: '2026-03-01T00:00:00.000Z',
-            updated_at: '2026-03-01T00:00:00.000Z',
-            images: [],
-          },
-          {
-            id: 2,
-            name: 'Item 2',
-            active: false,
-            created_at: '2026-03-01T00:00:00.000Z',
-            updated_at: '2026-03-01T00:00:00.000Z',
-            images: [],
-          },
-        ],
+        json: async () => ({
+          items: [
+            {
+              id: 1,
+              name: 'Item 1',
+              is_active: true,
+              quantity: 5,
+              image: null,
+              created_at: '2026-03-01T00:00:00.000Z',
+              updated_at: '2026-03-01T00:00:00.000Z',
+            },
+            {
+              id: 2,
+              name: 'Item 2',
+              is_active: false,
+              quantity: 0,
+              image: null,
+              created_at: '2026-03-01T00:00:00.000Z',
+              updated_at: '2026-03-01T00:00:00.000Z',
+            },
+          ],
+          total: 2,
+          page: 1,
+        }),
       })
 
       const result = await fetchItems(true)
@@ -86,17 +97,24 @@ describe('API Functions', () => {
       ;(global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          id: 1,
-          name: 'Test Item',
-          active: true,
-          created_at: '2026-03-01T00:00:00.000Z',
-          updated_at: '2026-03-01T00:00:00.000Z',
-          images: [],
+          items: [
+            {
+              id: 1,
+              name: 'Test Item',
+              is_active: true,
+              quantity: 3,
+              image: null,
+              created_at: '2026-03-01T00:00:00.000Z',
+              updated_at: '2026-03-01T00:00:00.000Z',
+            },
+          ],
+          total: 1,
+          page: 1,
         }),
       })
 
       const result = await fetchItemByUid('TYPE-1')
-      expect(global.fetch).toHaveBeenCalledWith('/api/item-types/1', { cache: 'no-store' })
+      expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/items/', { cache: 'no-store' })
       expect(result.uid).toBe('TYPE-1')
     })
 
@@ -107,56 +125,22 @@ describe('API Functions', () => {
   })
 
   describe('createItem', () => {
-    it('creates a new item type', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          id: 1,
-          name: 'New Item',
-          active: true,
-          created_at: '2026-03-01T00:00:00.000Z',
-          updated_at: '2026-03-01T00:00:00.000Z',
-        }),
-      })
-
-      const result = await createItem({ uid: 'NEWITEM', name: 'New Item' })
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/item-types',
-        expect.objectContaining({
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: 'New Item' }),
-        })
+    it('throws not-yet-implemented error', async () => {
+      await expect(createItem({ uid: 'NEWITEM', name: 'New Item' })).rejects.toThrow(
+        'not yet implemented in backend'
       )
-      expect(result.uid).toBe('TYPE-1')
     })
   })
 
   describe('updateItem and deleteItem', () => {
-    it('updates an existing item type', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          id: 1,
-          name: 'Updated Name',
-          active: true,
-          created_at: '2026-03-01T00:00:00.000Z',
-          updated_at: '2026-03-01T00:00:00.000Z',
-        }),
-      })
-
-      await updateItem('TYPE-1', { name: 'Updated Name', uid: 'TYPE-1' })
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/item-types/1',
-        expect.objectContaining({ method: 'PATCH' })
+    it('throws not-yet-implemented error for updateItem', async () => {
+      await expect(updateItem('TYPE-1', { name: 'Updated Name', uid: 'TYPE-1' })).rejects.toThrow(
+        'not yet implemented in backend'
       )
     })
 
-    it('deletes an item type', async () => {
-      ;(global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true })
-      await deleteItem('TYPE-1')
-      expect(global.fetch).toHaveBeenCalledWith('/api/item-types/1', { method: 'DELETE' })
+    it('throws not-yet-implemented error for deleteItem', async () => {
+      await expect(deleteItem('TYPE-1')).rejects.toThrow('not yet implemented in backend')
     })
   })
 

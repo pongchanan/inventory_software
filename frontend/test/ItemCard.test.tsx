@@ -24,13 +24,13 @@ describe("ItemCard", () => {
 
   it("shows remaining quantity when item is in stock", () => {
     render(<ItemCard item={mockItem} />);
-    expect(screen.getByText(/คงเหลือ 5/)).toBeInTheDocument();
+    expect(screen.getByText(/5 Available/)).toBeInTheDocument();
   });
 
   it("shows out of stock message when qty is 0", () => {
     const outOfStockItem = { ...mockItem, qty: 0 };
     render(<ItemCard item={outOfStockItem} />);
-    expect(screen.getByText("สินค้าหมด")).toBeInTheDocument();
+    expect(screen.getByText("Out of Stock")).toBeInTheDocument();
   });
 
   it("renders item image with correct alt text", () => {
