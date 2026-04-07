@@ -68,7 +68,7 @@ export async function fetchMostDamagedItems(limit: number = 5): Promise<ItemStat
       const itemKey = `item_${report.item_id}`;
       if (!damageCount[itemKey]) {
         damageCount[itemKey] = { 
-          name: report.topic || `Item ${report.item_id}`, 
+          name: report.item?.name || report.item_name || `Item ${report.item_id}`, 
           count: 0 
         };
       }

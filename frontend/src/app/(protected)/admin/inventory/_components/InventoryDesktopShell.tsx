@@ -49,9 +49,9 @@ export function InventoryDesktopShell({
       <table className="w-full text-left">
         <thead className="bg-gray-50 border-b border-gray-100">
           <tr>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Equipment</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Quantity</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">ID</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Name</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Qty</th>
             <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Actions</th>
           </tr>
         </thead>
@@ -70,12 +70,12 @@ export function InventoryDesktopShell({
             items.map((item) => (
               <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-4">
+                  <p className="text-sm font-bold text-gray-500">#{item.id}</p>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
                     <AdminItemImage item={item} imageUrls={imageUrls} setImageUrls={setImageUrls} />
-                    <div>
-                      <p className="font-bold text-gray-900 leading-none mb-1">{item.name}</p>
-                      <p className="font-mono text-[10px] text-gray-400 font-bold uppercase tracking-wider">{item.uid}</p>
-                    </div>
+                    <p className="font-bold text-gray-900">{item.name}</p>
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -108,17 +108,6 @@ export function InventoryDesktopShell({
                   ) : (
                     <p className="text-sm font-bold text-gray-600">{item.quantity}</p>
                   )}
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                      item.available
-                        ? "bg-green-50 text-green-600 border-green-100"
-                        : "bg-red-50 text-red-600 border-red-100"
-                    }`}
-                  >
-                    {item.available ? "Ready to Use" : "Borrowed / Unavailable"}
-                  </span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">

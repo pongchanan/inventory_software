@@ -45,19 +45,10 @@ export function InventoryMobileShell({
           <div key={item.id} className="p-4 flex gap-4">
             <AdminItemImage item={item} imageUrls={imageUrls} setImageUrls={setImageUrls} />
             <div className="flex-grow min-w-0">
-              <div className="flex justify-between items-start">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-gray-400">#{item.id}</span>
                 <p className="font-bold text-gray-900 truncate">{item.name}</p>
-                <span
-                  className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                    item.available
-                      ? "bg-green-50 text-green-600 border-green-100"
-                      : "bg-red-50 text-red-600 border-red-100"
-                  }`}
-                >
-                  {item.available ? "Ready" : "Busy"}
-                </span>
               </div>
-              <p className="text-[10px] text-gray-400 font-mono font-bold mt-1 uppercase tracking-wider">{item.uid}</p>
 
               {editingUid === item.uid ? (
                 <div className="flex items-center gap-2 mt-2">
