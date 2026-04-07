@@ -149,11 +149,11 @@ void setupCamera() {
 
     // Use higher resolution if PSRAM is available
     if (psramFound()) {
-        config.frame_size  = FRAMESIZE_UXGA;  // 1600x1200
+        config.frame_size  = FRAMESIZE_SVGA;  // 800x600 — safer for TLS upload (UXGA ~60KB crashes TLS heap)
         config.jpeg_quality = 10;
-        config.fb_count    = 2;
+        config.fb_count    = 1;
         config.grab_mode   = CAMERA_GRAB_LATEST;
-        Serial.println("[CAM] PSRAM found — using UXGA");
+        Serial.println("[CAM] PSRAM found — using SVGA");
     } else {
         config.frame_size  = FRAMESIZE_VGA;   // 640x480
         config.jpeg_quality = 12;
@@ -185,18 +185,21 @@ void setupCamera() {
 void captureAndSend(int sessionId) {
     Serial.println("[CAM] Capturing image...");
 
-    // Flash LED on — hold long enough for auto-exposure to settle
+    // Flash LED on early — AE needs time to re-calibrate from dark to lit scene
     digitalWrite(FLASH_LED_PIN, HIGH);
-    delay(800);  // 800 ms warm-up: AE adjusts to lit scene
+    delay(1500);  // 1.5 s warm-up: AE fully adjusts to flash illumination
 
-    // Discard first frame (stale buffer from before flash)
-    camera_fb_t* discard = esp_camera_fb_get();
-    if (discard) esp_camera_fb_return(discard);
-    delay(300);  // extra settle time after discard
+    // Discard two stale frames (buffered before/during AE adjustment)
+    for (int i = 0; i < 2; i++) {
+        camera_fb_t* discard = esp_camera_fb_get();
+        if (discard) esp_camera_fb_return(discard);
+        delay(200);  // gap between discards
+    }
+    delay(400);  // final settle before the real capture
 
     // Capture with flash still ON → properly exposed frame
     camera_fb_t* fb = esp_camera_fb_get();
-    delay(200);  // short delay to ensure flash captures the image before turning off
+    delay(300);  // hold flash on briefly after shutter so frame is fully flushed
     digitalWrite(FLASH_LED_PIN, LOW);  // flash off after capture
 
     if (!fb) {
@@ -205,6 +208,19 @@ void captureAndSend(int sessionId) {
     }
 
     Serial.printf("[CAM] Captured %u bytes (%dx%d)\n", fb->len, fb->width, fb->height);
+
+    // Copy image out of camera DMA buffer into PSRAM, then free fb immediately.
+    // This releases camera memory BEFORE TLS allocations (~70-100KB internal SRAM).
+    size_t imgLen = fb->len;
+    uint8_t* imgBuf = (uint8_t*) ps_malloc(imgLen);  // allocate in PSRAM
+    if (!imgBuf) imgBuf = (uint8_t*) malloc(imgLen);  // fallback: internal heap
+    if (!imgBuf) {
+        Serial.println("[CAM] Not enough RAM for image copy");
+        esp_camera_fb_return(fb);
+        return;
+    }
+    memcpy(imgBuf, fb->buf, imgLen);
+    esp_camera_fb_return(fb);  // free camera DMA NOW — before TLS stack is allocated
 
     // POST raw JPEG to backend — backend uploads to S3 and closes the session
     String url = String(BACKEND_URL) + "/api/sessions/" + sessionId + "/close-image";
@@ -218,8 +234,8 @@ void captureAndSend(int sessionId) {
     http.addHeader("Content-Type", "image/jpeg");
     http.setTimeout(15000);  // 15s — allow time for S3 upload
 
-    int httpCode = http.POST(fb->buf, fb->len);
-    esp_camera_fb_return(fb);
+    int httpCode = http.POST(imgBuf, imgLen);
+    free(imgBuf);
 
     if (httpCode == 200) {
         Serial.printf("[HTTP] Upload OK — session #%d closed\n", sessionId);
