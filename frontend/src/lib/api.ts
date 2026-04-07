@@ -39,6 +39,7 @@ export {
   fetchItems,
   getImageUrl,
   updateItem,
+  updateItemQuantityAuth,
   uploadItemImage,
   uploadItemImageAuth,
   enrollItem,

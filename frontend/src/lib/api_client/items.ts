@@ -84,6 +84,20 @@ export async function uploadItemImageAuth(uid: string, file: File): Promise<Item
   throw new Error("POST /api/item-types/{id}/images endpoint not yet implemented in backend. Please implement image upload endpoint.");
 }
 
+export async function updateItemQuantityAuth(uid: string, newQuantity: number, currentQuantity: number): Promise<void> {
+  const itemTypeId = parseItemTypeId(uid);
+  const delta = newQuantity - currentQuantity;
+  const res = await fetch(`${API_BASE}/api/items/${itemTypeId}/quantity`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ delta }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to update quantity" }));
+    throw new Error(err.detail || "Failed to update quantity");
+  }
+}
+
 export async function enrollItem(
   name: string,
   quantity: number,
