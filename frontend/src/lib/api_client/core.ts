@@ -8,7 +8,8 @@ import {
   StorageUnitApi,
 } from "./types";
 
-export const API_BASE = "http://localhost:3000";
+export const API_BASE =
+  (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/+$/, "");
 
 export function toItemUid(itemTypeId: number): string {
   return `TYPE-${itemTypeId}`;
@@ -35,7 +36,7 @@ export function mapItemTypeToItem(itemType: ItemTypeApi): Item {
     name: itemType.name,
     description: null,
     category: "item-type",
-    quantity: 1,
+    quantity: itemType.quantity ?? 0,
     available: itemType.active,
     location: null,
     image_url: pickPrimaryImage(itemType.images),
@@ -59,6 +60,7 @@ export async function fetchItemTypes(): Promise<ItemTypeApi[]> {
   return (data.items || []).map((item: any) => ({
     id: item.id,
     name: item.name,
+    quantity: item.quantity ?? 0,
     active: item.is_active,
     created_at: item.created_at || new Date().toISOString(),
     updated_at: item.updated_at || new Date().toISOString(),

@@ -5,7 +5,7 @@ import {
     fetchItems,
     createItemAuth,
     deleteItemAuth,
-    uploadItemImageAuth,
+    updateItemQuantityAuth,
     enrollItem,
     Item,
     ItemCreate,
@@ -16,10 +16,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-    ShieldCheck,
     Plus,
     Trash2,
-    Upload,
     Loader2,
     AlertCircle,
     CheckCircle,
@@ -55,12 +53,12 @@ export default function InventoryAdminPage() {
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
     const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
     const [deletingUid, setDeletingUid] = useState<string | null>(null);
-    const [uploadingUid, setUploadingUid] = useState<string | null>(null);
+    const [savingUid, setSavingUid] = useState<string | null>(null);
 
     // Redirect if not admin
     useEffect(() => {
         if (!authLoading && (!user || !isAdmin)) {
-            router.push("/login");
+            router.replace("/login");
         }
     }, [authLoading, user, isAdmin, router]);
 
@@ -120,6 +118,19 @@ export default function InventoryAdminPage() {
         setSubmitting(false);
     };
 
+    const handleSaveEdit = async (uid: string, newQty: number, currentQty: number) => {
+        if (newQty === currentQty) return;
+        setSavingUid(uid);
+        try {
+            await updateItemQuantityAuth(uid, newQty, currentQty);
+            setSuccessMsg(`Quantity updated to ${newQty}.`);
+            loadItems();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to update quantity.");
+        }
+        setSavingUid(null);
+    };
+
     const handleDelete = async (uid: string) => {
         if (!confirm(`Confirm deletion of device ${uid}? This cannot be undone`)) return;
         setDeletingUid(uid);
@@ -131,18 +142,6 @@ export default function InventoryAdminPage() {
             setError("Unable to delete device.");
         }
         setDeletingUid(null);
-    };
-
-    const handleUploadImage = async (uid: string, file: File) => {
-        setUploadingUid(uid);
-        try {
-            await uploadItemImageAuth(uid, file);
-            setSuccessMsg(`Image uploaded for ${uid} successfully.`);
-            loadItems();
-        } catch {
-            setError("Unable to upload image.");
-        }
-        setUploadingUid(null);
     };
 
     if (authLoading || !user || !isAdmin) return null;
@@ -195,6 +194,10 @@ export default function InventoryAdminPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-700">Device Name *</label>
                             <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="e.g., Arduino Uno R3" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">Quantity *</label>
+                            <input type="number" required min={1} value={form.quantity ?? 1} onChange={(e) => setForm({ ...form, quantity: Math.max(1, parseInt(e.target.value) || 1) })} className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium" placeholder="1" />
                         </div>
                     </div>
 
@@ -258,9 +261,9 @@ export default function InventoryAdminPage() {
                     imageUrls={imageUrls}
                     setImageUrls={setImageUrls}
                     deletingUid={deletingUid}
-                    uploadingUid={uploadingUid}
+                    savingUid={savingUid}
                     handleDelete={handleDelete}
-                    handleUploadImage={handleUploadImage}
+                    handleSaveEdit={handleSaveEdit}
                     AdminItemImage={AdminItemImage}
                 />
                 <InventoryMobileShell
@@ -269,9 +272,9 @@ export default function InventoryAdminPage() {
                     imageUrls={imageUrls}
                     setImageUrls={setImageUrls}
                     deletingUid={deletingUid}
-                    uploadingUid={uploadingUid}
+                    savingUid={savingUid}
                     handleDelete={handleDelete}
-                    handleUploadImage={handleUploadImage}
+                    handleSaveEdit={handleSaveEdit}
                     AdminItemImage={AdminItemImage}
                 />
             </div>
