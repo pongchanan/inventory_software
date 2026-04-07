@@ -1,7 +1,11 @@
 import pytest
 from unittest.mock import MagicMock
 
-from app.services.borrowings_service import get_user_borrowings, get_popular_items
+from app.services.borrowings_service import (
+    get_user_borrowings,
+    get_all_borrowings_admin,
+    get_popular_items,
+)
 
 
 class TestGetUserBorrowings:
@@ -35,6 +39,43 @@ class TestGetUserBorrowings:
         query = self._setup_query(mock_db, [sample_borrowing], 45)
 
         result = get_user_borrowings(mock_db, user_id=1, page=2, page_size=20)
+        assert result["total_pages"] == 3
+        assert result["page"] == 2
+        query.order_by.return_value.offset.assert_called_with(20)  # (2-1)*20
+        query.order_by.return_value.offset.return_value.limit.assert_called_with(20)
+
+
+class TestGetAllBorrowingsAdmin:
+    def _setup_query(self, mock_db, borrowings, total):
+        query = MagicMock()
+        mock_db.query.return_value.join.return_value = query
+        query.count.return_value = total
+        query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
+            borrowings
+        )
+        return query
+
+    def test_returns_all_borrowings(self, mock_db, sample_borrowing):
+        self._setup_query(mock_db, [sample_borrowing], 1)
+
+        result = get_all_borrowings_admin(mock_db, page=1, page_size=20)
+        assert result["borrowings"] == [sample_borrowing]
+        assert result["total"] == 1
+        assert result["page"] == 1
+        assert result["total_pages"] == 1
+
+    def test_empty(self, mock_db):
+        self._setup_query(mock_db, [], 0)
+
+        result = get_all_borrowings_admin(mock_db, page=1, page_size=20)
+        assert result["borrowings"] == []
+        assert result["total"] == 0
+        assert result["total_pages"] == 1
+
+    def test_pagination(self, mock_db, sample_borrowing):
+        query = self._setup_query(mock_db, [sample_borrowing], 45)
+
+        result = get_all_borrowings_admin(mock_db, page=2, page_size=20)
         assert result["total_pages"] == 3
         assert result["page"] == 2
         query.order_by.return_value.offset.assert_called_with(20)  # (2-1)*20

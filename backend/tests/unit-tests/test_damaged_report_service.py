@@ -8,6 +8,7 @@ from app.services.damaged_report_service import (
     get_report_image_url,
     create_user_report,
     create_admin_report,
+    approve_report,
     export_reports_excel,
 )
 
@@ -165,6 +166,73 @@ class TestCreateAdminReport:
                 image_data=b"img",
             )
         mock_db.add.assert_not_called()
+
+
+class TestApproveReport:
+    def test_approves_and_closes_borrowing(self, mock_db, sample_damaged_report):
+        sample_damaged_report.approved = False
+        sample_damaged_report.item_id = 1
+        sample_damaged_report.report_by = 1
+        sample_damaged_report.report_at = datetime(2026, 4, 1, 9, 0)
+
+        borrowing = MagicMock()
+        borrowing.return_at = None
+
+        # First call returns the report, second returns the active borrowing
+        mock_db.query.return_value.filter.return_value.first.side_effect = [
+            sample_damaged_report,
+            borrowing,
+        ]
+
+        approve_report(mock_db, report_id=1, approved_by=99, admin_comment="Confirmed")
+
+        assert sample_damaged_report.approved is True
+        assert sample_damaged_report.approved_by == 99
+        assert sample_damaged_report.admin_comment == "Confirmed"
+        assert borrowing.return_at == sample_damaged_report.report_at
+        mock_db.commit.assert_called_once()
+
+    def test_idempotent_when_already_approved(self, mock_db, sample_damaged_report):
+        sample_damaged_report.approved = True
+        mock_db.query.return_value.filter.return_value.first.return_value = (
+            sample_damaged_report
+        )
+
+        approve_report(mock_db, report_id=1, approved_by=99)
+
+        mock_db.commit.assert_not_called()
+
+    def test_report_not_found(self, mock_db):
+        mock_db.query.return_value.filter.return_value.first.return_value = None
+
+        with pytest.raises(ValueError, match="not found"):
+            approve_report(mock_db, report_id=999, approved_by=99)
+        mock_db.commit.assert_not_called()
+
+    def test_no_active_borrowing_still_approves(self, mock_db, sample_damaged_report):
+        sample_damaged_report.approved = False
+        mock_db.query.return_value.filter.return_value.first.side_effect = [
+            sample_damaged_report,
+            None,  # no active borrowing found
+        ]
+
+        approve_report(mock_db, report_id=1, approved_by=99)
+
+        assert sample_damaged_report.approved is True
+        mock_db.commit.assert_called_once()
+
+    def test_none_comment_does_not_set_field(self, mock_db, sample_damaged_report):
+        sample_damaged_report.approved = False
+        sample_damaged_report.admin_comment = None
+        mock_db.query.return_value.filter.return_value.first.side_effect = [
+            sample_damaged_report,
+            None,
+        ]
+
+        approve_report(mock_db, report_id=1, approved_by=99, admin_comment=None)
+
+        # admin_comment=None → the field must not be touched
+        assert sample_damaged_report.admin_comment is None
 
 
 class TestExportReportsExcel:
