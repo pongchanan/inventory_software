@@ -16,10 +16,7 @@ export function LoansMobileShell({
       {loans.slice(0, 50).map((loan) => (
         <div key={loan.id} className="p-4 space-y-3">
           <div className="flex justify-between items-start">
-            <div>
-              <p className="font-bold text-gray-900">{loan.user_name}</p>
-              <p className="text-[10px] text-gray-400 font-bold">{loan.user_uid}</p>
-            </div>
+            <p className="font-bold text-gray-900">{loan.user_name}</p>
             <StatusBadge status={loan.status} />
           </div>
           <p className="text-sm font-bold text-gray-700">{loan.item_name}</p>

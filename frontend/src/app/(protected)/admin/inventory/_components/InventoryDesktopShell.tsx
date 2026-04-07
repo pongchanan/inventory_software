@@ -35,7 +35,7 @@ export function InventoryDesktopShell({
         <thead className="bg-gray-50 border-b border-gray-100">
           <tr>
             <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Equipment</th>
-            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Category / Location</th>
+            <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Location</th>
             <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">Status</th>
             <th className="px-6 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">Actions</th>
           </tr>
@@ -43,13 +43,13 @@ export function InventoryDesktopShell({
         <tbody className="divide-y divide-gray-50">
           {loading ? (
             <tr>
-              <td colSpan={4} className="py-20 text-center text-gray-400 font-bold">
+              <td colSpan={3} className="py-20 text-center text-gray-400 font-bold">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /> Loading data...
               </td>
             </tr>
           ) : items.length === 0 ? (
             <tr>
-              <td colSpan={4} className="py-20 text-center text-gray-400 font-bold">No equipment found</td>
+              <td colSpan={3} className="py-20 text-center text-gray-400 font-bold">No equipment found</td>
             </tr>
           ) : (
             items.map((item) => (
@@ -64,8 +64,7 @@ export function InventoryDesktopShell({
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <p className="text-sm font-bold text-gray-600 mb-0.5">{item.category || "—"}</p>
-                  <p className="text-xs text-gray-400 font-medium">Cabinet: {item.location || "—"}</p>
+                  <p className="text-sm font-bold text-gray-600">Cabinet: {item.location || "—"}</p>
                 </td>
                 <td className="px-6 py-4">
                   <span

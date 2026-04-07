@@ -7,7 +7,7 @@ export function LoginDesktopShell({
   form: React.ReactNode;
 }) {
   return (
-    <div className="hidden lg:flex min-h-screen bg-[#f8f9fa]">
+    <div className="hidden lg:flex min-h-screen bg-gradient-to-b from-orange-50 to-orange-100/50">
       <div className="relative lg:w-1/2 overflow-hidden bg-gray-900 p-12 text-white">
         <div className="absolute inset-0 z-0">
           <Image
@@ -46,17 +46,18 @@ export function LoginDesktopShell({
         </div>
       </div>
 
-      <div className="relative flex w-1/2 items-center justify-center overflow-hidden p-12">
-        <div className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full bg-orange-100 opacity-50 blur-[100px]" />
-        <div className="pointer-events-none absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-blue-100 opacity-50 blur-[100px]" />
+      <div className="relative flex w-1/2 items-center justify-center overflow-hidden p-12 bg-gradient-to-br from-[#fff5f0] via-[#ffe8dc] to-[#ffd4b8]">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-orange-400/20 to-orange-500/10" />
+        <div className="pointer-events-none absolute -top-20 -right-20 h-96 w-96 rounded-full bg-orange-300 opacity-60 blur-[100px]" />
+        <div className="pointer-events-none absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-orange-200 opacity-40 blur-[100px]" />
 
         <div className="relative z-10 w-full max-w-md">
           <div className="mb-10">
             <h2 className="mb-2 text-4xl font-black text-gray-900">Welcome Back! 👋</h2>
-            <p className="text-gray-500">Please sign in to manage the system</p>
+            <p className="text-gray-600">Please sign in to manage the system</p>
           </div>
 
-          <div className="relative overflow-hidden rounded-[2rem] border border-white/50 bg-white/80 p-10 shadow-2xl backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-[2rem] border-2 border-white/60 bg-white/95 p-10 shadow-2xl backdrop-blur-md bg-gradient-to-br from-white to-orange-50/30">
             <div className="pointer-events-none absolute inset-0 rounded-[2rem] border-2 border-white/60" />
             {form}
           </div>

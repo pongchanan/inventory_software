@@ -1,6 +1,6 @@
 import { Item, BorrowedItem, User } from '../domain/models/Item';
 
-import { fetchItems, fetchActiveLoanDetails, fetchMe, getImageUrl } from '../lib/api';
+import { fetchItems, fetchMe, getImageUrl } from '../lib/api';
 
 export const inventoryRepository = {
     getInventoryItems: async (): Promise<Item[]> => {
@@ -11,7 +11,6 @@ export const inventoryRepository = {
                 name: item.name,
                 qty: item.quantity,
                 total: item.quantity,
-                cabinet: item.location || 'Unspecified',
                 img: getImageUrl(item.image_url)
             }));
         } catch (error) {
@@ -25,23 +24,23 @@ export const inventoryRepository = {
             const token = localStorage.getItem('token');
             if (!token) return [];
 
-            const loans = await fetchActiveLoanDetails();
-            // Only show items that haven't been returned yet (returned_at is null)
-            return loans
-                .filter(loan => loan.returned_at === null)
-                .map(loan => {
-                    const dateObj = new Date(loan.borrowed_at);
-                    const formatter = new Intl.DateTimeFormat('th-TH', {
-                        day: 'numeric', month: 'short', year: '2-digit'
-                    });
-                    return {
-                        id: loan.id,
-                        name: loan.item_name,
-                        date: formatter.format(dateObj),
-                        loc: loan.item_category || 'Not Specified',
-                        img: getImageUrl(loan.item_image_url)
-                    };
+            // Use fetchMyBorrowings instead of fetchActiveLoanDetails (which uses admin endpoint)
+            const { fetchMyBorrowings } = await import('../lib/api_client/borrowings');
+            const borrowings = await fetchMyBorrowings(1, 100);
+            
+            return borrowings.map(loan => {
+                const dateObj = new Date(loan.borrow_at);
+                const formatter = new Intl.DateTimeFormat('en-US', {
+                    day: 'numeric', month: 'short', year: '2-digit'
                 });
+                return {
+                    id: loan.id,
+                    name: loan.item?.name || `Item ${loan.item_id}`,
+                    date: formatter.format(dateObj),
+                    img: loan.item?.image_url || '',
+                    status: (loan.status || 'active') as 'active' | 'overdue' | 'returning' | 'damage_reported' | 'damage_approved'
+                };
+            });
         } catch (error) {
             console.warn('Failed to fetch borrowed items:', error);
             return [];

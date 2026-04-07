@@ -15,6 +15,7 @@ export function ItemCard({ item }: ItemCardProps) {
                     src={item.img}
                     alt={item.name}
                     fill
+                    unoptimized
                     style={{ objectFit: 'cover' }}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />

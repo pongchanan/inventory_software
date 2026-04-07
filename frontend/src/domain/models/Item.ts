@@ -3,7 +3,7 @@ export interface Item {
     name: string;
     qty: number;
     total: number;
-    cabinet: string;
+    cabinet?: string;
     img: string;
 }
 
@@ -11,8 +11,8 @@ export interface BorrowedItem {
     id: number;
     name: string;
     date: string;
-    loc: string;
     img: string;
+    status?: 'active' | 'overdue' | 'returning' | 'damage_reported' | 'damage_approved';
 }
 
 export interface User {

@@ -1,5 +1,19 @@
 import { API_BASE, authHeaders } from "./core";
 
+export interface UserBasic {
+  id: number;
+  name: string;
+  email?: string | null;
+  card_id?: string | null;
+}
+
+export interface ItemBasic {
+  id: number;
+  name: string;
+  image_path?: string | null;
+  image_url?: string | null;
+}
+
 export interface BorrowingRecord {
   id: number;
   user_id: number;
@@ -10,6 +24,8 @@ export interface BorrowingRecord {
   due_at?: string;
   return_at?: string | null;
   status?: string;
+  user?: UserBasic;
+  item?: ItemBasic;
 }
 
 // Get current user's active borrowings

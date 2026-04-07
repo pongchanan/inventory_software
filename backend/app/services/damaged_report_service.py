@@ -9,6 +9,7 @@ from app.models.borrowing import Borrowing
 from app.models.damaged_item_report import DamagedItemReport
 from app.models.item import Item
 from app.models.user import User
+from app.services.items_service import _first_image_for_items
 from app.services.s3_storage import _get_bucket, _get_client, get_presigned_url
 
 
@@ -46,19 +47,35 @@ def _resolve_active_item(db: Session, user_id: int) -> int:
 # ---------------------------------------------------------------------------
 
 
+def _enrich_reports(
+    db: Session, reports: list[DamagedItemReport]
+) -> list[DamagedItemReport]:
+    """Attach presigned illustrated_url and item.image_url to each report."""
+    item_ids = list({r.item_id for r in reports})
+    sample_map = _first_image_for_items(db, item_ids)
+    for report in reports:
+        report.illustrated_url = get_presigned_url(report.illustrated_path)
+        if report.item:
+            key = sample_map.get(report.item_id)
+            report.item.image_url = get_presigned_url(key) if key else None
+    return reports
+
+
 def get_all_reports(db: Session) -> list[DamagedItemReport]:
-    return (
+    reports = (
         db.query(DamagedItemReport).order_by(DamagedItemReport.report_at.desc()).all()
     )
+    return _enrich_reports(db, reports)
 
 
 def get_reports_by_user(db: Session, user_id: int) -> list[DamagedItemReport]:
-    return (
+    reports = (
         db.query(DamagedItemReport)
         .filter(DamagedItemReport.report_by == user_id)
         .order_by(DamagedItemReport.report_at.desc())
         .all()
     )
+    return _enrich_reports(db, reports)
 
 
 def get_report_image_url(db: Session, report_id: int) -> str:

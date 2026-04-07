@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.models.item import Item
 from app.models.ai_label import AiLabel
 from app.models.ai_sample import AiSample
+from app.services.s3_storage import get_presigned_url
 
 
 def _first_image_for_items(db: Session, item_ids: list[int]) -> dict[int, str | None]:
@@ -52,13 +53,14 @@ def get_active_items(db: Session, page: int, page_size: int) -> dict:
 
     items_out = []
     for item in items:
+        raw_key = image_map.get(item.id)
         items_out.append(
             {
                 "id": item.id,
                 "name": item.name,
                 "quantity": item.quantity,
                 "is_active": item.is_active,
-                "image": image_map.get(item.id),
+                "image": get_presigned_url(raw_key) if raw_key else None,
             }
         )
 

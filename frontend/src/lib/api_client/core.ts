@@ -62,10 +62,10 @@ export async function fetchItemTypes(): Promise<ItemTypeApi[]> {
     active: item.is_active,
     created_at: item.created_at || new Date().toISOString(),
     updated_at: item.updated_at || new Date().toISOString(),
-    images: item.image_path ? [{
+    images: item.image ? [{
       id: 0,
       item_type_id: item.id,
-      image_url: item.image_path,
+      image_url: item.image,
       is_primary: true,
       created_at: new Date().toISOString()
     }] : []

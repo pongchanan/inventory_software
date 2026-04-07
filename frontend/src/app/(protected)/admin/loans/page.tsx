@@ -91,6 +91,24 @@ export default function LoansAdminPage() {
                         <AlertTriangle size={12} /> Overdue
                     </span>
                 );
+            case 'damage_reported':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-red-50 text-red-600 border border-red-100 uppercase tracking-wider">
+                        <AlertTriangle size={12} /> Damage Reported
+                    </span>
+                );
+            case 'damage_approved':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-orange-50 text-orange-600 border border-orange-100 uppercase tracking-wider">
+                        <AlertTriangle size={12} /> Damage Approved
+                    </span>
+                );
+            case 'returning':
+                return (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-purple-50 text-purple-600 border border-purple-100 uppercase tracking-wider">
+                        <Clock size={12} /> Returning
+                    </span>
+                );
             case 'active':
             default:
                 return (
@@ -122,7 +140,7 @@ export default function LoansAdminPage() {
                     {/* ACTIVE LOANS SECTION */}
                     <div className="space-y-4">
                         <h3 className="text-xl font-black flex items-center gap-2 px-2">
-                            <AlertTriangle className="text-orange-500" size={24} /> Items currently being borrowed. ({activeLoans.length})
+                            <AlertTriangle className="text-orange-500" size={24} /> Items currently being borrowed ({activeLoans.length})
                         </h3>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {activeLoans.map(loan => (
@@ -135,8 +153,8 @@ export default function LoansAdminPage() {
                                             <h4 className="font-bold text-gray-900 leading-tight">{loan.item_name}</h4>
                                             <StatusBadge status={loan.status} />
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-3">
-                                            <User size={12} /> {loan.user_name} ({loan.user_uid})
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-600 mb-3">
+                                            <User size={12} /> {loan.user_name}
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-50">
                                             <div>
