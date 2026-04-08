@@ -56,7 +56,6 @@ function _mapRawItemToItemTypeApi(item: any): ItemTypeApi {
   return {
     id: item.id,
     name: item.name,
-    quantity: item.quantity ?? 0,
     active: item.is_active,
     quantity: item.quantity ?? 0,
     created_at: item.created_at || new Date().toISOString(),
