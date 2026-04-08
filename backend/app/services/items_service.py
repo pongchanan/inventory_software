@@ -1,5 +1,6 @@
 import math
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.item import Item
@@ -11,18 +12,23 @@ from app.services.s3_storage import get_presigned_url, upload_item_image
 def _first_image_for_items(db: Session, item_ids: list[int]) -> dict[int, str | None]:
     if not item_ids:
         return {}
-    # Get the first sample image path per item (lowest AiSample.id)
+    # One row per item: the AiSample with the lowest id for that item.
+    subq = (
+        db.query(func.min(AiSample.id).label("sample_id"))
+        .join(AiLabel, AiLabel.id == AiSample.label_id)
+        .filter(AiLabel.item_id.in_(item_ids))
+        .group_by(AiLabel.item_id)
+        .subquery()
+    )
     rows = (
         db.query(AiLabel.item_id, AiSample.image_path)
-        .join(AiSample, AiSample.label_id == AiLabel.id)
-        .filter(AiLabel.item_id.in_(item_ids))
-        .order_by(AiLabel.item_id, AiSample.id)
+        .join(AiLabel, AiLabel.id == AiSample.label_id)
+        .filter(AiSample.id.in_(subq))
         .all()
     )
     result: dict[int, str | None] = {iid: None for iid in item_ids}
     for row in rows:
-        if result[row.item_id] is None:  # keep only the first
-            result[row.item_id] = row.image_path
+        result[row.item_id] = row.image_path
     return result
 
 
@@ -78,7 +84,8 @@ def update_item_image(
 def get_active_items(db: Session, page: int, page_size: int) -> dict:
     query = db.query(Item).filter(Item.is_active == True)  # noqa: E712
 
-    total = query.count()
+    # Use scalar count — avoids the extra subquery that legacy .count() generates.
+    total = db.query(func.count(Item.id)).filter(Item.is_active == True).scalar()  # noqa: E712
     total_pages = max(1, math.ceil(total / page_size))
 
     items = (
