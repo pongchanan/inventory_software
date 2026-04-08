@@ -23,6 +23,7 @@ interface AuthState {
     registerCardNow: boolean,
   ) => Promise<AuthResponse>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isAdmin: boolean;
 }
 
@@ -45,6 +46,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    const saved = localStorage.getItem(TOKEN_KEY);
+    if (!saved) return;
+    try {
+      const u = await api<User>("/api/auth/me", { token: saved });
+      setUser(u);
+    } catch {
+      // ignore
+    }
   }, []);
 
   // Hydrate on mount
@@ -96,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        refreshUser,
         isAdmin: user?.role === "admin",
       }}
     >

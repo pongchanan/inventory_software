@@ -179,16 +179,25 @@ export default function Sidebar() {
         <div
           className={`flex items-center ${collapsed ? "justify-center" : "gap-3"}`}
         >
-          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+          <Link
+            href="/profile"
+            onClick={() => setMobileOpen(false)}
+            className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0 hover:ring-2 hover:ring-blue-300 transition-all"
+            title="My Profile"
+          >
             {user?.name?.charAt(0).toUpperCase() ?? "?"}
-          </div>
+          </Link>
           {!collapsed && (
-            <div className="flex-1 min-w-0">
+            <Link
+              href="/profile"
+              onClick={() => setMobileOpen(false)}
+              className="flex-1 min-w-0 hover:opacity-80 transition-opacity"
+            >
               <p className="text-sm font-medium text-gray-900 truncate">
                 {user?.name}
               </p>
               <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-            </div>
+            </Link>
           )}
           <button
             onClick={logout}
