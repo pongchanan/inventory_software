@@ -40,6 +40,7 @@ export {
   fetchItemsPaginated,
   getImageUrl,
   updateItem,
+  updateItemQuantityAuth,
   uploadItemImage,
   uploadItemImageAuth,
   enrollItem,

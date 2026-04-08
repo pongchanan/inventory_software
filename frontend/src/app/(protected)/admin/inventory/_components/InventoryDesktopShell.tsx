@@ -1,4 +1,4 @@
-import { Dispatch, ReactNode, SetStateAction } from "react";
+import { Dispatch, ReactNode, SetStateAction, useState } from "react";
 import { Item } from "@/lib/api";
 import { Loader2, Upload, Trash2, Pencil } from "lucide-react";
 
@@ -14,7 +14,7 @@ export function InventoryDesktopShell({
   imageUrls,
   setImageUrls,
   deletingUid,
-  uploadingUid,
+  savingUid,
   handleDelete,
   handleUploadImage,
   handleEditQuantity,
@@ -25,12 +25,27 @@ export function InventoryDesktopShell({
   imageUrls: Record<string, string>;
   setImageUrls: Dispatch<SetStateAction<Record<string, string>>>;
   deletingUid: string | null;
-  uploadingUid: string | null;
+  savingUid: string | null;
   handleDelete: (uid: string) => void;
   handleUploadImage: (uid: string, file: File) => void;
   handleEditQuantity: (item: Item) => void;
   AdminItemImage: (props: AdminItemImageProps) => ReactNode;
 }) {
+  const [editingUid, setEditingUid] = useState<string | null>(null);
+  const [editQty, setEditQty] = useState<number>(1);
+
+  const startEdit = (uid: string, currentQty: number) => {
+    setEditingUid(uid);
+    setEditQty(currentQty);
+  };
+
+  const cancelEdit = () => setEditingUid(null);
+
+  const confirmEdit = (uid: string, currentQty: number) => {
+    handleSaveEdit(uid, editQty, currentQty);
+    setEditingUid(null);
+  };
+
   return (
     <div className="hidden md:block overflow-x-auto">
       <table className="w-full text-left">
@@ -113,27 +128,13 @@ export function InventoryDesktopShell({
                       }`}
                       title="Upgrade Image"
                     >
-                      {uploadingUid === item.uid ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Upload className="w-5 h-5" />
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleUploadImage(item.uid, file);
-                          e.target.value = "";
-                        }}
-                      />
-                    </label>
+                      <Pencil className="w-5 h-5" />
+                    </button>
                     <button
                       onClick={() => handleDelete(item.uid)}
                       disabled={deletingUid === item.uid}
                       className="p-2 rounded-xl hover:bg-red-50 text-red-500 transition-all disabled:opacity-50"
-                      title="Delete Data"
+                      title="Delete"
                     >
                       {deletingUid === item.uid ? (
                         <Loader2 className="w-5 h-5 animate-spin" />

@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 function getBackendUrl(): string {
   const envBackendUrl = process.env.BACKEND_URL?.trim();
   const publicApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-  const url = envBackendUrl || publicApiUrl || "http://localhost:3000";
+  const url = envBackendUrl || publicApiUrl || "http://localhost:8000";
   return url.replace(/\/+$/, "");
 }
 

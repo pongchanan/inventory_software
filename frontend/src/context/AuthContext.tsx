@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("user");
     setToken(null);
     setUser(null);
-    router.push("/login");
+    router.replace("/login");
   };
 
   const isAdmin = user?.role === "admin";

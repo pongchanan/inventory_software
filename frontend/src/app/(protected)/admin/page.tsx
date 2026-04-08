@@ -94,7 +94,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [authLoading, user, isAdmin, router]);
 

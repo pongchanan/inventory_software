@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/context/AuthContext';
 import { useAdminMode } from '@/context/AdminModeContext';
-import { User, Mail, LogOut, Clock, ShieldCheck, Settings, CreditCard, Loader2, ToggleRight, ToggleLeft } from 'lucide-react';
+import { User, Mail, LogOut, Clock, ShieldCheck, CreditCard, Loader2, ToggleRight, ToggleLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -178,23 +178,14 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <button className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors group">
+                    <Link href="/history" className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors group">
                         <div className="flex items-center gap-3 text-gray-700 font-medium">
                             <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
                                 <Clock size={20} />
                             </div>
                             All Borrowing History
                         </div>
-                    </button>
-
-                    <button className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl transition-colors group">
-                        <div className="flex items-center gap-3 text-gray-700 font-medium">
-                            <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-gray-500 group-hover:scale-110 transition-transform">
-                                <Settings size={20} />
-                            </div>
-                            Notification Settings
-                        </div>
-                    </button>
+                    </Link>
 
                     {isAdmin && (
                         <button

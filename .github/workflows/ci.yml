@@ -7,18 +7,17 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  backend-tests:
-    name: Backend Tests (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+  # ── Backend Unit Tests ─────────────────────────────────────────────────────
+  # Runs on Ubuntu only — the torch+torchvision CPU wheels are large and
+  # downloading them on 3 OSes in parallel is wasteful.
+  backend-unit:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
@@ -27,21 +26,201 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+        key: pip-backend-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: pip-backend-
 
-    - name: Install dependencies
+    - name: Install system libraries
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends libglib2.0-0 libgl1
+
+    - name: Install CPU-only PyTorch
+      run: |
+        pip install --upgrade pip
+        pip install torch==2.3.1+cpu torchvision==0.18.1+cpu \
+          --extra-index-url https://download.pytorch.org/whl/cpu
+
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: pip install -r requirements.txt pytest-cov
+
+    - name: Run unit tests with coverage
+      working-directory: ./backend
+      env:
+        # Unit tests mock all DB calls via MagicMock — a non-postgres URL is
+        # enough to satisfy the DATABASE_URL guard in database.py at import time.
+        DATABASE_URL: sqlite:///./ci_unit.db
+        JWT_SECRET: ci-unit-test-secret
+      run: |
+        pytest --cov=app --cov-report=term-missing --cov-report=xml
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-coverage
+        path: backend/coverage.xml
+        retention-days: 7
+
+  # ── Backend System Tests (Robot Framework) ─────────────────────────────────
+  # Spins up a real PostgreSQL service, seeds the test admin, starts uvicorn,
+  # then runs all Robot suites (hardware-dependent "slow" tests are excluded).
+  backend-system:
+    name: Backend System Tests
+    runs-on: ubuntu-latest
+    needs: backend-unit
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: inventory_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inventory_test
+      JWT_SECRET: ci-system-test-secret
+      # Fake AWS credentials — boto3 requires them to initialise; no real S3
+      # calls happen in the smoke-tagged system tests.
+      AWS_ACCESS_KEY_ID: fake-access-key
+      AWS_SECRET_ACCESS_KEY: fake-secret-key
+      AWS_DEFAULT_REGION: us-east-1
+      S3_BUCKET: fake-bucket
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: pip-system-${{ hashFiles('backend/requirements.txt', 'backend/tests/system-tests/requirements-robot.txt') }}
+        restore-keys: pip-system-
+
+    - name: Install system libraries
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends libglib2.0-0 libgl1
+
+    - name: Install CPU-only PyTorch
+      run: |
+        pip install --upgrade pip
+        pip install torch==2.3.1+cpu torchvision==0.18.1+cpu \
+          --extra-index-url https://download.pytorch.org/whl/cpu
+
+    - name: Install backend and Robot Framework dependencies
       working-directory: ./backend
       run: |
-        python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install -r test/requirements-test.txt
+        pip install -r tests/system-tests/requirements-robot.txt
 
-    - name: Run backend automated tests (manual excluded by default)
+    - name: Initialise database and seed test admin
       working-directory: ./backend
       run: |
-        pytest --cov=app --cov-report=term-missing
+        python - <<'EOF'
+        import app.models  # noqa: registers all SQLAlchemy models with Base
+        from app.database import init_db, SessionLocal
+        from app.models.user import User
+        from app.services.auth_service import hash_password
+
+        init_db()
+        db = SessionLocal()
+        try:
+            if not db.query(User).filter(User.email == "testadmin@gmail.com").first():
+                db.add(User(
+                    name="CI Test Admin",
+                    email="testadmin@gmail.com",
+                    password_hash=hash_password("admin123"),
+                    role="admin",
+                ))
+                db.commit()
+                print("Test admin seeded.")
+            else:
+                print("Test admin already exists.")
+        finally:
+            db.close()
+        EOF
+
+    - name: Start backend server
+      working-directory: ./backend
+      run: |
+        nohup uvicorn app.main:app --host 0.0.0.0 --port 3000 \
+          > /tmp/uvicorn.log 2>&1 &
+        echo $! > /tmp/uvicorn.pid
+
+    - name: Wait for backend to be ready
+      run: |
+        echo "Waiting for backend on :3000..."
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:3000/health; then
+            echo ""
+            echo "Backend is ready."
+            break
+          fi
+          echo "Attempt $i/30 — retrying in 2s..."
+          sleep 2
+        done
+
+    - name: Run Robot Framework system tests
+      working-directory: ./backend/tests/system-tests
+      run: |
+        robot --exclude slow --outputdir results suites/
+
+    - name: Upload Robot Framework results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: robot-results
+        path: backend/tests/system-tests/results/
+        retention-days: 7
+
+    - name: Upload uvicorn log on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: uvicorn-log
+        path: /tmp/uvicorn.log
+        retention-days: 3
+
+    - name: Stop backend server
+      if: always()
+      run: kill $(cat /tmp/uvicorn.pid) 2>/dev/null || true
+
+  # ── Backend Deploy (Railway) ────────────────────────────────────────────────
+  # Deploys to Railway only when a commit is pushed to main AND both test
+  # jobs pass.  Requires the following GitHub secrets / variables:
+  #   RAILWAY_TOKEN       — Account or project token from the Railway dashboard
+  # Optionally set RAILWAY_SERVICE_ID / RAILWAY_PROJECT_ID as repo variables
+  # if the token does not embed project context.
+  backend-deploy:
+    name: Deploy Backend to Railway
+    runs-on: ubuntu-latest
+    needs: [backend-unit, backend-system]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Railway CLI
+      run: npm install -g @railway/cli
+
+    - name: Deploy to Railway
+      working-directory: ./backend
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      run: railway up --detach
     
   frontend-tests:
     name: Frontend Tests (${{ matrix.os }})

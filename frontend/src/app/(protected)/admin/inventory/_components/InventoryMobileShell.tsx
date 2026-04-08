@@ -1,4 +1,4 @@
-import { Dispatch, ReactNode, SetStateAction } from "react";
+import { Dispatch, ReactNode, SetStateAction, useState } from "react";
 import { Item } from "@/lib/api";
 import { Loader2, Upload, Trash2, Pencil } from "lucide-react";
 
@@ -14,7 +14,7 @@ export function InventoryMobileShell({
   imageUrls,
   setImageUrls,
   deletingUid,
-  uploadingUid,
+  savingUid,
   handleDelete,
   handleUploadImage,
   handleEditQuantity,
@@ -25,12 +25,15 @@ export function InventoryMobileShell({
   imageUrls: Record<string, string>;
   setImageUrls: Dispatch<SetStateAction<Record<string, string>>>;
   deletingUid: string | null;
-  uploadingUid: string | null;
+  savingUid: string | null;
   handleDelete: (uid: string) => void;
   handleUploadImage: (uid: string, file: File) => void;
   handleEditQuantity: (item: Item) => void;
   AdminItemImage: (props: AdminItemImageProps) => ReactNode;
 }) {
+  const [editingUid, setEditingUid] = useState<string | null>(null);
+  const [editQty, setEditQty] = useState<number>(1);
+
   return (
     <div className="md:hidden divide-y divide-gray-100">
       {loading ? (
@@ -75,16 +78,35 @@ export function InventoryMobileShell({
                 >
                   <Upload size={12} /> Photo
                   <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleUploadImage(item.uid, file);
-                      e.target.value = "";
-                    }}
+                    type="number"
+                    min={0}
+                    value={editQty}
+                    onChange={(e) => setEditQty(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-16 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    autoFocus
                   />
-                </label>
+                  <button
+                    onClick={() => { handleSaveEdit(item.uid, editQty, item.quantity); setEditingUid(null); }}
+                    disabled={savingUid === item.uid}
+                    className="p-1 rounded-lg bg-green-50 text-green-600"
+                  >
+                    {savingUid === item.uid ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                  </button>
+                  <button onClick={() => setEditingUid(null)} className="p-1 rounded-lg bg-gray-100 text-gray-500">
+                    <X size={12} />
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 mt-1">Qty: {item.quantity}</p>
+              )}
+
+              <div className="flex items-center gap-3 mt-3">
+                <button
+                  onClick={() => { setEditingUid(item.uid); setEditQty(item.quantity); }}
+                  className="text-[10px] font-black uppercase text-orange-500 flex items-center gap-1"
+                >
+                  <Pencil size={12} /> Edit
+                </button>
                 <button
                   onClick={() => handleDelete(item.uid)}
                   disabled={deletingUid === item.uid}

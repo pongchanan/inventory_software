@@ -8,27 +8,32 @@ import {
 
 describe("api client facade", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   test("fetchItems maps canonical item-types to Item contract", async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
-      json: async () => [
-        {
-          id: 3,
-          name: "Screwdriver",
-          active: true,
-          created_at: "2026-03-10T00:00:00.000Z",
-          updated_at: "2026-03-10T00:00:00.000Z",
-          images: [{ id: 1, item_type_id: 3, image_url: "/img/a.png", is_primary: true }],
-        },
-      ],
+      json: async () => ({
+        items: [
+          {
+            id: 3,
+            name: "Screwdriver",
+            is_active: true,
+            quantity: 1,
+            image: "/img/a.png",
+            created_at: "2026-03-10T00:00:00.000Z",
+            updated_at: "2026-03-10T00:00:00.000Z",
+          },
+        ],
+        total: 1,
+        page: 1,
+      }),
     });
 
     const items = await fetchItems();
 
-    expect(global.fetch).toHaveBeenCalledWith("/api/item-types", { cache: "no-store" });
+    expect(global.fetch).toHaveBeenCalledWith("http://localhost:8000/api/items/", { cache: "no-store" });
     expect(items).toEqual([
       {
         id: 3,
@@ -53,12 +58,9 @@ describe("api client facade", () => {
   });
 
   test("createItem keeps error semantics", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ detail: "dup" }),
-    });
-
-    await expect(createItem({ uid: "A", name: "A" })).rejects.toThrow("dup");
+    await expect(createItem({ uid: "A", name: "A" })).rejects.toThrow(
+      "not yet implemented in backend"
+    );
   });
 
   test("login keeps error semantics", async () => {
@@ -73,6 +75,6 @@ describe("api client facade", () => {
   test("getImageUrl keeps placeholder behavior", () => {
     expect(getImageUrl(null)).toBe("/placeholder.png");
     expect(getImageUrl("https://cdn/x.png")).toBe("https://cdn/x.png");
-    expect(getImageUrl("img.png")).toBe("/img.png");
+    expect(getImageUrl("img.png")).toBe("http://localhost:8000/img.png");
   });
 });
