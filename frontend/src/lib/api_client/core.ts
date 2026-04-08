@@ -8,7 +8,14 @@ import {
   StorageUnitApi,
 } from "./types";
 
-export const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+export const API_BASE =
+  typeof window !== "undefined"
+    ? ""
+    : (
+        process.env.BACKEND_URL ??
+        process.env.NEXT_PUBLIC_API_URL ??
+        "http://localhost:3000"
+      ).replace(/\/+$/, "");
 
 
 export function toItemUid(itemTypeId: number): string {
