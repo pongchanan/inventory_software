@@ -128,82 +128,71 @@ export async function fetchLocationsByUnit(unitId: number): Promise<StorageLocat
   return [];
 }
 
+function _borrowingToEvents(borrowing: any): InventoryEventApi[] {
+  const events: InventoryEventApi[] = [
+    {
+      id: borrowing.id * 2 - 1,
+      session_id: 0,
+      user_id: borrowing.user_id,
+      item_type_id: borrowing.item_id,
+      event_type: "borrow",
+      quantity: 1,
+      location_id: null,
+      observation_id: null,
+      note: null,
+      created_at: borrowing.borrow_at,
+    },
+  ];
+  if (borrowing.return_at) {
+    events.push({
+      id: borrowing.id * 2,
+      session_id: 0,
+      user_id: borrowing.user_id,
+      item_type_id: borrowing.item_id,
+      event_type: "return",
+      quantity: 1,
+      location_id: null,
+      observation_id: null,
+      note: null,
+      created_at: borrowing.return_at,
+    });
+  }
+  return events;
+}
+
 export async function fetchInventoryEvents(): Promise<InventoryEventApi[]> {
   try {
-    console.log("fetchInventoryEvents: Starting...");
-    // Fetch current user's borrowings
-    let page = 1;
-    let hasMore = true;
-    const allBorrowings: InventoryEventApi[] = [];
-    const MAX_PAGES = 50; // Safety limit to prevent infinite loops
-    
-    while (hasMore && page <= MAX_PAGES) {
-      console.log(`fetchInventoryEvents: Fetching page ${page}...`);
-      try {
-        const borrowingsResponse = await fetch(
-          `${API_BASE}/api/borrowings/me?page=${page}&page_size=100`,
-          { headers: authHeaders() }
-        );
-        
-        if (!borrowingsResponse.ok) {
-          console.warn(`fetchInventoryEvents: HTTP ${borrowingsResponse.status} on page ${page}`);
-          break;
+    const PAGE_SIZE = 100;
+    // Fetch page 1 to discover total_pages
+    const firstRes = await fetch(
+      `${API_BASE}/api/borrowings/me?page=1&page_size=${PAGE_SIZE}`,
+      { headers: authHeaders() }
+    );
+    if (!firstRes.ok) return [];
+    const firstData = await firstRes.json();
+    if (!Array.isArray(firstData.borrowings)) return [];
+
+    const totalPages: number = firstData.total_pages || 1;
+    const allBorrowings = [...firstData.borrowings];
+
+    // Fetch remaining pages in parallel
+    if (totalPages > 1) {
+      const pageNumbers = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
+      const results = await Promise.all(
+        pageNumbers.map((p) =>
+          fetch(`${API_BASE}/api/borrowings/me?page=${p}&page_size=${PAGE_SIZE}`, {
+            headers: authHeaders(),
+          }).then((r) => (r.ok ? r.json() : null))
+        )
+      );
+      for (const data of results) {
+        if (data?.borrowings && Array.isArray(data.borrowings)) {
+          allBorrowings.push(...data.borrowings);
         }
-        
-        const data = await borrowingsResponse.json();
-        if (!data.borrowings || !Array.isArray(data.borrowings)) {
-          console.log("fetchInventoryEvents: No borrowings in response, stopping");
-          break;
-        }
-        
-        if (data.borrowings.length === 0) {
-          console.log(`fetchInventoryEvents: Page ${page} is empty, stopping`);
-          break;
-        }
-        
-        console.log(`fetchInventoryEvents: Page ${page} has ${data.borrowings.length} items`);
-        
-        // Convert each borrowing to two events: BORROW and RETURN (if returned)
-        for (const borrowing of data.borrowings) {
-          allBorrowings.push({
-            id: borrowing.id * 2 - 1,
-            session_id: 0,
-            user_id: borrowing.user_id,
-            item_type_id: borrowing.item_id,
-            event_type: "borrow",
-            quantity: 1,
-            location_id: null,
-            observation_id: null,
-            note: null,
-            created_at: borrowing.borrow_at,
-          });
-          
-          if (borrowing.return_at) {
-            allBorrowings.push({
-              id: borrowing.id * 2,
-              session_id: 0,
-              user_id: borrowing.user_id,
-              item_type_id: borrowing.item_id,
-              event_type: "return",
-              quantity: 1,
-              location_id: null,
-              observation_id: null,
-              note: null,
-              created_at: borrowing.return_at,
-            });
-          }
-        }
-        
-        hasMore = page < (data?.total_pages || 1);
-        if (hasMore) page++;
-      } catch (pageError) {
-        console.error(`fetchInventoryEvents: Error on page ${page}:`, pageError);
-        break;
       }
     }
-    
-    console.log(`fetchInventoryEvents: Completed, total ${allBorrowings.length} events`);
-    return allBorrowings;
+
+    return allBorrowings.flatMap(_borrowingToEvents);
   } catch (error) {
     console.error("fetchInventoryEvents: error fetching from backend", error);
     return [];

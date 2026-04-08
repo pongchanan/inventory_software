@@ -28,11 +28,10 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <AuthProvider>
-          <AdminModeProvider>
-            {children}
-          </AdminModeProvider>
+          <AdminModeProvider>{children}</AdminModeProvider>
         </AuthProvider>
       </body>
     </html>

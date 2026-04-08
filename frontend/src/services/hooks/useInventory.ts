@@ -18,13 +18,11 @@ export function useInventory() {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                const [fetchedItems, fetchedBorrowed, fetchedUser] = await Promise.all([
-                    inventoryRepository.getInventoryItems(),
+                const [fetchedBorrowed, fetchedUser] = await Promise.all([
                     inventoryRepository.getBorrowedItems(),
                     inventoryRepository.getCurrentUser()
                 ]);
 
-                setItems(fetchedItems);
                 setBorrowedItems(fetchedBorrowed);
                 setCurrentUser(fetchedUser);
             } catch (error) {

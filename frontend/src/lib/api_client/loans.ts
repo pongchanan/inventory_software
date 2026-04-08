@@ -4,6 +4,7 @@ import {
 } from "./core";
 import { fetchUsers } from "./auth";
 import { Loan, LoanCreate, LoanDetail } from "./types";
+import { fetchMyBorrowings } from "./borrowings";
 
 const PAGE_SIZE = 10;
 
@@ -85,18 +86,28 @@ export async function fetchActiveLoanDetails(): Promise<LoanDetail[]> {
 }
 
 
+// Fetch current user's own loan history (uses /api/borrowings/me, not admin endpoint)
 export async function fetchUserLoanDetails(
-  userUid: string,
+  _userUid: string,
   includeReturned = true
 ): Promise<LoanDetail[]> {
-  const result = await fetchAllBorrowings(1, 100); // Fetch up to 100 items
-  const mine = result.borrowings.filter((loan) => loan.user_uid === userUid);
-  
-  if (includeReturned) {
-    return mine;
-  }
-  
-  return mine.filter((loan) => loan.status !== "returned");
+  const borrowings = await fetchMyBorrowings(1, 200);
+  const mapped: LoanDetail[] = borrowings.map((b) => ({
+    id: b.id,
+    user_uid: `user_${b.user_id}`,
+    user_name: b.user?.name || "Unknown",
+    user_email: null,
+    item_uid: `item_${b.item_id}`,
+    item_name: b.item_name || b.item?.name || `Item ${b.item_id}`,
+    item_category: null,
+    item_image_url: b.item?.image_url || null,
+    borrowed_at: b.borrow_at,
+    due_at: b.due_at || "",
+    returned_at: b.return_at || null,
+    status: b.status || (b.return_at ? "returned" : "active"),
+  }));
+  if (includeReturned) return mapped;
+  return mapped.filter((l) => l.status !== "returned");
 }
 
 export async function fetchActiveLoans(userUid?: string): Promise<Loan[]> {
