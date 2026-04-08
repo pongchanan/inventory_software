@@ -107,3 +107,15 @@ export async function enrollItem(
 
   return await res.json();
 }
+
+export async function adjustItemQuantity(itemId: number, delta: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/items/${itemId}/quantity`, {
+    method: "PATCH",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ delta }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to update quantity" }));
+    throw new Error(err.detail || "Failed to update quantity");
+  }
+}

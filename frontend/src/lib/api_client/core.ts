@@ -36,7 +36,7 @@ export function mapItemTypeToItem(itemType: ItemTypeApi): Item {
     name: itemType.name,
     description: null,
     category: "item-type",
-    quantity: 1,
+    quantity: itemType.quantity ?? 0,
     available: itemType.active,
     location: null,
     image_url: pickPrimaryImage(itemType.images),
@@ -61,6 +61,7 @@ export async function fetchItemTypes(): Promise<ItemTypeApi[]> {
     id: item.id,
     name: item.name,
     active: item.is_active,
+    quantity: item.quantity ?? 0,
     created_at: item.created_at || new Date().toISOString(),
     updated_at: item.updated_at || new Date().toISOString(),
     images: item.image ? [{

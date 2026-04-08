@@ -42,6 +42,7 @@ export {
   uploadItemImage,
   uploadItemImageAuth,
   enrollItem,
+  adjustItemQuantity,
 } from "./api_client/items";
 export type { ItemEnrollOut } from "./api_client/items";
 export {

@@ -1,6 +1,6 @@
 import { Dispatch, ReactNode, SetStateAction } from "react";
 import { Item } from "@/lib/api";
-import { Loader2, Upload, Trash2 } from "lucide-react";
+import { Loader2, Upload, Trash2, Pencil } from "lucide-react";
 
 type AdminItemImageProps = {
   item: Item;
@@ -17,6 +17,7 @@ export function InventoryMobileShell({
   uploadingUid,
   handleDelete,
   handleUploadImage,
+  handleEditQuantity,
   AdminItemImage,
 }: {
   loading: boolean;
@@ -27,6 +28,7 @@ export function InventoryMobileShell({
   uploadingUid: string | null;
   handleDelete: (uid: string) => void;
   handleUploadImage: (uid: string, file: File) => void;
+  handleEditQuantity: (item: Item) => void;
   AdminItemImage: (props: AdminItemImageProps) => ReactNode;
 }) {
   return (
@@ -36,30 +38,36 @@ export function InventoryMobileShell({
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /> Loading...
         </div>
       ) : items.length === 0 ? (
-        <div className="py-20 text-center text-gray-400 font-bold">No items found</div>
+        <div className="py-20 text-center text-gray-400 font-bold">
+          No items found
+        </div>
       ) : (
         items.map((item) => (
           <div key={item.id} className="p-4 flex gap-4">
-            <AdminItemImage item={item} imageUrls={imageUrls} setImageUrls={setImageUrls} />
-            <div className="flex-grow min-w-0">
-              <div className="flex justify-between items-start">
-                <p className="font-bold text-gray-900 truncate">{item.name}</p>
-                <span
-                  className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                    item.available
-                      ? "bg-green-50 text-green-600 border-green-100"
-                      : "bg-red-50 text-red-600 border-red-100"
-                  }`}
-                >
-                  {item.available ? "Ready" : "Busy"}
-                </span>
-              </div>
-              <p className="text-[10px] text-gray-400 font-mono font-bold mt-1 uppercase tracking-wider">{item.uid}</p>
+            <AdminItemImage
+              item={item}
+              imageUrls={imageUrls}
+              setImageUrls={setImageUrls}
+            />
+            <div className="grow min-w-0">
+              <p className="font-bold text-gray-900 truncate">{item.name}</p>
+              <p className="text-[10px] text-gray-400 font-mono font-bold mt-1 uppercase tracking-wider">
+                {item.uid}
+              </p>
               <p className="text-xs text-gray-500 mt-1">
-                Cabinet: {item.location}
+                <span className="font-black text-gray-800">
+                  {item.quantity}
+                </span>
+                <span className="font-medium ml-1">units in stock</span>
               </p>
 
               <div className="flex items-center gap-3 mt-3">
+                <button
+                  onClick={() => handleEditQuantity(item)}
+                  className="text-[10px] font-black uppercase text-orange-500 flex items-center gap-1"
+                >
+                  <Pencil size={12} /> Edit Qty
+                </button>
                 <label
                   className={`text-[10px] font-black uppercase text-blue-500 flex items-center gap-1 ${
                     uploadingUid === item.uid ? "opacity-50" : ""
