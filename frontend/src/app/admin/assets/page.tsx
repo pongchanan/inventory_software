@@ -17,7 +17,14 @@ import {
   Video,
   ImageIcon,
   Package,
+  ArrowUpDown,
+  Eye,
+  EyeOff,
+  Images,
 } from "lucide-react";
+
+type ActiveFilter = "all" | "active" | "inactive";
+type SortKey = "name-asc" | "name-desc" | "qty-asc" | "qty-desc" | "samples-asc" | "samples-desc";
 
 /* ═══════════════════════════════════════════
    Main Page
@@ -33,6 +40,8 @@ export default function AdminAssetsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [showEnroll, setShowEnroll] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>("all");
+  const [sort, setSort] = useState<SortKey>("name-asc");
 
   // debounce search
   useEffect(() => {
@@ -46,9 +55,14 @@ export default function AdminAssetsPage() {
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api<PaginatedItems>("/api/items/", {
+      const data = await api<PaginatedItems>("/api/items/admin", {
         token,
-        params: { page, page_size: pageSize, search: debouncedSearch || undefined },
+        params: {
+          page,
+          page_size: pageSize,
+          search: debouncedSearch || undefined,
+          is_active: activeFilter === "all" ? undefined : activeFilter === "active" ? "true" : "false",
+        },
       });
       setItems(data.items);
       setTotal(data.total);
@@ -58,11 +72,24 @@ export default function AdminAssetsPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, page, debouncedSearch]);
+  }, [token, page, debouncedSearch, activeFilter]);
 
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  // Client-side sorting
+  const sortedItems = [...items].sort((a, b) => {
+    switch (sort) {
+      case "name-asc": return a.name.localeCompare(b.name);
+      case "name-desc": return b.name.localeCompare(a.name);
+      case "qty-asc": return a.quantity - b.quantity;
+      case "qty-desc": return b.quantity - a.quantity;
+      case "samples-asc": return a.sample_count - b.sample_count;
+      case "samples-desc": return b.sample_count - a.sample_count;
+      default: return 0;
+    }
+  });
 
   return (
     <div>
@@ -80,16 +107,56 @@ export default function AdminAssetsPage() {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-6">
-        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search items…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+      {/* Search + Sort */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search items…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+        <div className="relative sm:w-52">
+          <ArrowUpDown size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className="w-full appearance-none pl-8 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          >
+            <option value="name-asc">Name A → Z</option>
+            <option value="name-desc">Name Z → A</option>
+            <option value="qty-desc">Quantity: High → Low</option>
+            <option value="qty-asc">Quantity: Low → High</option>
+            <option value="samples-desc">Samples: High → Low</option>
+            <option value="samples-asc">Samples: Low → High</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex gap-2 mb-6">
+        {(
+          [
+            { key: "all", label: "All" },
+            { key: "active", label: "Active" },
+            { key: "inactive", label: "Inactive" },
+          ] as const
+        ).map((f) => (
+          <button
+            key={f.key}
+            onClick={() => { setActiveFilter(f.key); setPage(1); }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeFilter === f.key
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {/* Item table / grid */}
@@ -110,7 +177,7 @@ export default function AdminAssetsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {items.map((item) => (
+          {sortedItems.map((item) => (
             <AssetCard key={item.id} item={item} token={token} onUpdate={fetchItems} />
           ))}
         </div>
@@ -154,10 +221,12 @@ function AssetCard({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [toggling, setToggling] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isProcessing = item.enroll_status === "processing";
   const isFailed = item.enroll_status === "failed";
+  const isInactive = !item.is_active;
 
   async function handleSaveQty() {
     if (delta === 0) {
@@ -203,31 +272,55 @@ function AssetCard({
     }
   }
 
+  async function handleToggleActive() {
+    setToggling(true);
+    try {
+      await api(`/api/items/${item.id}/active`, { method: "PATCH", token });
+      onUpdate();
+    } catch {
+      // silently fail
+    } finally {
+      setToggling(false);
+    }
+  }
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition-shadow">
+    <div className={`bg-white border rounded-xl overflow-hidden hover:shadow-sm transition-shadow ${isInactive ? "border-gray-300 opacity-70" : "border-gray-200"}`}>
       {/* Image */}
       <div className="relative h-40 bg-gray-50">
         {item.image ? (
-          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+          <img src={item.image} alt={item.name} className={`w-full h-full object-cover ${isInactive ? "grayscale" : ""}`} />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-300">
             <Package size={40} />
           </div>
         )}
 
-        {/* Status badge */}
-        {isProcessing && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 bg-yellow-100 text-yellow-700 text-xs font-medium px-2 py-1 rounded-full">
-            <Loader2 size={12} className="animate-spin" />
-            Processing
-          </div>
-        )}
-        {isFailed && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 bg-red-100 text-red-700 text-xs font-medium px-2 py-1 rounded-full">
-            <AlertCircle size={12} />
-            Failed
-          </div>
-        )}
+        {/* Top-left badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
+          {isInactive && (
+            <span className="flex items-center gap-1 bg-gray-800 text-white text-xs font-medium px-2 py-1 rounded-full">
+              <EyeOff size={12} />
+              Inactive
+            </span>
+          )}
+        </div>
+
+        {/* Top-right badges */}
+        <div className="absolute top-2 right-2 flex flex-col gap-1">
+          {isProcessing && (
+            <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 text-xs font-medium px-2 py-1 rounded-full">
+              <Loader2 size={12} className="animate-spin" />
+              Processing
+            </span>
+          )}
+          {isFailed && (
+            <span className="flex items-center gap-1 bg-red-100 text-red-700 text-xs font-medium px-2 py-1 rounded-full">
+              <AlertCircle size={12} />
+              Failed
+            </span>
+          )}
+        </div>
 
         {/* Upload overlay button */}
         <button
@@ -243,9 +336,35 @@ function AssetCard({
 
       {/* Body */}
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 truncate" title={item.name}>
-          {item.name}
-        </h3>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-gray-900 truncate" title={item.name}>
+            {item.name}
+          </h3>
+          <button
+            onClick={handleToggleActive}
+            disabled={toggling}
+            className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+              item.is_active
+                ? "text-gray-400 hover:text-red-600 hover:bg-red-50"
+                : "text-gray-400 hover:text-green-600 hover:bg-green-50"
+            }`}
+            title={item.is_active ? "Deactivate item" : "Activate item"}
+          >
+            {toggling ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : item.is_active ? (
+              <EyeOff size={14} />
+            ) : (
+              <Eye size={14} />
+            )}
+          </button>
+        </div>
+
+        {/* Sample count */}
+        <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+          <Images size={12} />
+          <span>{item.sample_count} sample{item.sample_count !== 1 ? "s" : ""}</span>
+        </div>
 
         {/* Quantity */}
         <div className="mt-3">

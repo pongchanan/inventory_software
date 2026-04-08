@@ -16,7 +16,9 @@ from app.services.enroll_job_store import create_job, get_job, submit_job
 from app.services.item_enroll_service import add_quantity_to_existing, create_item_record
 from app.services.items_service import (
     get_active_items,
+    get_admin_items,
     item_to_out,
+    toggle_item_active,
     update_item_image,
     update_item_quantity,
 )
@@ -32,6 +34,29 @@ def list_active_items(
     db: Session = Depends(get_db),
 ):
     return get_active_items(db, page, page_size, search=search)
+
+
+@router.get("/admin", response_model=PaginatedItems, dependencies=[Depends(require_admin)])
+def list_admin_items(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    search: str | None = Query(None, max_length=100),
+    is_active: bool | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    return get_admin_items(db, page, page_size, search=search, is_active=is_active)
+
+
+@router.patch(
+    "/{item_id}/active",
+    response_model=ItemOut,
+    dependencies=[Depends(require_admin)],
+)
+def toggle_item_active_route(item_id: int, db: Session = Depends(get_db)):
+    try:
+        return toggle_item_active(db, item_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
 
 @router.patch(

@@ -8,6 +8,7 @@ class ItemOut(BaseModel):
     is_active: bool
     image: str | None = None
     enroll_status: str | None = None
+    sample_count: int = 0
 
     model_config = {"from_attributes": True}
 

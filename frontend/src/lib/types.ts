@@ -23,6 +23,7 @@ export interface Item {
   is_active: boolean;
   image: string | null;
   enroll_status: "processing" | "done" | "failed" | null;
+  sample_count: number;
 }
 
 export interface PaginatedItems {
