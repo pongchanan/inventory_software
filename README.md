@@ -1,6 +1,6 @@
 # Smart Inventory System
 
-IoT-based inventory management with NFC/RFID tracking, MQTT kiosk communication, S3 image storage, and JWT authentication.
+IoT-based inventory management with NFC/RFID tracking, MQTT kiosk communication, S3 image storage, AI-powered item enrollment via video, and JWT authentication.
 
 ## Architecture
 
@@ -10,22 +10,23 @@ IoT-based inventory management with NFC/RFID tracking, MQTT kiosk communication,
 │  Kiosk      │                │  FastAPI    │               │  Next.js     │
 │  (Arduino)  │                │  Python     │               │  TypeScript  │
 └─────────────┘                └─────────────┘               └──────────────┘
-                                      │
-                               ┌──────┴──────┐
-                               │  PostgreSQL  │
-                               │  (SQLite     │
-                               │  locally)    │
-                               └─────────────┘
+                                      │                              │
+                               ┌──────┴──────┐               ┌──────┴──────┐
+                               │  PostgreSQL  │               │  S3-compat  │
+                               │  (SQLite     │               │  object     │
+                               │  locally)    │               │  storage    │
+                               └─────────────┘               └─────────────┘
 ```
 
 ## 📁 Structure
 
 | Directory | Stack | Description |
 |---|---|---|
-| `/backend` | Python, FastAPI | REST API + MQTT handlers + S3 integration |
+| `/backend` | Python, FastAPI | REST API + MQTT handlers + S3 integration + AI enrollment |
 | `/frontend` | Next.js, TypeScript | Admin + user web dashboards |
 | `/kiosk` | C++, Arduino (ESP32) | Kiosk firmware with NFC/RFID + MQTT |
-| `/scripts` | Python | Dev utilities (kiosk config generator) |
+| `/vision` | Python | Vision subsystem (controller + inference) |
+| `/scripts` | Python | Dev utilities (kiosk config generator, migrations) |
 
 ## 🛠️ Local Development
 
@@ -41,7 +42,7 @@ npm run install-all
 ### 2. Configure environment
 
 Create root `.env` and copy values from `backend/.env.example`.
-Fill in values required by your local setup.
+Fill in values required by your local setup — including S3 credentials for image storage.
 
 ### 3. Start backend + frontend
 
@@ -82,6 +83,42 @@ This is a monorepo with two independent Railway services:
 3. Railway detects `railway.json` in each folder automatically.
 4. Set all environment variables from `backend/.env.example` in the Railway backend service settings.
 
+## 🖼️ Image Storage (S3)
+
+Item cover images are stored in S3-compatible object storage.
+
+| Env var | Purpose |
+|---|---|
+| `AWS_ACCESS_KEY_ID` | S3 access key |
+| `AWS_SECRET_ACCESS_KEY` | S3 secret key |
+| `AWS_ENDPOINT_URL` | Custom S3 endpoint (e.g. Cloudflare R2) |
+| `AWS_DEFAULT_REGION` | Region (default: `auto`) |
+| `S3_BUCKET_NAME` | Target bucket name |
+
+**Image resolution priority (per item):**
+1. Explicit image uploaded by admin via `PUT /api/items/{id}/image` or during enrollment
+2. Best accepted frame extracted automatically from the enrollment video by the AI pipeline
+3. `/placeholder.png` if neither is available
+
+## 📦 Key Backend Endpoints
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/api/items/` | — | List all active items (paginated) |
+| `POST` | `/api/items/enroll` | Admin | Enroll new item (video + optional image) — async 202 |
+| `GET` | `/api/items/enroll/jobs/{job_id}` | Admin | Poll enrollment job status |
+| `PATCH` | `/api/items/{id}/quantity` | Admin | Adjust stock quantity by delta |
+| `PUT` | `/api/items/{id}/image` | Admin | Upload / replace item cover image |
+
+## 🎛️ Admin Inventory Page (`/admin/inventory`)
+
+The asset management page lets admins:
+
+- **Enroll** a new device with a short video clip (AI extracts training frames); an optional cover image can be attached at enrollment time
+- **Edit Quantity** — click the pencil icon to adjust stock by a delta (positive to add, negative to remove)
+- **Upload Image** — replace the cover photo for any existing item at any time
+- **Delete** an item from the system
+
 ## 📖 Documentation
 
 - [Backend README](backend/README.md) — API endpoints, MQTT topics, database schema
@@ -89,48 +126,5 @@ This is a monorepo with two independent Railway services:
 - [Backend Setup Guide](docs/backend/SETUP_GUIDE.md) — Step-by-step setup and troubleshooting
 - [Backend API Docs](docs/backend/API_DOCUMENTATION.md) — Full endpoint reference
 - [Kiosk README](kiosk/kiosk_main/README.md) — Wiring, MQTT usage, library list
+- [Architecture](docs/architecture/README.md) — System context, data model, vision architecture
 
-
-## 🛠️ Local Development
-
-Canonical guide: [docs/operations/run-guide.md](docs/operations/run-guide.md)
-
-1. **Setup**: Install all dependencies (Node + Python venv)
-   ```bash
-   npm run install-all
-   ```
-2. **Run**: Start both Backend (3000) & Frontend (3001)
-   ```bash
-   npm run dev
-   ```
-
-## ☁️ Deployment (Railway)
-
-This repo is structured as a **Monorepo**. To deploy:
-1. Create **2 separate services** in Railway from this repo.
-2. In Railway Service Settings:
-   - For **Backend**: Set **Root Directory** to `/backend`.
-   - For **Frontend**: Set **Root Directory** to `/frontend`.
-3. Railway will automatically detect the `railway.json` in each folder.
-
-## 🔌 Kiosk / ESP32 Configuration
-
-Because the kiosk usually connects via a Mobile Hotspot, WiFi credentials and the API IP need to be updated frequently:
-1. Update `WIFI_SSID`, `WIFI_PASSWORD`, and `NEXT_PUBLIC_API_URL` in your root `.env` file.
-2. Run the config generator:
-   ```bash
-   npm run kiosk:config
-   ```
-   *This automatically generates `kiosk/kiosk_main/kiosk_config.h`.*
-3. **Upload Code:** Connect the ESP32 via USB and upload the code using Arduino IDE or VSCode.
-
-## 📁 Structure
-- `/backend`: FastAPI (Python)
-- `/frontend`: Next.js (TypeScript)
-- `/kiosk`: ESP32 Firmware (Arduino)
-- `/vision`: Vision subsystem (controller + inference)
-- `/docs`: Architecture and technical documentation
-
-## 📐 Architecture Documents
-- `VISION_BASED_INVENTORY_ARCHITECTURE.md`: Vision-first drawer architecture, slot-based tracking model, lifecycle, and draft data model
-- `PROJECT_STRUCTURE_BEFORE_AFTER.md`: Repository structure analysis, current vs target layout, and readability guidelines
