@@ -9,6 +9,7 @@ export interface ItemTypeImageApi {
 export interface ItemTypeApi {
   id: number;
   name: string;
+  quantity: number;
   active: boolean;
   quantity: number;
   created_at: string;

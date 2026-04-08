@@ -24,7 +24,7 @@ export default function HardwareAdminPage() {
     // Redirect if not admin
     useEffect(() => {
         if (!authLoading && (!user || !isAdmin)) {
-            router.push("/login");
+            router.replace("/login");
         }
     }, [authLoading, user, isAdmin, router]);
 

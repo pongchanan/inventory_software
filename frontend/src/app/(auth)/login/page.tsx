@@ -10,24 +10,25 @@ import { LoginMobileShell } from "./_components/LoginMobileShell";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginStore, user } = useAuth();
+  const { loginStore, user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Already logged in — redirect to admin or home based on role.
+  // Guard with authLoading to avoid redirecting with stale state during logout.
   useEffect(() => {
-    if (user) {
+    if (!authLoading && user) {
       if (user.role === "admin") {
-        router.push("/admin");
+        router.replace("/admin");
       } else {
-        router.push("/");
+        router.replace("/");
       }
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
-  if (user) {
+  if (!authLoading && user) {
     return null;
   }
 

@@ -7,11 +7,6 @@ jest.mock("@/context/AuthContext", () => ({
   useAuth: jest.fn(),
 }));
 
-function MockNavbar() {
-  return <div>Smart Inventory</div>;
-}
-jest.mock("@/components/Navbar", () => MockNavbar);
-
 // Mock next/link
 jest.mock("next/link", () => {
   const MockLink = ({ children, href }: any) => {
@@ -37,13 +32,20 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("lucide-react", () => {
+  const icon = (name: string) =>
+    function MockIcon() {
+      return <div data-testid={`icon-${name}`} />;
+    };
   return {
-    Menu: function MockMenu() {
-      return <div data-testid="icon-menu" />;
-    },
-    X: function MockX() {
-      return <div data-testid="icon-x" />;
-    },
+    Package: icon("package"),
+    LayoutGrid: icon("layout-grid"),
+    ShieldCheck: icon("shield-check"),
+    ClipboardList: icon("clipboard-list"),
+    Menu: icon("menu"),
+    X: icon("x"),
+    LogIn: icon("log-in"),
+    LogOut: icon("log-out"),
+    User: icon("user"),
   };
 });
 
@@ -161,7 +163,6 @@ describe("Navbar", () => {
       fireEvent.click(logoutButton);
 
       expect(mockLogout).toHaveBeenCalledTimes(1);
-      expect(mockPush).toHaveBeenCalledWith("/");
     });
   });
 

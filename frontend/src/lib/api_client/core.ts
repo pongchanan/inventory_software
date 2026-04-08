@@ -8,8 +8,8 @@ import {
   StorageUnitApi,
 } from "./types";
 
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+export const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+
 
 export function toItemUid(itemTypeId: number): string {
   return `TYPE-${itemTypeId}`;
@@ -56,6 +56,7 @@ function _mapRawItemToItemTypeApi(item: any): ItemTypeApi {
   return {
     id: item.id,
     name: item.name,
+    quantity: item.quantity ?? 0,
     active: item.is_active,
     quantity: item.quantity ?? 0,
     created_at: item.created_at || new Date().toISOString(),

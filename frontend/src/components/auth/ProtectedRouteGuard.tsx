@@ -15,7 +15,7 @@ export function ProtectedRouteGuard({
   useEffect(() => {
     // If auth check is complete and user is not authenticated, redirect to login
     if (!loading && (!token || !user)) {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [loading, token, user, router]);
 
