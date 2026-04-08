@@ -70,42 +70,17 @@ def recognize_from_image(
     """
     logger.info("[ai_service][recognize] image size=%d bytes", len(payload.image_bytes))
     detections = detect_image_bytes(payload.image_bytes)
-    logger.info(
-        "[ai_service][recognize] detector returned %d detection(s)", len(detections)
-    )
 
     if not detections:
         logger.warning("[ai_service][recognize] no detections — returning empty list")
         return []
-
-    for i, d in enumerate(detections):
-        logger.info(
-            "[ai_service][recognize] detection[%d] class=%r conf=%.4f bbox=%s",
-            i,
-            d.get("class_name"),
-            d.get("confidence"),
-            d.get("bbox"),
-        )
 
     hits = impl.recognize_from_detections(
         db=db,
         image_bytes=payload.image_bytes,
         detections=detections,
     )
-    logger.info(
-        "[ai_service][recognize] recognize_from_detections returned %d hit(s)",
-        len(hits),
-    )
     outputs = [RecognizeHitOutput(**_to_mapping(hit)) for hit in hits]
-    for i, hit in enumerate(outputs):
-        logger.info(
-            "[ai_service][recognize] hit[%d] label=%r score=%.4f margin=%.4f accepted=%s",
-            i,
-            hit.label,
-            hit.score,
-            hit.margin,
-            hit.accepted,
-        )
     return outputs
 
 

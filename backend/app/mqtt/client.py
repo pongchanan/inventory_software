@@ -71,8 +71,6 @@ def _on_message(client: paho.Client, userdata, msg: paho.MQTTMessage):
     except (json.JSONDecodeError, UnicodeDecodeError):
         payload = msg.payload.decode(errors="replace")
 
-    print(f"[MQTT] {msg.topic} → {sub_topic} handler")
-
     db = SessionLocal()
     try:
         handler(payload, db)
@@ -122,4 +120,3 @@ def publish(topic: str, payload: dict):
     full_topic = f"{base}/{topic}"
     if _client and _client.is_connected():
         _client.publish(full_topic, json.dumps(payload))
-        print(f"[MQTT] Published to {full_topic}")

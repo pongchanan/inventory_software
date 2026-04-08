@@ -49,7 +49,6 @@ def upload_image(data: bytes, session_id: int, content_type: str = "image/jpeg")
         ContentType=content_type,
     )
 
-    print(f"[s3] Uploaded {len(data)} bytes → {key}")
     return key
 
 
@@ -79,7 +78,6 @@ def upload_item_image(data: bytes, item_id: int, content_type: str = "image/jpeg
         ContentType=content_type,
     )
 
-    print(f"[s3] Uploaded item image {len(data)} bytes → {key}")
     return key
 
 
