@@ -118,6 +118,7 @@ export interface Session {
   open_at: string;
   close_at: string | null;
   close_image_path: string | null;
+  close_image_url: string | null;
   user: User;
 }
 

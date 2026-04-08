@@ -24,7 +24,22 @@ def get_sessions(db: Session, page: int, page_size: int) -> dict:
     sessions = []
     for session, user in rows:
         session.user = user
-        sessions.append(session)
+        # Build a dict so we can inject close_image_url
+        d = {
+            "id": session.id,
+            "open_by": session.open_by,
+            "open_at": session.open_at,
+            "close_at": session.close_at,
+            "close_image_path": session.close_image_path,
+            "close_image_url": None,
+            "user": user,
+        }
+        if session.close_image_path:
+            try:
+                d["close_image_url"] = get_presigned_url(session.close_image_path)
+            except Exception:
+                pass
+        sessions.append(d)
 
     return {
         "sessions": sessions,

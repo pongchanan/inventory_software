@@ -11,6 +11,7 @@ class OpenSessionOut(BaseModel):
     open_at: datetime
     close_at: datetime | None
     close_image_path: str | None
+    close_image_url: str | None = None
     user: UserOut
 
     model_config = {"from_attributes": True}

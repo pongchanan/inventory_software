@@ -16,7 +16,7 @@ import {
   Server,
 } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
 
 export default function AdminCabinetLogsPage() {
   const { token } = useAuth();
@@ -134,7 +134,7 @@ export default function AdminCabinetLogsPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((s) => (
-                  <SessionRow key={s.id} session={s} token={token} onImageClick={setLightboxUrl} />
+                  <SessionRow key={s.id} session={s} onImageClick={setLightboxUrl} />
                 ))}
               </tbody>
             </table>
@@ -143,7 +143,7 @@ export default function AdminCabinetLogsPage() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-3">
             {filtered.map((s) => (
-              <SessionCard key={s.id} session={s} token={token} onImageClick={setLightboxUrl} />
+              <SessionCard key={s.id} session={s} onImageClick={setLightboxUrl} />
             ))}
           </div>
         </>
@@ -207,20 +207,16 @@ function getDuration(openAt: string, closeAt: string | null): string {
 /* ─── Desktop Row ─── */
 function SessionRow({
   session,
-  token,
   onImageClick,
 }: {
   session: Session;
-  token: string | null;
   onImageClick: (url: string) => void;
 }) {
   const isOpen = !session.close_at;
 
   function handleImageClick() {
-    if (!session.close_image_path) return;
-    const url = `${API_BASE}/api/sessions/${session.id}/image`;
-    // The endpoint returns a 302 redirect to presigned URL — open in lightbox
-    onImageClick(`${url}?token=${token}`);
+    if (!session.close_image_url) return;
+    onImageClick(session.close_image_url);
   }
 
   return (
@@ -256,7 +252,7 @@ function SessionRow({
         )}
       </td>
       <td className="py-3 px-4 text-center">
-        {session.close_image_path ? (
+        {session.close_image_url ? (
           <button
             onClick={handleImageClick}
             className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -275,18 +271,16 @@ function SessionRow({
 /* ─── Mobile Card ─── */
 function SessionCard({
   session,
-  token,
   onImageClick,
 }: {
   session: Session;
-  token: string | null;
   onImageClick: (url: string) => void;
 }) {
   const isOpen = !session.close_at;
 
   function handleImageClick() {
-    if (!session.close_image_path) return;
-    onImageClick(`${API_BASE}/api/sessions/${session.id}/image?token=${token}`);
+    if (!session.close_image_url) return;
+    onImageClick(session.close_image_url);
   }
 
   return (
@@ -324,7 +318,7 @@ function SessionCard({
           </div>
         </div>
 
-        {session.close_image_path && (
+        {session.close_image_url && (
           <button
             onClick={handleImageClick}
             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shrink-0"
