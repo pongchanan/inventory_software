@@ -81,11 +81,16 @@ def update_item_image(
     return item_to_out(item)
 
 
-def get_active_items(db: Session, page: int, page_size: int) -> dict:
-    query = db.query(Item).filter(Item.is_active == True)  # noqa: E712
+def get_active_items(
+    db: Session, page: int, page_size: int, search: str | None = None
+) -> dict:
+    base_filter = [Item.is_active == True]  # noqa: E712
+    if search:
+        base_filter.append(Item.name.ilike(f"%{search}%"))
+    query = db.query(Item).filter(*base_filter)
 
     # Use scalar count — avoids the extra subquery that legacy .count() generates.
-    total = db.query(func.count(Item.id)).filter(Item.is_active == True).scalar()  # noqa: E712
+    total = db.query(func.count(Item.id)).filter(*base_filter).scalar()
     total_pages = max(1, math.ceil(total / page_size))
 
     items = (

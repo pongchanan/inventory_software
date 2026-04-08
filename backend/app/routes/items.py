@@ -14,7 +14,12 @@ from app.schemas.item import (
 from app.services.auth_service import require_admin
 from app.services.enroll_job_store import create_job, get_job, submit_job
 from app.services.item_enroll_service import create_item_record
-from app.services.items_service import get_active_items, item_to_out, update_item_image, update_item_quantity
+from app.services.items_service import (
+    get_active_items,
+    item_to_out,
+    update_item_image,
+    update_item_quantity,
+)
 
 router = APIRouter(prefix="/api/items", tags=["Items"])
 
@@ -23,9 +28,10 @@ router = APIRouter(prefix="/api/items", tags=["Items"])
 def list_active_items(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    search: str | None = Query(None, max_length=100),
     db: Session = Depends(get_db),
 ):
-    return get_active_items(db, page, page_size)
+    return get_active_items(db, page, page_size, search=search)
 
 
 @router.patch(
@@ -42,6 +48,7 @@ def adjust_item_quantity(
         return update_item_quantity(db, item_id, body.delta)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
 
 @router.post(
     "/enroll",
