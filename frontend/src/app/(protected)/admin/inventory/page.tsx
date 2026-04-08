@@ -109,7 +109,7 @@ export default function InventoryAdminPage() {
       }
 
       const quantity = parseInt(form.quantity?.toString() || "1", 10);
-      const result = await enrollItem(form.name, quantity, videoFile);
+      const result = await enrollItem(form.name, quantity, videoFile, imageFile ?? undefined);
 
       setSuccessMsg(
         `Added device "${result.name}" successfully! (Accepted: ${result.accepted_count}/${result.frames_sampled})`,

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from typing import Optional
 
 from app.database import get_db
 from app.schemas.item import (
@@ -13,7 +14,7 @@ from app.schemas.item import (
 from app.services.auth_service import require_admin
 from app.services.enroll_job_store import create_job, get_job, submit_job
 from app.services.item_enroll_service import create_item_record
-from app.services.items_service import get_active_items, update_item_quantity
+from app.services.items_service import get_active_items, item_to_out, update_item_image, update_item_quantity
 
 router = APIRouter(prefix="/api/items", tags=["Items"])
 
@@ -42,7 +43,6 @@ def adjust_item_quantity(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-
 @router.post(
     "/enroll",
     response_model=EnrollJobAccepted,
@@ -53,11 +53,15 @@ async def enroll_item_route(
     name: str = Form(...),
     quantity: int = Form(..., ge=0),
     video: UploadFile = File(...),
+    image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
 ):
     """Start a background enrollment job.
 
     1. Creates the Item row immediately (fast DB write).
+       If *image* is provided it is uploaded to S3 right away and stored
+       as the item's cover image.  Otherwise the ML pipeline will pick the
+       best accepted frame from the video and use that instead.
     2. Queues the heavy ML pipeline in a background thread.
     3. Returns **202 Accepted** with a ``job_id`` the frontend can poll.
 
@@ -68,9 +72,23 @@ async def enroll_item_route(
     if not video_bytes:
         raise HTTPException(status_code=400, detail="video file is empty")
 
+    image_bytes: bytes | None = None
+    image_content_type = "image/jpeg"
+    if image is not None:
+        image_bytes = await image.read()
+        image_content_type = image.content_type or "image/jpeg"
+        if not image_bytes:
+            image_bytes = None  # treat empty upload as no image
+
     # Synchronous part — create the DB record now so the item is visible
     # in the list immediately (status will show "processing").
-    item = create_item_record(db, name=name, quantity=quantity)
+    item = create_item_record(
+        db,
+        name=name,
+        quantity=quantity,
+        image_bytes=image_bytes,
+        image_content_type=image_content_type,
+    )
 
     job_id = create_job(item_id=item.id, name=item.name, quantity=item.quantity)
     submit_job(job_id, video_bytes)
@@ -104,3 +122,29 @@ def get_enroll_job_status(job_id: str):
     if job is None:
         raise HTTPException(status_code=404, detail="job not found")
     return EnrollJobStatus(**job)
+
+
+@router.put(
+    "/{item_id}/image",
+    response_model=ItemOut,
+    dependencies=[Depends(require_admin)],
+)
+async def upload_item_image_route(
+    item_id: int,
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    """Replace (or set) the cover image for an existing item.
+
+    Uploads the provided image file to S3, stores the S3 object key in
+    ``item.image_path``, and returns the updated item with a live presigned
+    URL as the ``image`` field — ready to use as an ``<img src>``.
+    """
+    image_bytes = await image.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="image file is empty")
+    content_type = image.content_type or "image/jpeg"
+    try:
+        return update_item_image(db, item_id, image_bytes, content_type)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))

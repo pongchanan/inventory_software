@@ -25,6 +25,7 @@ from sqlalchemy import update as sa_update
 from app.database import SessionLocal
 from app.models.item import Item
 from app.services.item_enroll_service import run_enroll_pipeline
+from app.services.s3_storage import get_presigned_url
 
 logger = logging.getLogger(__name__)
 
@@ -104,16 +105,26 @@ def _run_job(job_id: str, video_bytes: bytes) -> None:
         result = run_enroll_pipeline(
             db, item_id=item_id, name=name, video_bytes=video_bytes
         )
-        # Persist success status to DB so it survives a future server restart.
-        db.execute(
-            sa_update(Item).where(Item.id == item_id).values(enroll_status="done")
-        )
+        # Persist success status.  Also populate image_path from the first
+        # accepted frame when the admin did not upload an explicit cover image.
+        update_vals: dict = {"enroll_status": "done"}
+        first_frame_key: str | None = result["images"][0] if result["images"] else None
+        current_path = db.query(Item.image_path).filter(Item.id == item_id).scalar()
+        if current_path is None and first_frame_key:
+            update_vals["image_path"] = first_frame_key
+        db.execute(sa_update(Item).where(Item.id == item_id).values(**update_vals))
         db.commit()
+
+        # Resolve image key → presigned URL for the in-memory store so the
+        # poll response gives the frontend a ready-to-use URL.
+        resolved_key = update_vals.get("image_path") or current_path or first_frame_key
+        image_url = get_presigned_url(resolved_key) if resolved_key else None
+
         with _lock:
             _store[job_id].update(
                 {
                     "status": "done",
-                    "image": result["images"][0] if result["images"] else None,
+                    "image": image_url,
                     "accepted_count": result["accepted_count"],
                     "rejected_count": result["rejected_count"],
                     "frames_sampled": result["frames_sampled"],

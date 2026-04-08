@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.models.item import Item
 from app.models.ai_label import AiLabel
 from app.models.ai_sample import AiSample
-from app.services.s3_storage import get_presigned_url
+from app.services.s3_storage import get_presigned_url, upload_item_image
 
 
 def _first_image_for_items(db: Session, item_ids: list[int]) -> dict[int, str | None]:
@@ -26,7 +26,23 @@ def _first_image_for_items(db: Session, item_ids: list[int]) -> dict[int, str | 
     return result
 
 
-def update_item_quantity(db: Session, item_id: int, delta: int) -> Item:
+def item_to_out(item: Item) -> dict:
+    """Convert an Item ORM object to a dict compatible with ``ItemOut``.
+
+    Resolves ``image_path`` → presigned URL so the frontend can use it
+    directly as an ``<img src>``.
+    """
+    return {
+        "id": item.id,
+        "name": item.name,
+        "quantity": item.quantity,
+        "is_active": item.is_active,
+        "image": get_presigned_url(item.image_path) if item.image_path else None,
+        "enroll_status": item.enroll_status,
+    }
+
+
+def update_item_quantity(db: Session, item_id: int, delta: int) -> dict:
     item = db.query(Item).filter(Item.id == item_id).first()
     if not item:
         raise ValueError(f"Item {item_id} not found")
@@ -36,7 +52,27 @@ def update_item_quantity(db: Session, item_id: int, delta: int) -> Item:
     item.quantity = new_qty
     db.commit()
     db.refresh(item)
-    return item
+    return item_to_out(item)
+
+
+def update_item_image(
+    db: Session,
+    item_id: int,
+    image_bytes: bytes,
+    content_type: str = "image/jpeg",
+) -> dict:
+    """Upload a new cover image for *item_id* to S3 and persist the S3 key.
+
+    Returns an ``ItemOut``-compatible dict with a live presigned URL.
+    """
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        raise ValueError(f"Item {item_id} not found")
+    key = upload_item_image(image_bytes, item_id, content_type)
+    item.image_path = key
+    db.commit()
+    db.refresh(item)
+    return item_to_out(item)
 
 
 def get_active_items(db: Session, page: int, page_size: int) -> dict:
@@ -49,11 +85,17 @@ def get_active_items(db: Session, page: int, page_size: int) -> dict:
         query.order_by(Item.id).offset((page - 1) * page_size).limit(page_size).all()
     )
 
-    image_map = _first_image_for_items(db, [item.id for item in items])
+    # For items that don't yet have image_path set (legacy rows), fall back to
+    # the first accepted AiSample frame.
+    items_without_path = [i for i in items if not i.image_path]
+    sample_image_map = _first_image_for_items(db, [i.id for i in items_without_path])
 
     items_out = []
     for item in items:
-        raw_key = image_map.get(item.id)
+        if item.image_path:
+            raw_key: str | None = item.image_path
+        else:
+            raw_key = sample_image_map.get(item.id)
         items_out.append(
             {
                 "id": item.id,
@@ -61,6 +103,7 @@ def get_active_items(db: Session, page: int, page_size: int) -> dict:
                 "quantity": item.quantity,
                 "is_active": item.is_active,
                 "image": get_presigned_url(raw_key) if raw_key else None,
+                "enroll_status": item.enroll_status,
             }
         )
 
