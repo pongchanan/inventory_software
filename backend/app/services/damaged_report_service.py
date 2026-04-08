@@ -99,12 +99,28 @@ def create_user_report(
     topic: str,
     description: str,
     image_data: bytes,
+    item_id: int | None = None,
 ) -> DamagedItemReport:
-    """Create a damage report for the user's currently active borrow.
+    """Create a damage report for one of the user's active borrows.
 
-    Raises ValueError if the user has no active borrowing.
+    If item_id is given, validates that the user has an active borrow for it.
+    Otherwise falls back to the first active borrow.
+    Raises ValueError if the user has no matching active borrowing.
     """
-    item_id = _resolve_active_item(db, user_id)
+    if item_id is not None:
+        borrowing = (
+            db.query(Borrowing)
+            .filter(
+                Borrowing.user_id == user_id,
+                Borrowing.item_id == item_id,
+                Borrowing.return_at == None,  # noqa: E711
+            )
+            .first()
+        )
+        if not borrowing:
+            raise ValueError("You have no active borrowing for this item")
+    else:
+        item_id = _resolve_active_item(db, user_id)
     image_key = _upload_damaged_image(image_data, user_id)
 
     report = DamagedItemReport(

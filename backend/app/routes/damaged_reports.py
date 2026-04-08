@@ -73,12 +73,13 @@ async def submit_user_report(
     topic: str = Form(...),
     description: str = Form(...),
     image: UploadFile = File(...),
+    item_id: int | None = Form(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     image_data = await image.read()
     try:
-        return create_user_report(db, current_user.id, topic, description, image_data)
+        return create_user_report(db, current_user.id, topic, description, image_data, item_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
