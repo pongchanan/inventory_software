@@ -123,3 +123,9 @@ def download_image(key: str) -> bytes:
     client = _get_client()
     response = client.get_object(Bucket=_get_bucket(), Key=key)
     return response["Body"].read()
+
+
+def delete_s3_object(key: str) -> None:
+    """Delete an object from S3 by its key."""
+    client = _get_client()
+    client.delete_object(Bucket=_get_bucket(), Key=_normalize_key(key))

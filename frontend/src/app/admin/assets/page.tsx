@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
-import type { Item, PaginatedItems, EnrollJob } from "@/lib/types";
+import type { Item, PaginatedItems, EnrollJob, AiSample } from "@/lib/types";
 import Pagination from "@/components/ui/pagination";
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
@@ -21,6 +21,7 @@ import {
   Eye,
   EyeOff,
   Images,
+  Trash2,
 } from "lucide-react";
 
 type ActiveFilter = "all" | "active" | "inactive";
@@ -223,6 +224,7 @@ function AssetCard({
   const [uploading, setUploading] = useState(false);
   const [toggling, setToggling] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [showSamples, setShowSamples] = useState(false);
 
   const isProcessing = item.enroll_status === "processing";
   const isFailed = item.enroll_status === "failed";
@@ -360,11 +362,14 @@ function AssetCard({
           </button>
         </div>
 
-        {/* Sample count */}
-        <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+        {/* Sample count — clickable to open samples */}
+        <button
+          onClick={() => setShowSamples(true)}
+          className="flex items-center gap-1 mt-1 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+        >
           <Images size={12} />
           <span>{item.sample_count} sample{item.sample_count !== 1 ? "s" : ""}</span>
-        </div>
+        </button>
 
         {/* Quantity */}
         <div className="mt-3">
@@ -431,6 +436,169 @@ function AssetCard({
               </div>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Sample Detail Modal */}
+      {showSamples && (
+        <SampleDetailModal
+          item={item}
+          token={token}
+          onClose={() => setShowSamples(false)}
+          onUpdate={onUpdate}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   Sample Detail Modal
+   ═══════════════════════════════════════════ */
+function SampleDetailModal({
+  item,
+  token,
+  onClose,
+  onUpdate,
+}: {
+  item: Item;
+  token: string | null;
+  onClose: () => void;
+  onUpdate: () => void;
+}) {
+  const [samples, setSamples] = useState<AiSample[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const fetchSamples = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api<AiSample[]>(`/api/items/${item.id}/samples`, { token });
+      setSamples(data);
+    } catch {
+      setSamples([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [item.id, token]);
+
+  useEffect(() => {
+    fetchSamples();
+  }, [fetchSamples]);
+
+  async function handleDelete(sampleId: number) {
+    if (!confirm("Remove this sample image?")) return;
+    setDeleting(sampleId);
+    try {
+      await api(`/api/items/${item.id}/samples/${sampleId}`, { method: "DELETE", token });
+      setSamples((prev) => prev.filter((s) => s.id !== sampleId));
+      onUpdate();
+    } catch {
+      // silently fail
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append("image", file);
+        const newSample = await api<AiSample>(`/api/items/${item.id}/samples`, {
+          method: "POST",
+          formData: fd,
+          token,
+        });
+        setSamples((prev) => [...prev, newSample]);
+      }
+      onUpdate();
+    } catch {
+      // silently fail
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 shrink-0">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">{item.name}</h2>
+            <p className="text-sm text-gray-500">{samples.length} AI sample image{samples.length !== 1 ? "s" : ""}</p>
+          </div>
+          <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-5">
+          {loading ? (
+            <div className="grid grid-cols-3 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="aspect-square bg-gray-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : samples.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <Images size={40} className="mx-auto mb-2 opacity-50" />
+              <p>No sample images yet</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {samples.map((s) => (
+                <div key={s.id} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200">
+                  <img
+                    src={s.image_url}
+                    alt={`Sample ${s.id}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    onClick={() => handleDelete(s.id)}
+                    disabled={deleting === s.id}
+                    className="absolute top-1.5 right-1.5 p-1.5 bg-red-600/90 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 disabled:opacity-50"
+                    title="Remove sample"
+                  >
+                    {deleting === s.id ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-5 border-t border-gray-100 shrink-0">
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium"
+          >
+            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+            {uploading ? "Uploading…" : "Add Sample Images"}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleUpload}
+          />
         </div>
       </div>
     </div>

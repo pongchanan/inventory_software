@@ -59,3 +59,9 @@ class PaginatedItems(BaseModel):
 
 class UpdateItemQuantityRequest(BaseModel):
     delta: int  # positive = add stock, negative = remove stock
+
+
+class AiSampleOut(BaseModel):
+    id: int
+    image_url: str
+    created_at: str

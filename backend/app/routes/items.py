@@ -5,6 +5,7 @@ from typing import Optional
 
 from app.database import get_db
 from app.schemas.item import (
+    AiSampleOut,
     EnrollJobAccepted,
     EnrollJobStatus,
     ItemOut,
@@ -15,12 +16,15 @@ from app.services.auth_service import require_admin
 from app.services.enroll_job_store import create_job, get_job, submit_job
 from app.services.item_enroll_service import add_quantity_to_existing, create_item_record
 from app.services.items_service import (
+    delete_item_sample,
     get_active_items,
     get_admin_items,
+    get_item_samples,
     item_to_out,
     toggle_item_active,
     update_item_image,
     update_item_quantity,
+    upload_sample_image,
 )
 
 router = APIRouter(prefix="/api/items", tags=["Items"])
@@ -215,3 +219,50 @@ async def upload_item_image_route(
         return update_item_image(db, item_id, image_bytes, content_type)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+
+
+# ── AI sample management ────────────────────────────────────────────────
+
+@router.get(
+    "/{item_id}/samples",
+    response_model=list[AiSampleOut],
+    dependencies=[Depends(require_admin)],
+)
+def list_item_samples(item_id: int, db: Session = Depends(get_db)):
+    try:
+        return get_item_samples(db, item_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@router.delete(
+    "/{item_id}/samples/{sample_id}",
+    status_code=204,
+    dependencies=[Depends(require_admin)],
+)
+def delete_item_sample_route(item_id: int, sample_id: int, db: Session = Depends(get_db)):
+    try:
+        delete_item_sample(db, item_id, sample_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@router.post(
+    "/{item_id}/samples",
+    response_model=AiSampleOut,
+    status_code=201,
+    dependencies=[Depends(require_admin)],
+)
+async def add_item_sample_route(
+    item_id: int,
+    image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    image_bytes = await image.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="image file is empty")
+    content_type = image.content_type or "image/jpeg"
+    try:
+        return upload_sample_image(db, item_id, image_bytes, content_type)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))

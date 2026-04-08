@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.models.item import Item
 from app.models.ai_label import AiLabel
 from app.models.ai_sample import AiSample
-from app.services.s3_storage import get_presigned_url, upload_item_image
+from app.services.s3_storage import delete_s3_object, get_presigned_url, upload_item_image
 
 
 def _sample_counts_for_items(db: Session, item_ids: list[int]) -> dict[int, int]:
@@ -215,3 +215,87 @@ def toggle_item_active(db: Session, item_id: int) -> dict:
     db.refresh(item)
     sc = _sample_counts_for_items(db, [item.id])
     return item_to_out(item, sample_count=sc.get(item.id, 0))
+
+
+def get_item_samples(db: Session, item_id: int) -> list[dict]:
+    """Return all AI sample images for an item as presigned URLs."""
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        raise ValueError(f"Item {item_id} not found")
+    rows = (
+        db.query(AiSample)
+        .join(AiLabel, AiLabel.id == AiSample.label_id)
+        .filter(AiLabel.item_id == item_id)
+        .order_by(AiSample.id)
+        .all()
+    )
+    return [
+        {
+            "id": s.id,
+            "image_url": get_presigned_url(s.image_path),
+            "created_at": s.created_at.isoformat(),
+        }
+        for s in rows
+    ]
+
+
+def delete_item_sample(db: Session, item_id: int, sample_id: int) -> None:
+    """Delete a single AI sample image from S3 and the database."""
+    sample = (
+        db.query(AiSample)
+        .join(AiLabel, AiLabel.id == AiSample.label_id)
+        .filter(AiLabel.item_id == item_id, AiSample.id == sample_id)
+        .first()
+    )
+    if not sample:
+        raise ValueError(f"Sample {sample_id} not found for item {item_id}")
+    try:
+        delete_s3_object(sample.image_path)
+    except Exception:
+        pass  # best-effort S3 cleanup
+    db.delete(sample)
+    db.commit()
+
+
+def upload_sample_image(
+    db: Session, item_id: int, image_bytes: bytes, content_type: str = "image/jpeg"
+) -> dict:
+    """Upload a new AI sample image for an item."""
+    import hashlib
+
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        raise ValueError(f"Item {item_id} not found")
+
+    # Find or create AiLabel for this item
+    label = db.query(AiLabel).filter(AiLabel.item_id == item_id).first()
+    if not label:
+        label = AiLabel(name=item.name.strip(), item_id=item_id)
+        db.add(label)
+        db.commit()
+        db.refresh(label)
+
+    # Upload to S3
+    key = upload_item_image(image_bytes, item_id, content_type)
+    image_hash = hashlib.sha256(image_bytes).hexdigest()
+
+    # Check for duplicate hash
+    existing = db.query(AiSample).filter(AiSample.image_hash == image_hash).first()
+    if existing:
+        raise ValueError("Duplicate image — this sample already exists")
+
+    sample = AiSample(
+        label_id=label.id,
+        image_path=key,
+        embedding_blob=b"",  # placeholder — no ML embedding for manual uploads
+        image_hash=image_hash,
+    )
+    db.add(sample)
+    db.commit()
+    db.refresh(sample)
+
+    return {
+        "id": sample.id,
+        "image_url": get_presigned_url(key),
+        "created_at": sample.created_at.isoformat(),
+    }

@@ -26,6 +26,12 @@ export interface Item {
   sample_count: number;
 }
 
+export interface AiSample {
+  id: number;
+  image_url: string;
+  created_at: string;
+}
+
 export interface PaginatedItems {
   items: Item[];
   total: number;
