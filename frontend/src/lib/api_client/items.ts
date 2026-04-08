@@ -3,6 +3,7 @@ import {
   authHeaders,
   fetchItemTypeById,
   fetchItemTypes,
+  fetchItemTypesPaginated,
   mapItemTypeToItem,
   parseItemTypeId,
   pickPrimaryImage,
@@ -25,6 +26,28 @@ export async function fetchItems(available?: boolean): Promise<Item[]> {
   const mapped = itemTypes.map(mapItemTypeToItem);
   if (available === undefined) return mapped;
   return mapped.filter((item) => item.available === available);
+}
+
+export interface PaginatedItems {
+  items: Item[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export async function fetchItemsPaginated(
+  page = 1,
+  page_size = 20
+): Promise<PaginatedItems> {
+  const data = await fetchItemTypesPaginated(page, page_size);
+  return {
+    items: data.items.map(mapItemTypeToItem),
+    total: data.total,
+    page: data.page,
+    page_size: data.page_size,
+    total_pages: data.total_pages,
+  };
 }
 
 export async function fetchItemByUid(uid: string): Promise<Item> {

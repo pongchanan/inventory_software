@@ -52,26 +52,60 @@ export function authHeaders(): Record<string, string> {
   return { Authorization: `Bearer ${token}` };
 }
 
-export async function fetchItemTypes(): Promise<ItemTypeApi[]> {
-  const res = await fetch(`${API_BASE}/api/items/`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch item types");
-  const data = await res.json();
-  // Convert paginated items response to ItemTypeApi array
-  return (data.items || []).map((item: any) => ({
+function _mapRawItemToItemTypeApi(item: any): ItemTypeApi {
+  return {
     id: item.id,
     name: item.name,
     active: item.is_active,
     quantity: item.quantity ?? 0,
     created_at: item.created_at || new Date().toISOString(),
     updated_at: item.updated_at || new Date().toISOString(),
-    images: item.image ? [{
-      id: 0,
-      item_type_id: item.id,
-      image_url: item.image,
-      is_primary: true,
-      created_at: new Date().toISOString()
-    }] : []
-  }));
+    images: item.image
+      ? [
+          {
+            id: 0,
+            item_type_id: item.id,
+            image_url: item.image,
+            is_primary: true,
+            created_at: new Date().toISOString(),
+          },
+        ]
+      : [],
+  };
+}
+
+export async function fetchItemTypes(): Promise<ItemTypeApi[]> {
+  const res = await fetch(`${API_BASE}/api/items/`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch item types");
+  const data = await res.json();
+  return (data.items || []).map(_mapRawItemToItemTypeApi);
+}
+
+export interface PaginatedItemTypes {
+  items: ItemTypeApi[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export async function fetchItemTypesPaginated(
+  page = 1,
+  page_size = 20
+): Promise<PaginatedItemTypes> {
+  const res = await fetch(
+    `${API_BASE}/api/items/?page=${page}&page_size=${page_size}`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) throw new Error("Failed to fetch item types");
+  const data = await res.json();
+  return {
+    items: (data.items || []).map(_mapRawItemToItemTypeApi),
+    total: data.total ?? 0,
+    page: data.page ?? page,
+    page_size: data.page_size ?? page_size,
+    total_pages: data.total_pages ?? 1,
+  };
 }
 
 export async function fetchItemTypeById(itemTypeId: number): Promise<ItemTypeApi> {

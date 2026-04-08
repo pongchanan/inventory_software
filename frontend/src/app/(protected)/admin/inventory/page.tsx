@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import {
-  fetchItems,
+  fetchItemsPaginated,
   createItemAuth,
   deleteItemAuth,
   uploadItemImageAuth,
@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { InventoryDesktopShell } from "./_components/InventoryDesktopShell";
 import { InventoryMobileShell } from "./_components/InventoryMobileShell";
+import { Pagination } from "@/components/ui/Pagination";
 
 const emptyForm: ItemCreate = {
   uid: "",
@@ -62,23 +63,31 @@ export default function InventoryAdminPage() {
   const [quantityDelta, setQuantityDelta] = useState<string>("");
   const [adjusting, setAdjusting] = useState(false);
   const [adjustError, setAdjustError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const PAGE_SIZE = 20;
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
       router.push("/login");
     }
   }, [authLoading, user, isAdmin, router]);
 
-  const loadItems = useCallback(() => {
+  const loadItems = useCallback((p: number) => {
     setLoading(true);
-    fetchItems()
-      .then(setItems)
+    fetchItemsPaginated(p, PAGE_SIZE)
+      .then((result) => {
+        setItems(result.items);
+        setTotal(result.total);
+        setTotalPages(result.total_pages);
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    loadItems();
-  }, [loadItems]);
+    loadItems(page);
+  }, [loadItems, page]);
 
   const handleImageSelect = (file: File | null) => {
     setImageFile(file);
@@ -119,7 +128,7 @@ export default function InventoryAdminPage() {
       setImagePreview(null);
       setVideoFile(null);
       setShowForm(false);
-      loadItems();
+      loadItems(page);
     } catch (err) {
       setSubmitError(
         err instanceof Error ? err.message : "Failed to create item",
@@ -135,7 +144,7 @@ export default function InventoryAdminPage() {
     try {
       await deleteItemAuth(uid);
       setSuccessMsg(`Device ${uid} deleted.`);
-      loadItems();
+      loadItems(page);
     } catch {
       setError("Unable to delete device.");
     }
@@ -147,7 +156,7 @@ export default function InventoryAdminPage() {
     try {
       await uploadItemImageAuth(uid, file);
       setSuccessMsg(`Image uploaded for ${uid} successfully.`);
-      loadItems();
+      loadItems(page);
     } catch {
       setError("Unable to upload image.");
     }
@@ -369,6 +378,14 @@ export default function InventoryAdminPage() {
           handleUploadImage={handleUploadImage}
           handleEditQuantity={handleEditQuantity}
           AdminItemImage={AdminItemImage}
+        />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
+          loading={loading}
         />
       </div>
 
