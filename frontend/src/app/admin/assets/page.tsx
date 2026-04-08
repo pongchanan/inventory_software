@@ -22,6 +22,7 @@ import {
   EyeOff,
   Images,
   Trash2,
+  HelpCircle,
 } from "lucide-react";
 
 type ActiveFilter = "all" | "active" | "inactive";
@@ -92,11 +93,37 @@ export default function AdminAssetsPage() {
     }
   });
 
+  const [showTips, setShowTips] = useState(false);
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Asset Management</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900">Asset Management</h1>
+            <div className="relative">
+              <button
+                onClick={() => setShowTips((v) => !v)}
+                className="p-1 text-gray-400 hover:text-blue-600 transition-colors rounded-full"
+                title="Tips"
+              >
+                <HelpCircle size={18} />
+              </button>
+              {showTips && (
+                <div className="absolute left-0 top-full mt-2 z-40 w-72 bg-white border border-gray-200 rounded-xl shadow-lg p-4 text-sm text-gray-600">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-gray-900">Quick Tips</span>
+                    <button onClick={() => setShowTips(false)} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
+                  </div>
+                  <ul className="space-y-2">
+                    <li className="flex gap-2"><Video size={14} className="text-blue-500 shrink-0 mt-0.5" /><span><strong>Enroll</strong> — Upload a video of the item to train AI recognition.</span></li>
+                    <li className="flex gap-2"><Images size={14} className="text-blue-500 shrink-0 mt-0.5" /><span><strong>Samples</strong> — Click the sample count on a card to view, add, or remove AI training images.</span></li>
+                    <li className="flex gap-2"><Eye size={14} className="text-blue-500 shrink-0 mt-0.5" /><span><strong>Active / Inactive</strong> — Inactive items are hidden from students and ignored by AI.</span></li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
           <p className="text-sm text-gray-500 mt-1">{total} items total</p>
         </div>
         <button
