@@ -37,14 +37,16 @@ export {
   fetchImageUrl,
   fetchItemByUid,
   fetchItems,
+  fetchItemsPaginated,
   getImageUrl,
   updateItem,
   updateItemQuantityAuth,
   uploadItemImage,
   uploadItemImageAuth,
   enrollItem,
+  adjustItemQuantity,
 } from "./api_client/items";
-export type { ItemEnrollOut } from "./api_client/items";
+export type { ItemEnrollOut, PaginatedItems } from "./api_client/items";
 export {
   createLoan,
   fetchActiveLoanDetails,

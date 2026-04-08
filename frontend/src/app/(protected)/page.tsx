@@ -1,28 +1,58 @@
 "use client";
 
-import { useState } from 'react';
-import { useInventory } from '../../services/hooks/useInventory';
+import { useState, useMemo, useEffect } from 'react';
+import { fetchItemsPaginated, getImageUrl } from '@/lib/api';
 import { ItemCard } from '../../components/inventory/ItemCard';
 import { Item } from '../../domain/models/Item';
+import { Pagination } from '@/components/ui/Pagination';
 import { Search, Filter } from 'lucide-react';
 
+const PAGE_SIZE = 20;
+
 export default function HomePage() {
-  const { sortedItems, searchQuery, setSearchQuery, sortBy, setSortBy } = useInventory();
+  const [items, setItems] = useState<Item[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'qty-desc' | 'qty-asc'>('name');
   const [showFilters, setShowFilters] = useState(false);
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'in-stock' | 'out-of-stock'>('all');
 
-  // Filter items by search query and availability
-  const filteredItems = sortedItems.filter((item: Item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    if (availabilityFilter === 'in-stock') {
-      return matchesSearch && item.qty > 0;
-    } else if (availabilityFilter === 'out-of-stock') {
-      return matchesSearch && item.qty === 0;
-    }
-    
-    return matchesSearch;
-  });
+  useEffect(() => {
+    setIsLoading(true);
+    fetchItemsPaginated(page, PAGE_SIZE)
+      .then((result) => {
+        setItems(
+          result.items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            qty: item.quantity,
+            total: item.quantity,
+            img: getImageUrl(item.image_url),
+          }))
+        );
+        setTotal(result.total);
+        setTotalPages(result.total_pages);
+      })
+      .catch((err) => console.error('Failed to load items:', err))
+      .finally(() => setIsLoading(false));
+  }, [page]);
+
+  // Apply client-side sort and filter within the current page
+  const filteredItems = useMemo(() => {
+    let result = items.filter((item: Item) => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      if (availabilityFilter === 'in-stock') return matchesSearch && item.qty > 0;
+      if (availabilityFilter === 'out-of-stock') return matchesSearch && item.qty === 0;
+      return matchesSearch;
+    });
+    if (sortBy === 'name') result.sort((a, b) => a.name.localeCompare(b.name));
+    if (sortBy === 'qty-desc') result.sort((a, b) => b.qty - a.qty);
+    if (sortBy === 'qty-asc') result.sort((a, b) => a.qty - b.qty);
+    return result;
+  }, [items, sortBy, searchQuery, availabilityFilter]);
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -142,15 +172,33 @@ export default function HomePage() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 pb-24">
-        {filteredItems.map((item: Item) => (
-          <ItemCard key={item.id} item={item} />
-        ))}
-        {filteredItems.length === 0 && (
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 pb-8">
+        {isLoading
+          ? Array.from({ length: PAGE_SIZE }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-gray-100 h-52 animate-pulse"
+              />
+            ))
+          : filteredItems.map((item: Item) => (
+              <ItemCard key={item.id} item={item} />
+            ))}
+        {!isLoading && filteredItems.length === 0 && (
           <div className="col-span-full py-20 text-center text-gray-400 font-medium bg-white rounded-xl border border-dashed border-gray-200">
             No devices found matching your search
           </div>
         )}
+      </div>
+
+      <div className="pb-24">
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          pageSize={PAGE_SIZE}
+          onPageChange={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          loading={isLoading}
+        />
       </div>
     </div>
   );

@@ -235,17 +235,11 @@ def recognize_from_detections(
         len(prototypes),
         list(prototypes.keys()),
     )
-    logger.info(
-        "[ai_impl][recognize_detections] thresholds: similarity=%.4f margin=%.4f",
-        AI_SIMILARITY_THRESHOLD,
-        AI_MIN_MARGIN,
-    )
 
     results: list[RecognizeHit] = []
     for idx, raw_detection in enumerate(detections):
         detection = _coerce_detection(raw_detection)
         bbox = detection.bbox
-        logger.info("[ai_impl][recognize_detections] detection[%d] bbox=%s", idx, bbox)
 
         try:
             cropped_bytes = crop_by_bbox(image_bytes, bbox)
@@ -290,18 +284,6 @@ def recognize_from_detections(
         top2_score = scores[1][1] if len(scores) > 1 else 0.0
         margin = float(top1_score - top2_score)
         accepted = top1_score >= AI_SIMILARITY_THRESHOLD and margin >= AI_MIN_MARGIN
-
-        logger.info(
-            "[ai_impl][recognize_detections] detection[%d] top1=%r score=%.4f margin=%.4f "
-            "accepted=%s (need score>=%.4f margin>=%.4f)",
-            idx,
-            top1_label,
-            top1_score,
-            margin,
-            accepted,
-            AI_SIMILARITY_THRESHOLD,
-            AI_MIN_MARGIN,
-        )
 
         results.append(
             RecognizeHit(

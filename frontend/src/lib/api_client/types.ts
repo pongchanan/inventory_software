@@ -11,6 +11,7 @@ export interface ItemTypeApi {
   name: string;
   quantity: number;
   active: boolean;
+  quantity: number;
   created_at: string;
   updated_at: string;
   images?: ItemTypeImageApi[];

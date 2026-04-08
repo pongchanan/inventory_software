@@ -49,7 +49,35 @@ def upload_image(data: bytes, session_id: int, content_type: str = "image/jpeg")
         ContentType=content_type,
     )
 
-    print(f"[s3] Uploaded {len(data)} bytes → {key}")
+    return key
+
+
+def upload_item_image(data: bytes, item_id: int, content_type: str = "image/jpeg") -> str:
+    """Upload an item cover image to S3 and return the S3 object key.
+
+    The key is stored in ``Item.image_path`` and later resolved to a presigned
+    URL when serving the item list.
+
+    Args:
+        data: Raw image bytes (JPEG or whatever the browser sent).
+        item_id: The numeric item ID (used to namespace the S3 key).
+        content_type: MIME type of the uploaded file.
+
+    Returns:
+        The bare S3 object key (e.g. ``items/42/a1b2c3d4.jpg``).
+    """
+    client = _get_client()
+    bucket = _get_bucket()
+    ext = "jpg" if "jpeg" in content_type or "jpg" in content_type else content_type.split("/")[-1]
+    key = f"items/{item_id}/{uuid.uuid4().hex[:8]}.{ext}"
+
+    client.put_object(
+        Bucket=bucket,
+        Key=key,
+        Body=data,
+        ContentType=content_type,
+    )
+
     return key
 
 
