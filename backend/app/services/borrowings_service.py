@@ -53,6 +53,31 @@ def get_user_borrowings(db: Session, user_id: int, page: int, page_size: int) ->
     }
 
 
+def get_user_borrowing_history(db: Session, user_id: int, page: int, page_size: int) -> dict:
+    query = db.query(Borrowing).filter(
+        Borrowing.user_id == user_id,
+        Borrowing.return_at != None,  # noqa: E711
+    )
+
+    total = query.count()
+    total_pages = max(1, math.ceil(total / page_size))
+
+    borrowings = (
+        query.order_by(Borrowing.return_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    return {
+        "borrowings": _enrich_borrowings(db, borrowings),
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
+
+
 def get_all_borrowings_admin(db: Session, page: int, page_size: int) -> dict:
     """Get all borrowings with user info (admin view) - optimized single query"""
     from app.models.user import User

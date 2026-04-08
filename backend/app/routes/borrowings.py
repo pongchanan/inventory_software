@@ -8,6 +8,7 @@ from app.services.auth_service import get_current_user, require_admin
 from app.services.borrowings_service import (
     get_all_borrowings_admin,
     get_popular_items,
+    get_user_borrowing_history,
     get_user_borrowings,
 )
 
@@ -22,6 +23,16 @@ def my_borrowings(
     db: Session = Depends(get_db),
 ):
     return get_user_borrowings(db, current_user.id, page, page_size)
+
+
+@router.get("/me/history", response_model=PaginatedBorrowings)
+def my_borrowing_history(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return get_user_borrowing_history(db, current_user.id, page, page_size)
 
 
 @router.get(
