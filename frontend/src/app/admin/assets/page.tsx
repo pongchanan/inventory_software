@@ -336,6 +336,7 @@ function EnrollModal({
   const [image, setImage] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
 
   // suggestions state
   const [suggestions, setSuggestions] = useState<Item[]>([]);
@@ -410,8 +411,8 @@ function EnrollModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!video) {
-      setError("Video file is required");
+    if (!selectedItem && !video) {
+      setError("Video file is required for new items");
       return;
     }
     setSubmitting(true);
@@ -420,13 +421,21 @@ function EnrollModal({
       const fd = new FormData();
       fd.append("name", name);
       fd.append("quantity", String(quantity));
-      fd.append("video", video);
+      if (video) fd.append("video", video);
       if (image) fd.append("image", image);
+      if (selectedItem) fd.append("item_id", String(selectedItem.id));
 
       const result = await api<{ job_id: string; status: string; item_id: number }>(
         "/api/items/enroll",
         { method: "POST", formData: fd, token },
       );
+
+      // Quantity-only update for existing item (no video) — done immediately
+      if (!result.job_id || result.status === "done") {
+        onDone();
+        return;
+      }
+
       setJobId(result.job_id);
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : "Failed to start enrollment");
@@ -445,7 +454,7 @@ function EnrollModal({
         {/* header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">
-            {jobId ? "Enrollment Progress" : "Enroll New Item"}
+            {jobId ? "Enrollment Progress" : selectedItem ? "Add to Existing Item" : "Enroll New Item"}
           </h2>
           {!jobId && (
             <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
@@ -464,7 +473,10 @@ function EnrollModal({
                 type="text"
                 required
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (selectedItem) setSelectedItem(null);
+                }}
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g. Arduino Uno R3"
@@ -478,6 +490,7 @@ function EnrollModal({
                       type="button"
                       onClick={() => {
                         setName(item.name);
+                        setSelectedItem(item);
                         setShowSuggestions(false);
                         inputRef.current?.focus();
                       }}
@@ -499,8 +512,15 @@ function EnrollModal({
                 </div>
               )}
             </div>
+            {selectedItem && (
+              <div className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-lg">
+                <CheckCircle2 size={14} />
+                <span>Updating existing item <strong>{selectedItem.name}</strong> (current qty: {selectedItem.quantity})</span>
+                <button type="button" onClick={() => { setSelectedItem(null); setName(""); }} className="ml-auto text-blue-400 hover:text-blue-600"><X size={14} /></button>
+              </div>
+            )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Initial Quantity</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{selectedItem ? "Add Quantity" : "Initial Quantity"}</label>
               <input
                 type="number"
                 min={0}
@@ -512,7 +532,8 @@ function EnrollModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Video File <span className="text-red-500">*</span>
+                Video File {!selectedItem && <span className="text-red-500">*</span>}
+                {selectedItem && <span className="text-gray-400 font-normal">(optional — adds sample data)</span>}
               </label>
               <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
                 {video ? (
@@ -592,7 +613,7 @@ function EnrollModal({
               className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium flex items-center justify-center gap-2"
             >
               {submitting && <Loader2 size={16} className="animate-spin" />}
-              Start Enrollment
+              {selectedItem ? (video ? "Add Quantity & Sample Data" : "Add Quantity") : "Start Enrollment"}
             </button>
           </form>
         ) : (

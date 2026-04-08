@@ -13,7 +13,7 @@ from app.schemas.item import (
 )
 from app.services.auth_service import require_admin
 from app.services.enroll_job_store import create_job, get_job, submit_job
-from app.services.item_enroll_service import create_item_record
+from app.services.item_enroll_service import add_quantity_to_existing, create_item_record
 from app.services.items_service import (
     get_active_items,
     item_to_out,
@@ -59,25 +59,29 @@ def adjust_item_quantity(
 async def enroll_item_route(
     name: str = Form(...),
     quantity: int = Form(..., ge=0),
-    video: UploadFile = File(...),
+    video: Optional[UploadFile] = File(None),
     image: Optional[UploadFile] = File(None),
+    item_id: Optional[int] = Form(None),
     db: Session = Depends(get_db),
 ):
     """Start a background enrollment job.
 
-    1. Creates the Item row immediately (fast DB write).
-       If *image* is provided it is uploaded to S3 right away and stored
-       as the item's cover image.  Otherwise the ML pipeline will pick the
-       best accepted frame from the video and use that instead.
-    2. Queues the heavy ML pipeline in a background thread.
-    3. Returns **202 Accepted** with a ``job_id`` the frontend can poll.
+    **New item** (``item_id`` omitted): ``video`` is required.
+    Creates the Item row, then runs the ML pipeline.
+
+    **Existing item** (``item_id`` provided): adds ``quantity`` to the
+    existing item.  If a ``video`` is also provided the ML pipeline runs
+    to add more sample data.  Cover image is optional for existing items.
 
     Poll ``GET /api/items/enroll/jobs/{job_id}`` until ``status`` is
     ``"done"`` or ``"failed"``.
     """
-    video_bytes = await video.read()
-    if not video_bytes:
-        raise HTTPException(status_code=400, detail="video file is empty")
+    # --- read uploaded files -------------------------------------------------
+    video_bytes: bytes | None = None
+    if video is not None:
+        video_bytes = await video.read()
+        if not video_bytes:
+            video_bytes = None
 
     image_bytes: bytes | None = None
     image_content_type = "image/jpeg"
@@ -85,10 +89,43 @@ async def enroll_item_route(
         image_bytes = await image.read()
         image_content_type = image.content_type or "image/jpeg"
         if not image_bytes:
-            image_bytes = None  # treat empty upload as no image
+            image_bytes = None
 
-    # Synchronous part — create the DB record now so the item is visible
-    # in the list immediately (status will show "processing").
+    # --- existing item path --------------------------------------------------
+    if item_id is not None:
+        item = add_quantity_to_existing(
+            db,
+            item_id=item_id,
+            extra_quantity=quantity,
+            image_bytes=image_bytes,
+            image_content_type=image_content_type,
+        )
+        if item is None:
+            raise HTTPException(status_code=404, detail="Item not found")
+
+        # If a video was provided, run the ML pipeline for more samples
+        if video_bytes:
+            job_id = create_job(item_id=item.id, name=item.name, quantity=item.quantity)
+            submit_job(job_id, video_bytes)
+            return JSONResponse(
+                status_code=202,
+                content=EnrollJobAccepted(
+                    job_id=job_id, status="pending", item_id=item.id,
+                ).model_dump(),
+            )
+
+        # No video — just quantity bump, return immediately
+        return JSONResponse(
+            status_code=202,
+            content=EnrollJobAccepted(
+                job_id="", status="done", item_id=item.id,
+            ).model_dump(),
+        )
+
+    # --- new item path -------------------------------------------------------
+    if not video_bytes:
+        raise HTTPException(status_code=400, detail="Video file is required for new items")
+
     item = create_item_record(
         db,
         name=name,
@@ -103,9 +140,7 @@ async def enroll_item_route(
     return JSONResponse(
         status_code=202,
         content=EnrollJobAccepted(
-            job_id=job_id,
-            status="pending",
-            item_id=item.id,
+            job_id=job_id, status="pending", item_id=item.id,
         ).model_dump(),
     )
 

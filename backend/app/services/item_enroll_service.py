@@ -10,6 +10,35 @@ from app.services.ai_service import enroll_from_video
 from app.services.s3_storage import upload_item_image
 
 
+def add_quantity_to_existing(
+    db: Session,
+    item_id: int,
+    extra_quantity: int,
+    image_bytes: bytes | None = None,
+    image_content_type: str = "image/jpeg",
+) -> Item | None:
+    """Add *extra_quantity* to an existing item.
+
+    Optionally replaces the cover image if *image_bytes* is given.
+    Returns the updated Item, or ``None`` if the item doesn't exist.
+    """
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if item is None:
+        return None
+
+    item.quantity += extra_quantity
+    db.commit()
+    db.refresh(item)
+
+    if image_bytes:
+        key = upload_item_image(image_bytes, item.id, image_content_type)
+        item.image_path = key
+        db.commit()
+        db.refresh(item)
+
+    return item
+
+
 def create_item_record(
     db: Session,
     name: str,
