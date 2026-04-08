@@ -7,6 +7,7 @@ import {
   mapItemTypeToItem,
   parseItemTypeId,
   pickPrimaryImage,
+  searchItemTypes,
 } from "./core";
 import { Item, ItemCreate, ItemTypeApi } from "./types";
 
@@ -48,6 +49,11 @@ export async function fetchItemsPaginated(
     page_size: data.page_size,
     total_pages: data.total_pages,
   };
+}
+
+export async function searchItems(query: string): Promise<Item[]> {
+  const results = await searchItemTypes(query);
+  return results.map(mapItemTypeToItem);
 }
 
 export async function fetchItemByUid(uid: string): Promise<Item> {

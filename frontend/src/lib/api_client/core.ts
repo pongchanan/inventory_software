@@ -108,6 +108,18 @@ export async function fetchItemTypesPaginated(
   };
 }
 
+export async function searchItemTypes(query: string): Promise<ItemTypeApi[]> {
+  if (!query || query.trim().length < 2) return [];
+  const encoded = encodeURIComponent(query.trim());
+  const res = await fetch(
+    `${API_BASE}/api/items/?search=${encoded}&page=1&page_size=10`,
+    { cache: "no-store" }
+  );
+  if (!res.ok) throw new Error("Failed to search items");
+  const data = await res.json();
+  return (data.items || []).map(_mapRawItemToItemTypeApi);
+}
+
 export async function fetchItemTypeById(itemTypeId: number): Promise<ItemTypeApi> {
   // Fetch all items and find by ID (GET /api/item-types/{id} not implemented)
   const items = await fetchItemTypes();

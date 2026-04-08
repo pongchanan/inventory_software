@@ -45,6 +45,7 @@ export {
   uploadItemImageAuth,
   enrollItem,
   adjustItemQuantity,
+  searchItems,
 } from "./api_client/items";
 export type { ItemEnrollOut, PaginatedItems } from "./api_client/items";
 export {

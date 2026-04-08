@@ -13,6 +13,7 @@ import {
   ItemEnrollOut,
   fetchImageUrl,
 } from "@/lib/api";
+import { useItemSuggestion } from "./_components/useItemSuggestion";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -29,6 +30,7 @@ import {
   Package,
   Film,
   Pencil,
+  Sparkles,
 } from "lucide-react";
 import { InventoryDesktopShell } from "./_components/InventoryDesktopShell";
 import { InventoryMobileShell } from "./_components/InventoryMobileShell";
@@ -66,6 +68,12 @@ export default function InventoryAdminPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [suggestionDismissed, setSuggestionDismissed] = useState(false);
+  const [confirmingAdd, setConfirmingAdd] = useState(false);
+  const { suggestion, searching: suggestionSearching } = useItemSuggestion(
+    form.name,
+    suggestionDismissed,
+  );
   const PAGE_SIZE = 20;
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -118,7 +126,12 @@ export default function InventoryAdminPage() {
       }
 
       const quantity = parseInt(form.quantity?.toString() || "1", 10);
-      const result = await enrollItem(form.name, quantity, videoFile, imageFile ?? undefined);
+      const result = await enrollItem(
+        form.name,
+        quantity,
+        videoFile,
+        imageFile ?? undefined,
+      );
 
       setSuccessMsg(
         `Added device "${result.name}" successfully! (Accepted: ${result.accepted_count}/${result.frames_sampled})`,
@@ -169,6 +182,31 @@ export default function InventoryAdminPage() {
     setAdjustError(null);
   };
 
+  const handleConfirmSuggestion = async () => {
+    if (!suggestion) return;
+    const qty = parseInt(form.quantity?.toString() || "1", 10);
+    if (isNaN(qty) || qty <= 0) return;
+    setConfirmingAdd(true);
+    try {
+      await adjustItemQuantity(suggestion.id, qty);
+      setSuccessMsg(
+        `Added ${qty} unit${qty !== 1 ? "s" : ""} to "${suggestion.name}" (was ${suggestion.quantity}, now ${suggestion.quantity + qty}).`,
+      );
+      setForm({ ...emptyForm });
+      setImageFile(null);
+      setImagePreview(null);
+      setVideoFile(null);
+      setSuggestionDismissed(false);
+      setShowForm(false);
+      loadItems(page);
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "Failed to update quantity",
+      );
+    }
+    setConfirmingAdd(false);
+  };
+
   const handleAdjustQuantity = async () => {
     if (!editingItem) return;
     const delta = parseInt(quantityDelta, 10);
@@ -216,6 +254,7 @@ export default function InventoryAdminPage() {
           onClick={() => {
             setShowForm(!showForm);
             setSubmitError(null);
+            setSuggestionDismissed(false);
           }}
           className="inline-flex items-center gap-2 bg-[#ee4d2d] text-white px-6 py-3 rounded-2xl hover:bg-[#ff7355] transition-all shadow-md font-bold"
         >
@@ -265,9 +304,99 @@ export default function InventoryAdminPage() {
                 type="text"
                 required
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={(e) => {
+                  setForm({ ...form, name: e.target.value });
+                  setSuggestionDismissed(false);
+                }}
                 className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium"
                 placeholder="e.g., Arduino Uno R3"
+              />
+              {/* Suggestion banner */}
+              {suggestionSearching && form.name.trim().length >= 2 && (
+                <div className="flex items-center gap-2 text-xs text-gray-400 font-medium px-1">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Searching
+                  existing devices...
+                </div>
+              )}
+              {suggestion && !suggestionDismissed && (
+                <div className="rounded-2xl border border-orange-200 bg-orange-50 p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Sparkles className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-gray-900">
+                        Similar device found
+                      </p>
+                      <p className="text-sm text-gray-700 truncate font-medium">
+                        {suggestion.name}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Current stock:{" "}
+                        <span className="font-black text-gray-800">
+                          {suggestion.quantity}
+                        </span>{" "}
+                        units
+                      </p>
+                    </div>
+                    {suggestion.image_url && (
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-orange-100 shrink-0">
+                        <Image
+                          src={suggestion.image_url}
+                          alt={suggestion.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Would you like to add{" "}
+                    <span className="font-black text-gray-800">
+                      {form.quantity ?? 1}
+                    </span>{" "}
+                    unit{(form.quantity ?? 1) !== 1 ? "s" : ""} to the existing
+                    device instead of enrolling a new one?
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={confirmingAdd}
+                      onClick={handleConfirmSuggestion}
+                      className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-black px-3 py-2 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-1"
+                    >
+                      {confirmingAdd ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-3 h-3" />
+                      )}
+                      Yes, add to existing
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSuggestionDismissed(true)}
+                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-black px-3 py-2 rounded-xl transition-all"
+                    >
+                      No, create new
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">
+                Quantity *
+              </label>
+              <input
+                type="number"
+                required
+                min={1}
+                value={form.quantity ?? 1}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    quantity: Math.max(1, parseInt(e.target.value) || 1),
+                  })
+                }
+                className="w-full bg-gray-50 border-none rounded-2xl px-4 py-3 focus:ring-4 focus:ring-orange-50 transition-all font-medium"
               />
             </div>
           </div>
