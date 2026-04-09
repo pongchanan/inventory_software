@@ -39,17 +39,35 @@ def _load_torch_model() -> tuple[Any, Any] | None:
     backbone.eval()
     backbone.to(device)
 
-    # NOTE: Triplet head is DISABLED because existing prototypes in the DB
-    # were enrolled using vanilla MobileNet (576-dim embeddings).
-    # Loading the Triplet head changes output to 256-dim, causing a dimension
-    # mismatch and near-zero cosine similarity scores.
-    # To use the Triplet head, ALL prototypes must be re-enrolled first.
-    #
-    # head_path = Path(AI_RECOGNIZER_MODEL_PATH)
-    # if head_path.exists() and head_path.suffix.lower() == ".pt":
-    #     checkpoint = torch.load(str(head_path), map_location=device)
-    #     ...
+    # Load Triplet head if checkpoint exists
+    head_path = Path(AI_RECOGNIZER_MODEL_PATH)
     full_model = backbone
+
+    if head_path.exists() and head_path.suffix.lower() == ".pt":
+        try:
+            import torch
+            checkpoint = torch.load(str(head_path), map_location=device)
+            state_dict = checkpoint.get("head") if isinstance(checkpoint, dict) else None
+
+            if isinstance(state_dict, dict):
+                with torch.no_grad():
+                    dummy = torch.zeros(1, 3, 224, 224).to(device)
+                    feature_dim = int(backbone(dummy).shape[1])
+
+                embedding_dim = int(checkpoint.get("embedding_dim", 256))
+                head = torch.nn.Linear(feature_dim, embedding_dim, bias=False)
+                head.load_state_dict(state_dict)
+                head.eval()
+                head.to(device)
+
+                full_model = torch.nn.Sequential(backbone, head)
+                print(f"[recognizer] Triplet head loaded: {feature_dim} → {embedding_dim} dim")
+            else:
+                print(f"[recognizer] No 'head' key in checkpoint, using vanilla backbone")
+        except Exception as exc:
+            print(f"[recognizer] Warning: Failed to load Triplet head: {exc}")
+    else:
+        print(f"[recognizer] No Triplet head found at {head_path}, using vanilla backbone")
 
     transform = transforms.Compose(
         [

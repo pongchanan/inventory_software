@@ -112,6 +112,64 @@ def health_check():
     return {"status": "healthy"}
 
 
+@app.post("/api/admin/re-embed")
+def admin_re_embed():
+    """Re-embed all AI samples with current model and recompute prototypes.
+    Run this after changing the recognizer model."""
+    import threading
+    from array import array as _array
+    from io import BytesIO
+
+    from app.database import SessionLocal
+    from app.models.ai_sample import AiSample
+    from app.models.ai_label import AiLabel
+    from app.services.s3_storage import download_image
+    from app.services.ai_pipeline_service.ai_embedding_service import embed_image
+    from app.services.ai_pipeline_service.ai_prototype_service import recompute_label_prototype
+
+    def _vec_to_blob(vec):
+        return _array("f", [float(v) for v in vec]).tobytes()
+
+    def _run():
+        db = SessionLocal()
+        try:
+            samples = db.query(AiSample).order_by(AiSample.id).all()
+            labels = db.query(AiLabel).order_by(AiLabel.id).all()
+            print(f"[re-embed] Starting: {len(samples)} samples, {len(labels)} labels")
+
+            success, failed = 0, 0
+            for i, sample in enumerate(samples):
+                try:
+                    image_bytes = download_image(sample.image_path)
+                    if not image_bytes:
+                        failed += 1
+                        continue
+                    new_emb = embed_image(image_bytes)
+                    sample.embedding_blob = _vec_to_blob(new_emb)
+                    success += 1
+                    if (i + 1) % 50 == 0:
+                        print(f"[re-embed] Progress: {i+1}/{len(samples)}")
+                except Exception as exc:
+                    failed += 1
+
+            db.commit()
+            print(f"[re-embed] Samples done: {success} ok, {failed} failed")
+
+            for label in labels:
+                try:
+                    recompute_label_prototype(db, label.id)
+                except Exception:
+                    pass
+
+            print(f"[re-embed] ✅ Complete! {success}/{len(samples)} samples, {len(labels)} prototypes")
+        finally:
+            db.close()
+
+    thread = threading.Thread(target=_run, daemon=True)
+    thread.start()
+    return {"status": "started", "message": "Re-embedding in background"}
+
+
 def main():
     import uvicorn
 
