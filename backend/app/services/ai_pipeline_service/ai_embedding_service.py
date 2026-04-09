@@ -4,6 +4,7 @@ import math
 from array import array
 from io import BytesIO
 from typing import Any
+from pathlib import Path
 
 from PIL import Image
 
