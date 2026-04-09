@@ -75,6 +75,10 @@ def build_detector():
         
         resized = image.resize((640, 640), Image.Resampling.BILINEAR)
         x = np.asarray(resized, dtype=np.float32) / 255.0
+        # ImageNet normalization — matches prototype onnx_detector.py
+        mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+        std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+        x = (x - mean) / std
         x = np.transpose(x, (2, 0, 1))
         x = np.expand_dims(x, axis=0).astype(np.float32, copy=False)
 
