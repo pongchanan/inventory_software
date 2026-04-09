@@ -26,10 +26,11 @@ AI_BRIGHTNESS_MAX = float(os.getenv("AI_BRIGHTNESS_MAX", "245.0"))
 AI_MIN_CROP_AREA_RATIO = float(os.getenv("AI_MIN_CROP_AREA_RATIO", "0.0015"))
 AI_MAX_CROP_AREA_RATIO = float(os.getenv("AI_MAX_CROP_AREA_RATIO", "0.98"))
 
-# Temporary open-source model choices while team-specific models are still training.
-AI_DETECTOR_MODEL_NAME = os.getenv("AI_DETECTOR_MODEL_NAME", "yolo11n.onnx")
-AI_RECOGNIZER_MODEL_NAME = os.getenv("AI_RECOGNIZER_MODEL_NAME", "mobilenet_v3_small")
+# Latest trained models from prototype
+AI_DETECTOR_MODEL_NAME = os.getenv("AI_DETECTOR_MODEL_NAME", "auto_detector_20260404_194242.onnx")
+AI_RECOGNIZER_MODEL_NAME = os.getenv("AI_RECOGNIZER_MODEL_NAME", "recognizer_triplet_20260408_122706.pt")
 AI_DETECTOR_MODEL_PATH = str(Path(AI_MODELS_DIR, AI_DETECTOR_MODEL_NAME).resolve())
+AI_RECOGNIZER_MODEL_PATH = str(Path(AI_MODELS_DIR, AI_RECOGNIZER_MODEL_NAME).resolve())
 AI_DETECTOR_CONF_THRESHOLD = float(os.getenv("AI_DETECTOR_CONF_THRESHOLD", "0.25"))
 AI_DETECTOR_IOU_THRESHOLD = float(os.getenv("AI_DETECTOR_IOU_THRESHOLD", "0.50"))
 

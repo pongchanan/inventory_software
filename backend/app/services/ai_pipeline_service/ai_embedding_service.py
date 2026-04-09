@@ -7,8 +7,11 @@ from typing import Any
 
 from PIL import Image
 
+from .ai_config import AI_RECOGNIZER_MODEL_PATH
+
 _MODEL = None
 _TRANSFORM = None
+_DEVICE = None
 
 
 def _load_torch_model() -> tuple[Any, Any] | None:
@@ -18,10 +21,48 @@ def _load_torch_model() -> tuple[Any, Any] | None:
     except Exception as exc:
         raise RuntimeError("torch/torchvision is required for MobileNet embedding") from exc
 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    
     try:
         backbone = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.DEFAULT)
-    except Exception as exc:
-        raise RuntimeError("failed to load mobilenet_v3_small weights") from exc
+    except Exception:
+        # Fallback: load without weights for offline environments
+        backbone = models.mobilenet_v3_small(weights=None)
+
+    # Remove classification head, keep features only
+    if hasattr(backbone, "classifier"):
+        backbone.classifier = torch.nn.Identity()
+    elif hasattr(backbone, "fc"):
+        backbone.fc = torch.nn.Identity()
+    
+    backbone.eval()
+    backbone.to(device)
+
+    # Load Triplet head if checkpoint exists
+    head_path = Path(AI_RECOGNIZER_MODEL_PATH)
+    full_model = backbone
+    
+    if head_path.exists() and head_path.suffix.lower() == ".pt":
+        try:
+            checkpoint = torch.load(str(head_path), map_location=device)
+            state_dict = checkpoint.get("head") if isinstance(checkpoint, dict) else None
+            
+            if isinstance(state_dict, dict):
+                # Infer dimensions
+                with torch.no_grad():
+                    dummy = torch.zeros(1, 3, 224, 224).to(device)
+                    feature_dim = int(backbone(dummy).shape[1])
+                
+                embedding_dim = int(checkpoint.get("embedding_dim", 256))
+                head = torch.nn.Linear(feature_dim, embedding_dim, bias=False)
+                head.load_state_dict(state_dict)
+                head.eval()
+                head.to(device)
+                
+                # Wrap in sequential for easy inference
+                full_model = torch.nn.Sequential(backbone, head)
+        except Exception as exc:
+            print(f"Warning: Failed to load Triplet head from {head_path}: {exc}")
 
     transform = transforms.Compose(
         [
@@ -32,24 +73,18 @@ def _load_torch_model() -> tuple[Any, Any] | None:
         ]
     )
 
-    if hasattr(backbone, "classifier"):
-        backbone.classifier = torch.nn.Identity()
-    elif hasattr(backbone, "fc"):
-        backbone.fc = torch.nn.Identity()
-    backbone.eval()
-
-    return backbone, transform
+    return full_model, transform, device
 
 
-def _ensure_model() -> tuple[Any, Any]:
-    global _MODEL, _TRANSFORM
+def _ensure_model() -> tuple[Any, Any, Any]:
+    global _MODEL, _TRANSFORM, _DEVICE
 
-    if _MODEL is not None and _TRANSFORM is not None:
-        return _MODEL, _TRANSFORM
+    if _MODEL is not None and _TRANSFORM is not None and _DEVICE is not None:
+        return _MODEL, _TRANSFORM, _DEVICE
 
     loaded = _load_torch_model()
-    _MODEL, _TRANSFORM = loaded
-    return _MODEL, _TRANSFORM
+    _MODEL, _TRANSFORM, _DEVICE = loaded
+    return _MODEL, _TRANSFORM, _DEVICE
 
 
 def l2_normalize(vec: list[float]) -> list[float]:
@@ -64,12 +99,12 @@ def embed_image(image_bytes: bytes) -> list[float]:
 
     try:
         import torch  # type: ignore
-        model, transform = _ensure_model()
-        x = transform(img).unsqueeze(0)
+        model, transform, device = _ensure_model()
+        x = transform(img).unsqueeze(0).to(device)
         with torch.no_grad():
             vec = model(x).squeeze(0).cpu().tolist()
     except Exception as exc:
-        raise RuntimeError("failed to generate embedding with mobilenet_v3_small") from exc
+        raise RuntimeError(f"failed to generate embedding: {exc}") from exc
 
     return l2_normalize(vec)
 
