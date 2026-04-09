@@ -166,6 +166,7 @@ def _count_labels(db: Session, image_bytes: bytes) -> Counter:
         if hit.accepted:
             counts[hit.label] += 1
 
+    logger.info("[borrowings] _count_labels result: %s", dict(counts))
     return counts
 
 
@@ -220,13 +221,26 @@ def process_close_image_diff(db: Session, session_id: int, current_jpeg: bytes) 
     all_labels = set(prev_counts) | set(curr_counts)
 
     if not all_labels:
+        logger.info("[borrowings][diff] session #%d: no labels detected in either image — skipping", session_id)
         return
+
+    logger.info("[borrowings][diff] ========================================")
+    logger.info("[borrowings][diff] Session #%d | User #%d", session_id, user_id)
+    logger.info("[borrowings][diff]   PREV image labels: %s", dict(prev_counts))
+    logger.info("[borrowings][diff]   CURR image labels: %s", dict(curr_counts))
 
     for label in all_labels:
         diff = prev_counts[label] - curr_counts[label]
 
         if diff == 0:
             continue
+
+        if diff > 0:
+            logger.info("[borrowings][diff]   📤 TAKEN: %r x%d (was %d, now %d)",
+                        label, diff, prev_counts[label], curr_counts[label])
+        else:
+            logger.info("[borrowings][diff]   📥 RETURNED: %r x%d (was %d, now %d)",
+                        label, -diff, prev_counts[label], curr_counts[label])
 
         item = (
             db.query(Item)

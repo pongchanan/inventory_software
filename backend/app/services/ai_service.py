@@ -75,12 +75,28 @@ def recognize_from_image(
         logger.warning("[ai_service][recognize] no detections — returning empty list")
         return []
 
+    logger.info("[ai_service][recognize] %d detection(s) found, running recognizer...", len(detections))
+
     hits = impl.recognize_from_detections(
         db=db,
         image_bytes=payload.image_bytes,
         detections=detections,
     )
     outputs = [RecognizeHitOutput(**_to_mapping(hit)) for hit in hits]
+
+    # --- Debug: log recognition results ---
+    for i, out in enumerate(outputs):
+        status = "✅ ACCEPTED" if out.accepted else "❌ rejected"
+        logger.info(
+            "[ai_service][recognize]   hit[%d] %s label=%r score=%.3f margin=%.3f bbox=%s",
+            i, status, out.label, out.score, out.margin, out.bbox,
+        )
+    accepted_items = [out.label for out in outputs if out.accepted]
+    if accepted_items:
+        logger.info("[ai_service][recognize] === Recognized items: %s ===", accepted_items)
+    else:
+        logger.info("[ai_service][recognize] === No items confidently recognized ===")
+
     return outputs
 
 
