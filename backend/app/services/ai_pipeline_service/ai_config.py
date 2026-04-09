@@ -18,8 +18,8 @@ AI_REPORTS_DIR = str(
     Path(os.getenv("AI_REPORTS_DIR", AI_RUNTIME_DIR / "reports")).resolve()
 )
 
-AI_SIMILARITY_THRESHOLD = float(os.getenv("AI_SIMILARITY_THRESHOLD", "0.55"))
-AI_MIN_MARGIN = float(os.getenv("AI_MIN_MARGIN", "0.05"))
+AI_SIMILARITY_THRESHOLD = float(os.getenv("AI_SIMILARITY_THRESHOLD", "0.35"))
+AI_MIN_MARGIN = float(os.getenv("AI_MIN_MARGIN", "0.03"))
 AI_BLUR_MIN = float(os.getenv("AI_BLUR_MIN", "0.30"))
 AI_BRIGHTNESS_MIN = float(os.getenv("AI_BRIGHTNESS_MIN", "20.0"))
 AI_BRIGHTNESS_MAX = float(os.getenv("AI_BRIGHTNESS_MAX", "245.0"))

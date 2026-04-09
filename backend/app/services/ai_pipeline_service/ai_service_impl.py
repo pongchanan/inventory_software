@@ -285,6 +285,15 @@ def recognize_from_detections(
         margin = float(top1_score - top2_score)
         accepted = top1_score >= AI_SIMILARITY_THRESHOLD and margin >= AI_MIN_MARGIN
 
+        # Debug: show top-3 candidates for this detection
+        top3 = scores[:3]
+        top3_str = ", ".join(f"{lbl}={sc:.3f}" for lbl, sc in top3)
+        status = "ACCEPTED" if accepted else "rejected"
+        logger.info(
+            "[ai_impl][recognize] det[%d] %s → top3: [%s] margin=%.3f (thresh=%.2f, min_margin=%.2f)",
+            idx, status, top3_str, margin, AI_SIMILARITY_THRESHOLD, AI_MIN_MARGIN,
+        )
+
         results.append(
             RecognizeHit(
                 bbox=bbox,
