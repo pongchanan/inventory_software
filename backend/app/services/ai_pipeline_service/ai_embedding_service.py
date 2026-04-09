@@ -39,31 +39,17 @@ def _load_torch_model() -> tuple[Any, Any] | None:
     backbone.eval()
     backbone.to(device)
 
-    # Load Triplet head if checkpoint exists
-    head_path = Path(AI_RECOGNIZER_MODEL_PATH)
+    # NOTE: Triplet head is DISABLED because existing prototypes in the DB
+    # were enrolled using vanilla MobileNet (576-dim embeddings).
+    # Loading the Triplet head changes output to 256-dim, causing a dimension
+    # mismatch and near-zero cosine similarity scores.
+    # To use the Triplet head, ALL prototypes must be re-enrolled first.
+    #
+    # head_path = Path(AI_RECOGNIZER_MODEL_PATH)
+    # if head_path.exists() and head_path.suffix.lower() == ".pt":
+    #     checkpoint = torch.load(str(head_path), map_location=device)
+    #     ...
     full_model = backbone
-    
-    if head_path.exists() and head_path.suffix.lower() == ".pt":
-        try:
-            checkpoint = torch.load(str(head_path), map_location=device)
-            state_dict = checkpoint.get("head") if isinstance(checkpoint, dict) else None
-            
-            if isinstance(state_dict, dict):
-                # Infer dimensions
-                with torch.no_grad():
-                    dummy = torch.zeros(1, 3, 224, 224).to(device)
-                    feature_dim = int(backbone(dummy).shape[1])
-                
-                embedding_dim = int(checkpoint.get("embedding_dim", 256))
-                head = torch.nn.Linear(feature_dim, embedding_dim, bias=False)
-                head.load_state_dict(state_dict)
-                head.eval()
-                head.to(device)
-                
-                # Wrap in sequential for easy inference
-                full_model = torch.nn.Sequential(backbone, head)
-        except Exception as exc:
-            print(f"Warning: Failed to load Triplet head from {head_path}: {exc}")
 
     transform = transforms.Compose(
         [
