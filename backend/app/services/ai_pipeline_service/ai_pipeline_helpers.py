@@ -7,7 +7,10 @@ from pathlib import Path
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
+import logging
 from . import ai_config
+
+logger = logging.getLogger(__name__)
 
 
 def iou_xyxy(a: list[int], b: list[int]) -> float:
@@ -50,16 +53,26 @@ def build_detector():
     if not model_file.exists():
         raise FileNotFoundError(f"detector model not found: {model_file}")
 
+    logger.info("[detector] Loading model from: %s", model_file)
     session = ort.InferenceSession(str(model_file), providers=["CPUExecutionProvider"])
-    input_name = session.get_inputs()[0].name
-    output_name = session.get_outputs()[0].name
+    
+    input_info = session.get_inputs()[0]
+    output_info = session.get_outputs()[0]
+    input_name = input_info.name
+    output_name = output_info.name
+    
+    logger.info("[detector] Model input: %s, shape: %s", input_name, input_info.shape)
+    logger.info("[detector] Model output: %s, shape: %s", output_name, output_info.shape)
+    
     conf_threshold = float(ai_config.AI_DETECTOR_CONF_THRESHOLD)
     iou_threshold = float(ai_config.AI_DETECTOR_IOU_THRESHOLD)
+    logger.info("[detector] Config: conf_thresh=%.3f, iou_thresh=%.3f", conf_threshold, iou_threshold)
 
     def detect(frame_bytes: bytes) -> list[dict[str, object]]:
         image = Image.open(BytesIO(frame_bytes)).convert("RGB")
         orig_w, orig_h = image.size
-
+        logger.info("[detector] Inferred image: %dx%d -> 640x640", orig_w, orig_h)
+        
         resized = image.resize((640, 640), Image.Resampling.BILINEAR)
         x = np.asarray(resized, dtype=np.float32) / 255.0
         x = np.transpose(x, (2, 0, 1))
@@ -67,6 +80,7 @@ def build_detector():
 
         output = session.run([output_name], {input_name: x})[0]
         arr = np.asarray(output)
+        
         if arr.ndim == 3:
             preds = arr[0]
             if preds.shape[0] < preds.shape[1]:
@@ -74,15 +88,20 @@ def build_detector():
         elif arr.ndim == 2:
             preds = arr
         else:
+            logger.warning("[detector] Unexpected output dimension: %d", arr.ndim)
             return []
 
+        logger.debug("[detector] Processed predictions shape: %s", preds.shape)
+
         if preds.shape[1] < 5:
+            logger.warning("[detector] Output row too short: %d", preds.shape[1])
             return []
 
         candidates: list[dict[str, object]] = []
         sx = orig_w / 640.0
         sy = orig_h / 640.0
 
+        max_conf_found = 0.0
         for row in preds:
             row = np.asarray(row, dtype=np.float32)
 
@@ -96,6 +115,9 @@ def build_detector():
             else:
                 conf = float(row[4])
                 class_id = 0
+
+            if conf > max_conf_found:
+                max_conf_found = conf
 
             if conf < conf_threshold:
                 continue
@@ -116,7 +138,12 @@ def build_detector():
                 }
             )
 
-        return nms_xyxy(candidates, iou_threshold=iou_threshold)
+        logger.info("[detector] Max confidence in frame: %.4f (thresh=%.4f)", max_conf_found, conf_threshold)
+        logger.info("[detector] Candidates passing threshold: %d", len(candidates))
+
+        result = nms_xyxy(candidates, iou_threshold=iou_threshold)
+        logger.info("[detector] Final detections after NMS: %d", len(result))
+        return result
 
     return detect
 
