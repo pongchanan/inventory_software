@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{baseUrl}}/api/damaged-reports/"
+method: GET
+headers:
+  Accept: application/json
+body:
+  type: text
+  content: ""
+examples: ./.resources/List All Reports.resources/examples
+order: 5000

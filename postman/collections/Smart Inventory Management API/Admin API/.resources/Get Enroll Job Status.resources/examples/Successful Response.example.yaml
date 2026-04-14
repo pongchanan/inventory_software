@@ -1,0 +1,33 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/items/enroll/jobs/:job_id"
+  method: GET
+  headers:
+    Accept: application/json
+  pathVariables:
+    job_id: string
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "job_id": "string",
+        "status": "string",
+        "item_id": 2244,
+        "name": null,
+        "quantity": null,
+        "is_active": null,
+        "image": null,
+        "accepted_count": null,
+        "rejected_count": null,
+        "frames_sampled": 2219,
+        "error": null
+      }
+order: 1000

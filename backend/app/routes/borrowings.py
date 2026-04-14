@@ -12,10 +12,10 @@ from app.services.borrowings_service import (
     get_user_borrowings,
 )
 
-router = APIRouter(prefix="/api/borrowings", tags=["Borrowings"])
+router = APIRouter(prefix="/api/borrowings")
 
 
-@router.get("/me", response_model=PaginatedBorrowings)
+@router.get("/me", response_model=PaginatedBorrowings, tags=["User API"])
 def my_borrowings(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -25,7 +25,7 @@ def my_borrowings(
     return get_user_borrowings(db, current_user.id, page, page_size)
 
 
-@router.get("/me/history", response_model=PaginatedBorrowings)
+@router.get("/me/history", response_model=PaginatedBorrowings, tags=["User API"])
 def my_borrowing_history(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -39,6 +39,7 @@ def my_borrowing_history(
     "/admin/all",
     response_model=PaginatedBorrowings,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def all_borrowings_admin(
     page: int = Query(1, ge=1),
@@ -53,6 +54,7 @@ def all_borrowings_admin(
     "/users/{user_id}",
     response_model=PaginatedBorrowings,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def user_borrowings(
     user_id: int,
@@ -67,6 +69,7 @@ def user_borrowings(
     "/popular",
     response_model=PaginatedPopularItems,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def popular_items(
     page: int = Query(1, ge=1),

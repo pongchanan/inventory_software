@@ -1,0 +1,38 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/auth/register"
+  method: POST
+  headers:
+    Content-Type: application/json
+    Accept: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "name": "string",
+        "email": "sAg@AMLaXSaotnPncsXbUDCookfMHZvTBVdzH.znoi",
+        "password": "string",
+        "register_card_now": false
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "access_token": "string",
+        "user": {
+          "id": 4072,
+          "name": "string",
+          "email": "string",
+          "role": "string",
+          "card_id": "string",
+          "is_blacklist": false,
+          "created_at": "2007-09-24T19:26:03.708Z"
+        },
+        "token_type": "bearer"
+      }
+order: 1000

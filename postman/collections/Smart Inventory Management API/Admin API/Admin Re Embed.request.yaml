@@ -1,0 +1,13 @@
+$kind: http-request
+description: |-
+  Re-embed all AI samples with current model and recompute prototypes.
+  Run this after changing the recognizer model.
+url: "{{baseUrl}}/api/admin/re-embed"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: text
+  content: ""
+examples: ./.resources/Admin Re Embed.resources/examples
+order: 27000

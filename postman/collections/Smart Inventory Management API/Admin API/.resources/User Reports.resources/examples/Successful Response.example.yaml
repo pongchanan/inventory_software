@@ -1,0 +1,72 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/damaged-reports/user/:user_id"
+  method: GET
+  headers:
+    Accept: application/json
+  pathVariables:
+    user_id: "1623"
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      [
+        {
+          "id": 9732,
+          "topic": "string",
+          "description": "string",
+          "item_id": 8300,
+          "report_at": "1947-02-16T18:44:42.127Z",
+          "report_by": 565,
+          "illustrated_path": "string",
+          "approved": true,
+          "approved_by": 5558,
+          "admin_comment": "string",
+          "item": {
+            "id": 2277,
+            "name": "string",
+            "image_path": "string",
+            "image_url": "string"
+          },
+          "user": {
+            "id": 4974,
+            "name": "string",
+            "email": "string",
+            "card_id": "string"
+          },
+          "illustrated_url": "string"
+        },
+        {
+          "id": 1556,
+          "topic": "string",
+          "description": "string",
+          "item_id": 3868,
+          "report_at": "1995-12-12T20:54:43.303Z",
+          "report_by": 689,
+          "illustrated_path": "string",
+          "approved": true,
+          "approved_by": 314,
+          "admin_comment": "string",
+          "item": {
+            "id": 5455,
+            "name": "string",
+            "image_path": "string",
+            "image_url": "string"
+          },
+          "user": {
+            "id": 4969,
+            "name": "string",
+            "email": "string",
+            "card_id": "string"
+          },
+          "illustrated_url": "string"
+        }
+      ]
+order: 1000

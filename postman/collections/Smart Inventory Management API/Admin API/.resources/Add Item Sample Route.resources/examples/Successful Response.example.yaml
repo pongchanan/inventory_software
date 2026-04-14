@@ -1,0 +1,30 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/items/:item_id/samples"
+  method: POST
+  headers:
+    Content-Type: multipart/form-data
+    Accept: application/json
+  pathVariables:
+    item_id: "898"
+  body:
+    type: formdata
+    content:
+      - type: file
+        key: image
+        src: ""
+        description: ""
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 4200,
+        "image_url": "string",
+        "created_at": "string"
+      }
+order: 1000

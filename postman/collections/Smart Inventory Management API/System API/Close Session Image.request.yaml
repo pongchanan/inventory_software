@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/api/sessions/:session_id/close-image"
+method: POST
+headers:
+  Accept: application/json
+pathVariables:
+  session_id: "9291"
+body:
+  type: text
+  content: ""
+examples: ./.resources/Close Session Image.resources/examples
+order: 1000

@@ -5,7 +5,7 @@ from app.database import get_db
 from app.services.auth_service import require_admin
 from app.services.dashboard_service import get_dashboard_stats, get_most_damaged_items
 
-router = APIRouter(prefix="/api/admin/dashboard", tags=["Dashboard"])
+router = APIRouter(prefix="/api/admin/dashboard", tags=["Admin API"])
 
 
 @router.get("/stats", dependencies=[Depends(require_admin)])

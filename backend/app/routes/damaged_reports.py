@@ -16,19 +16,20 @@ from app.services.damaged_report_service import (
     get_reports_by_user,
 )
 
-router = APIRouter(prefix="/api/damaged-reports", tags=["Damaged Reports"])
+router = APIRouter(prefix="/api/damaged-reports")
 
 
 @router.get(
     "/",
     response_model=list[DamagedItemReportOut],
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def list_all_reports(db: Session = Depends(get_db)):
     return get_all_reports(db)
 
 
-@router.get("/me", response_model=list[DamagedItemReportOut])
+@router.get("/me", response_model=list[DamagedItemReportOut], tags=["User API"])
 def my_reports(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -40,12 +41,13 @@ def my_reports(
     "/user/{user_id}",
     response_model=list[DamagedItemReportOut],
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def user_reports(user_id: int, db: Session = Depends(get_db)):
     return get_reports_by_user(db, user_id)
 
 
-@router.get("/export", dependencies=[Depends(require_admin)])
+@router.get("/export", dependencies=[Depends(require_admin)], tags=["Admin API"])
 def export_excel(db: Session = Depends(get_db)):
     data = export_reports_excel(db)
     return Response(
@@ -55,7 +57,7 @@ def export_excel(db: Session = Depends(get_db)):
     )
 
 
-@router.get("/{report_id}/image")
+@router.get("/{report_id}/image", tags=["User API"])
 def report_image(
     report_id: int,
     current_user: User = Depends(get_current_user),
@@ -68,7 +70,7 @@ def report_image(
     return RedirectResponse(url=url)
 
 
-@router.post("/", response_model=DamagedItemReportOut)
+@router.post("/", response_model=DamagedItemReportOut, tags=["User API"])
 async def submit_user_report(
     topic: str = Form(...),
     description: str = Form(...),
@@ -88,6 +90,7 @@ async def submit_user_report(
     "/{report_id}/approve",
     response_model=DamagedItemReportOut,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def approve_damaged_report(
     report_id: int,
@@ -102,7 +105,7 @@ def approve_damaged_report(
 
 
 @router.post(
-    "/admin", response_model=DamagedItemReportOut, dependencies=[Depends(require_admin)]
+    "/admin", response_model=DamagedItemReportOut, dependencies=[Depends(require_admin)], tags=["Admin API"]
 )
 async def submit_admin_report(
     topic: str = Form(...),

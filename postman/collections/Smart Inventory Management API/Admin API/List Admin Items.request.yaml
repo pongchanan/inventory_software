@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{baseUrl}}/api/items/admin?page=1&page_size=20&search=string&is_active=true"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  page: "1"
+  page_size: "20"
+  search: string
+  is_active: "true"
+body:
+  type: text
+  content: ""
+examples: ./.resources/List Admin Items.resources/examples
+order: 12000

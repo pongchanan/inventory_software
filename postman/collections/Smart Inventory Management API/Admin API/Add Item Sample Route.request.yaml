@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/api/items/:item_id/samples"
+method: POST
+headers:
+  Content-Type: multipart/form-data
+  Accept: application/json
+pathVariables:
+  item_id: "898"
+body:
+  type: formdata
+  content:
+    - type: file
+      key: image
+      src: ""
+      description: ""
+examples: ./.resources/Add Item Sample Route.resources/examples
+order: 19000

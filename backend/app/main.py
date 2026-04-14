@@ -98,7 +98,7 @@ app.include_router(sessions_router)
 app.include_router(users_router)
 
 
-@app.get("/")
+@app.get("/", tags=["General"])
 def root():
     return {
         "message": "Smart Inventory Management API",
@@ -107,12 +107,12 @@ def root():
     }
 
 
-@app.get("/health")
+@app.get("/health", tags=["General"])
 def health_check():
     return {"status": "healthy"}
 
 
-@app.post("/api/admin/re-embed")
+@app.post("/api/admin/re-embed", tags=["Admin API"])
 def admin_re_embed():
     """Re-embed all AI samples with current model and recompute prototypes.
     Run this after changing the recognizer model."""

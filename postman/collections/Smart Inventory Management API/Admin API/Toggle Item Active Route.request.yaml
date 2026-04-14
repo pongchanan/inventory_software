@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/api/items/:item_id/active"
+method: PATCH
+headers:
+  Accept: application/json
+pathVariables:
+  item_id: "898"
+body:
+  type: text
+  content: ""
+examples: ./.resources/Toggle Item Active Route.resources/examples
+order: 13000

@@ -27,17 +27,17 @@ from app.mqtt.handlers.card_registration_store import (
     clear_pending,
 )
 
-router = APIRouter(prefix="/api/auth", tags=["Auth"])
+router = APIRouter(prefix="/api/auth")
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login", response_model=LoginResponse, tags=["General"])
 def login(body: LoginRequest, db: Session = Depends(get_db)):
     user = authenticate_user(db, body.email, body.password)
     token = create_access_token(user.id, user.role)
     return LoginResponse(access_token=token, user=UserOut.model_validate(user))
 
 
-@router.post("/register", response_model=RegisterResponse, status_code=201)
+@router.post("/register", response_model=RegisterResponse, status_code=201, tags=["General"])
 def register(body: RegisterRequest, db: Session = Depends(get_db)):
     """Register a new user. If register_card_now=true, tells IoT to enter
     register mode and waits for card scan before responding."""
@@ -61,6 +61,6 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
     )
 
 
-@router.get("/me", response_model=UserOut)
+@router.get("/me", response_model=UserOut, tags=["User API"])
 def me(current_user: User = Depends(get_current_user)):
     return current_user

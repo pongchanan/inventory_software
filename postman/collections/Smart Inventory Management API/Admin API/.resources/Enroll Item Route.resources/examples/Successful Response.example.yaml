@@ -1,0 +1,44 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/items/enroll"
+  method: POST
+  headers:
+    Content-Type: multipart/form-data
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: name
+        value: string
+        description: ""
+      - type: text
+        key: quantity
+        value: "47"
+        description: ""
+      - type: file
+        key: video
+        src: ""
+        description: ""
+      - type: file
+        key: image
+        src: ""
+        description: ""
+      - type: text
+        key: item_id
+        value: "9533"
+        description: ""
+response:
+  statusCode: 202
+  statusText: Accepted
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "job_id": "string",
+        "item_id": 7642,
+        "status": "pending"
+      }
+order: 1000

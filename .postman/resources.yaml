@@ -1,0 +1,20 @@
+# Use this workspace to collaborate
+workspace:
+  id: 90bc5c44-cddc-4c39-8163-420b856e685b
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ..\postman\collections\Smart Inventory Management API: 53980865-b2038341-9724-4670-8078-cb231af51d6e
+  environments:
+    ..\postman\environments\Railway Dev.environment.yaml: 32766846-4804-4100-bb37-a93b407ccf75
+    ..\postman\environments\Local.environment.yaml: 05ae0473-cb55-4cb7-b19a-fd2ea08f74ba
+  specs:
+    ..\postman\specs\Smart Inventory Management API-1\index.yaml: 1b128e1e-0a5b-44b6-8764-c1eb10da6fcc
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/

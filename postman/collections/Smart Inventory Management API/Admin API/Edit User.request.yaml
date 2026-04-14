@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/api/users/:user_id"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Accept: application/json
+pathVariables:
+  user_id: "1623"
+body:
+  type: json
+  content: |-
+    {
+      "name": "string",
+      "email": null,
+      "role": "string",
+      "is_blacklist": false
+    }
+examples: ./.resources/Edit User.resources/examples
+order: 26000

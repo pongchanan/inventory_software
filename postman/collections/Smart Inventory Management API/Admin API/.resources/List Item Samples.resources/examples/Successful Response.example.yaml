@@ -1,0 +1,32 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/items/:item_id/samples"
+  method: GET
+  headers:
+    Accept: application/json
+  pathVariables:
+    item_id: "898"
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      [
+        {
+          "id": 4491,
+          "image_url": "string",
+          "created_at": "string"
+        },
+        {
+          "id": 8954,
+          "image_url": "string",
+          "created_at": "string"
+        }
+      ]
+order: 1000

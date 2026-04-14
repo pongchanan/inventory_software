@@ -1,0 +1,60 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/damaged-reports/"
+  method: POST
+  headers:
+    Content-Type: multipart/form-data
+    Accept: application/json
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: topic
+        value: string
+        description: ""
+      - type: text
+        key: description
+        value: string
+        description: ""
+      - type: file
+        key: image
+        src: ""
+        description: ""
+      - type: text
+        key: item_id
+        value: "8376"
+        description: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 2124,
+        "topic": "string",
+        "description": "string",
+        "item_id": 7844,
+        "report_at": "1962-07-05T05:13:10.673Z",
+        "report_by": 8315,
+        "illustrated_path": "string",
+        "approved": true,
+        "approved_by": 7609,
+        "admin_comment": "string",
+        "item": {
+          "id": 7839,
+          "name": "string",
+          "image_path": "string",
+          "image_url": "string"
+        },
+        "user": {
+          "id": 6010,
+          "name": "string",
+          "email": "string",
+          "card_id": "string"
+        },
+        "illustrated_url": "string"
+      }
+order: 1000

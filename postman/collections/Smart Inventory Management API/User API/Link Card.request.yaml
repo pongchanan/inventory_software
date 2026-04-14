@@ -1,0 +1,11 @@
+$kind: http-request
+description: Tell IoT to enter register mode, wait for card scan, link card to current user.
+url: "{{baseUrl}}/api/users/me/link-card"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: text
+  content: ""
+examples: ./.resources/Link Card.resources/examples
+order: 4000

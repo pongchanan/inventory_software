@@ -13,11 +13,11 @@ from app.services.sessions_service import (
     get_sessions,
 )
 
-router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
+router = APIRouter(prefix="/api/sessions")
 
 
 @router.get(
-    "/", response_model=PaginatedSessions, dependencies=[Depends(require_admin)]
+    "/", response_model=PaginatedSessions, dependencies=[Depends(require_admin)], tags=["Admin API"]
 )
 def list_sessions(
     page: int = Query(1, ge=1),
@@ -31,6 +31,7 @@ def list_sessions(
     "/images",
     response_model=PaginatedSessionImages,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def list_session_images(
     page: int = Query(1, ge=1),
@@ -40,7 +41,7 @@ def list_session_images(
     return get_session_images(db, page, page_size)
 
 
-@router.post("/{session_id}/close-image")
+@router.post("/{session_id}/close-image", tags=["System API"])
 async def close_session_image(
     session_id: int,
     request: Request,
@@ -59,7 +60,7 @@ async def close_session_image(
     return {"ok": True}
 
 
-@router.get("/{session_id}/image", dependencies=[Depends(require_admin)])
+@router.get("/{session_id}/image", dependencies=[Depends(require_admin)], tags=["Admin API"])
 def get_session_image(
     session_id: int,
     db: Session = Depends(get_db),

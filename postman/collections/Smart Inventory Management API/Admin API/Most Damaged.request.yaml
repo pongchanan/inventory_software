@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/api/admin/dashboard/most-damaged?limit=5"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  limit: "5"
+body:
+  type: text
+  content: ""
+examples: ./.resources/Most Damaged.resources/examples
+order: 11000

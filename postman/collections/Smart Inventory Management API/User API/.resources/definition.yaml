@@ -1,0 +1,127 @@
+$kind: collection
+name: User API
+scripts:
+  - type: http:beforeRequest
+    code: "// ฟังก์ชันช่วยยิง Request แบบรอผล\r
+
+      const sendRequest = (options) => {\r
+
+      \    return new Promise((resolve, reject) => {\r
+
+      \        pm.sendRequest(options, (err, res) => {\r
+
+      \            if (err) return reject(err);\r
+
+      \            resolve(res);\r
+
+      \        });\r
+
+      \    });\r
+
+      };\r
+
+      \r
+
+      (async function main() {\r
+
+      \    const baseUrl = pm.environment.get(\"baseUrl\");\r
+
+      \    const email = pm.environment.get(\"user_email\");\r
+
+      \    const password = pm.environment.get(\"user_password\");\r
+
+      \    const name = pm.environment.get(\"user_name\") || \"Auto User\";\r
+
+      \r
+
+      \    // ถ้ามี Token แล้ว ไม่ต้องทำอะไร\r
+
+      \    if (pm.environment.get(\"userToken\")) return;\r
+
+      \r
+
+      \    console.log(\"Checking User access...\");\r
+
+      \r
+
+      \    try {\r
+
+      \        // 1. ลอง Login\r
+
+      \        let res = await sendRequest({\r
+
+      \            url: baseUrl + \"/api/auth/login\",\r
+
+      \            method: 'POST',\r
+
+      \            header: { 'Content-Type': 'application/json' },\r
+
+      \            body: { mode: 'raw', raw: JSON.stringify({ email, password })
+      }\r
+
+      \        });\r
+
+      \r
+
+      \        if (res.code === 200) {\r
+
+      \            pm.environment.set(\"userToken\", res.json().access_token);\r
+
+      \            console.log(\"User Login: Success\");\r
+
+      \        } else {\r
+
+      \            // 2. ถ้า Login ไม่ติด (อาจจะยังไม่มี User) ให้ลอง Register\r
+
+      \            console.log(\"User not found. Registering...\");\r
+
+      \            res = await sendRequest({\r
+
+      \                url: baseUrl + \"/api/auth/register\",\r
+
+      \                method: 'POST',\r
+
+      \                header: { 'Content-Type': 'application/json' },\r
+
+      \                body: {\r
+
+      \                    mode: 'raw',\r
+
+      \                    raw: JSON.stringify({ name, email, password,
+      register_card_now: false })\r
+
+      \                }\r
+
+      \            });\r
+
+      \r
+
+      \            if (res.code === 201) {\r
+
+      \                pm.environment.set(\"userToken\",
+      res.json().access_token);\r
+
+      \                console.log(\"User Register & Login: Success\");\r
+
+      \            } else {\r
+
+      \                console.error(\"User Register: Failed!\", res.json());\r
+
+      \            }\r
+
+      \        }\r
+
+      \    } catch (e) {\r
+
+      \        console.error(\"User Auth Error:\", e);\r
+
+      \    }\r
+
+      })();"
+auth:
+  - id: 54271e0b-117d-4f86-8920-6b98ae08b120
+    type: bearer
+    name: Bearer Token
+    credentials:
+      token: "{{userToken}}"
+order: 3000

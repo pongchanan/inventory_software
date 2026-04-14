@@ -1,0 +1,20 @@
+$kind: http-request
+description: |-
+  Register a new user. If register_card_now=true, tells IoT to enter
+  register mode and waits for card scan before responding.
+url: "{{baseUrl}}/api/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "string",
+      "email": "sAg@AMLaXSaotnPncsXbUDCookfMHZvTBVdzH.znoi",
+      "password": "string",
+      "register_card_now": false
+    }
+examples: ./.resources/Register.resources/examples
+order: 2000

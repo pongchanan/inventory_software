@@ -1,0 +1,41 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/sessions/images?page=1&page_size=20"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    page: "1"
+    page_size: "20"
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "images": [
+          {
+            "session_id": 2498,
+            "open_at": "2015-08-04T01:35:18.958Z",
+            "close_at": "1976-12-03T17:03:42.675Z",
+            "url": "string"
+          },
+          {
+            "session_id": 677,
+            "open_at": "1972-11-08T07:14:00.246Z",
+            "close_at": "1971-11-04T09:45:33.237Z",
+            "url": "string"
+          }
+        ],
+        "total": 505,
+        "page": 5094,
+        "page_size": 3057,
+        "total_pages": 4838
+      }
+order: 1000

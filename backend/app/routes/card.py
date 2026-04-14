@@ -12,7 +12,7 @@ from app.mqtt.handlers.card_registration_store import (
     clear_pending,
 )
 
-router = APIRouter(prefix="/api/users/me", tags=["Card"])
+router = APIRouter(prefix="/api/users/me", tags=["User API"])
 
 
 @router.post("/link-card", response_model=UserOut)

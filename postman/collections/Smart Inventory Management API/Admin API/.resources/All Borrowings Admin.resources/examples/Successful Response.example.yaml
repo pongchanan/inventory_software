@@ -1,0 +1,59 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/borrowings/admin/all?page=1&page_size=20"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    page: "1"
+    page_size: "20"
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "borrowings": [
+          {
+            "id": 5250,
+            "item_id": 9506,
+            "user_id": 6292,
+            "borrow_at": "1948-09-06T20:07:27.805Z",
+            "due_at": "2022-08-30T23:42:53.864Z",
+            "return_at": "1956-01-23T05:39:43.451Z",
+            "user": null,
+            "item": null
+          },
+          {
+            "id": 1964,
+            "item_id": 1451,
+            "user_id": 2369,
+            "borrow_at": "1967-05-06T15:24:23.907Z",
+            "due_at": "1959-08-14T18:44:48.957Z",
+            "return_at": null,
+            "user": {
+              "id": 3397,
+              "name": "string",
+              "email": null,
+              "card_id": "string"
+            },
+            "item": {
+              "id": 2796,
+              "name": "string",
+              "image_path": null,
+              "image_url": null
+            }
+          }
+        ],
+        "total": 5707,
+        "page": 7457,
+        "page_size": 6342,
+        "total_pages": 3487
+      }
+order: 1000

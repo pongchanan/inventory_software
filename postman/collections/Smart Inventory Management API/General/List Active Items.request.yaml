@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/api/items/?page=1&page_size=20&search=string"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  page: "1"
+  page_size: "20"
+  search: string
+body:
+  type: text
+  content: ""
+examples: ./.resources/List Active Items.resources/examples
+order: 3000

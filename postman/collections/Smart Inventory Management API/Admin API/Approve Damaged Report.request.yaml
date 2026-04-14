@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/api/damaged-reports/:report_id/approve"
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+pathVariables:
+  report_id: "4351"
+body:
+  type: json
+  content: "{}"
+examples: ./.resources/Approve Damaged Report.resources/examples
+order: 8000

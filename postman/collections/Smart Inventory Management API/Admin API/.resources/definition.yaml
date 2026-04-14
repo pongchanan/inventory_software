@@ -1,0 +1,89 @@
+$kind: collection
+name: Admin API
+scripts:
+  - type: http:beforeRequest
+    code: "const sendRequest = (options) => {\r
+
+      \    return new Promise((resolve, reject) => {\r
+
+      \        pm.sendRequest(options, (err, res) => {\r
+
+      \            if (err) return reject(err);\r
+
+      \            resolve(res);\r
+
+      \        });\r
+
+      \    });\r
+
+      };\r
+
+      \r
+
+      (async function main() {\r
+
+      \    const baseUrl = pm.environment.get(\"baseUrl\");\r
+
+      \    const email = pm.environment.get(\"admin_email\");\r
+
+      \    const password = pm.environment.get(\"admin_password\");\r
+
+      \r
+
+      \    if (pm.environment.get(\"adminToken\")) return;\r
+
+      \r
+
+      \    console.log(\"Checking Admin access...\");\r
+
+      \r
+
+      \    try {\r
+
+      \        const res = await sendRequest({\r
+
+      \            url: baseUrl + \"/api/auth/login\",\r
+
+      \            method: 'POST',\r
+
+      \            header: { 'Content-Type': 'application/json' },\r
+
+      \            body: { mode: 'raw', raw: JSON.stringify({ email, password })
+      }\r
+
+      \        });\r
+
+      \r
+
+      \        if (res.code === 200) {\r
+
+      \            pm.environment.set(\"adminToken\",
+      res.json().access_token);\r
+
+      \            console.log(\"Admin Login: Success\");\r
+
+      \        } else {\r
+
+      \            console.warn(\"🚨 [ADMIN AUTH FAILED]\");\r
+
+      \            console.warn(\"โปรดเช็ค Database ว่ามี User นี้และ Role เป็น
+      admin หรือยัง?\");\r
+
+      \            pm.environment.unset(\"adminToken\");\r
+
+      \        }\r
+
+      \    } catch (e) {\r
+
+      \        console.error(\"Admin Auth Error:\", e);\r
+
+      \    }\r
+
+      })();"
+auth:
+  - id: 276f0174-10d5-4a10-8bee-6aabed8ef2ef
+    type: bearer
+    name: Bearer Token
+    credentials:
+      token: "{{adminToken}}"
+order: 1000

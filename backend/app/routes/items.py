@@ -27,10 +27,10 @@ from app.services.items_service import (
     upload_sample_image,
 )
 
-router = APIRouter(prefix="/api/items", tags=["Items"])
+router = APIRouter(prefix="/api/items")
 
 
-@router.get("/", response_model=PaginatedItems)
+@router.get("/", response_model=PaginatedItems, tags=["General"])
 def list_active_items(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -40,7 +40,7 @@ def list_active_items(
     return get_active_items(db, page, page_size, search=search)
 
 
-@router.get("/admin", response_model=PaginatedItems, dependencies=[Depends(require_admin)])
+@router.get("/admin", response_model=PaginatedItems, dependencies=[Depends(require_admin)], tags=["Admin API"])
 def list_admin_items(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -55,6 +55,7 @@ def list_admin_items(
     "/{item_id}/active",
     response_model=ItemOut,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def toggle_item_active_route(item_id: int, db: Session = Depends(get_db)):
     try:
@@ -67,6 +68,7 @@ def toggle_item_active_route(item_id: int, db: Session = Depends(get_db)):
     "/{item_id}/quantity",
     response_model=ItemOut,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def adjust_item_quantity(
     item_id: int,
@@ -84,6 +86,7 @@ def adjust_item_quantity(
     response_model=EnrollJobAccepted,
     status_code=202,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 async def enroll_item_route(
     name: str = Form(...),
@@ -178,6 +181,7 @@ async def enroll_item_route(
     "/enroll/jobs/{job_id}",
     response_model=EnrollJobStatus,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def get_enroll_job_status(job_id: str):
     """Poll the status of a background enrollment job.
@@ -199,6 +203,7 @@ def get_enroll_job_status(job_id: str):
     "/{item_id}/image",
     response_model=ItemOut,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 async def upload_item_image_route(
     item_id: int,
@@ -227,6 +232,7 @@ async def upload_item_image_route(
     "/{item_id}/samples",
     response_model=list[AiSampleOut],
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def list_item_samples(item_id: int, db: Session = Depends(get_db)):
     try:
@@ -239,6 +245,7 @@ def list_item_samples(item_id: int, db: Session = Depends(get_db)):
     "/{item_id}/samples/{sample_id}",
     status_code=204,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 def delete_item_sample_route(item_id: int, sample_id: int, db: Session = Depends(get_db)):
     try:
@@ -252,6 +259,7 @@ def delete_item_sample_route(item_id: int, sample_id: int, db: Session = Depends
     response_model=AiSampleOut,
     status_code=201,
     dependencies=[Depends(require_admin)],
+    tags=["Admin API"],
 )
 async def add_item_sample_route(
     item_id: int,

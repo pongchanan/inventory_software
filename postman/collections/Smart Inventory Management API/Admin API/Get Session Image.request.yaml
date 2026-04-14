@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/api/sessions/:session_id/image"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  session_id: "9291"
+body:
+  type: text
+  content: ""
+examples: ./.resources/Get Session Image.resources/examples
+order: 23000

@@ -1,0 +1,21 @@
+$kind: http-request
+description: |-
+  Poll the status of a background enrollment job.
+
+  Possible ``status`` values:
+
+  * ``pending``  — queued, not yet started
+  * ``running``  — ML pipeline is processing the video
+  * ``done``     — complete; ``accepted_count``, ``image``, etc. are populated
+  * ``failed``   — pipeline error; ``error`` field contains the message
+url: "{{baseUrl}}/api/items/enroll/jobs/:job_id"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  job_id: string
+body:
+  type: text
+  content: ""
+examples: ./.resources/Get Enroll Job Status.resources/examples
+order: 16000

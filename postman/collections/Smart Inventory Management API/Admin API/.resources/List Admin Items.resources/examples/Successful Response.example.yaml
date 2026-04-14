@@ -1,0 +1,50 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/items/admin?page=1&page_size=20&search=string&is_active=t\
+    rue"
+  method: GET
+  headers:
+    Accept: application/json
+  queryParams:
+    page: "1"
+    page_size: "20"
+    search: string
+    is_active: "true"
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "items": [
+          {
+            "id": 4891,
+            "name": "string",
+            "quantity": 948,
+            "is_active": false,
+            "image": null,
+            "enroll_status": "string",
+            "sample_count": 0
+          },
+          {
+            "id": 1801,
+            "name": "string",
+            "quantity": 3704,
+            "is_active": true,
+            "image": null,
+            "enroll_status": null,
+            "sample_count": 0
+          }
+        ],
+        "total": 1210,
+        "page": 8365,
+        "page_size": 6838,
+        "total_pages": 8637
+      }
+order: 1000

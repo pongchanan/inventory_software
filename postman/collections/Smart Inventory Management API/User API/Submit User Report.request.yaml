@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{baseUrl}}/api/damaged-reports/"
+method: POST
+headers:
+  Content-Type: multipart/form-data
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: topic
+      value: string
+      description: ""
+    - type: text
+      key: description
+      value: string
+      description: ""
+    - type: file
+      key: image
+      src: ""
+      description: ""
+    - type: text
+      key: item_id
+      value: "8376"
+      description: ""
+examples: ./.resources/Submit User Report.resources/examples
+order: 6000

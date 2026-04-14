@@ -1,0 +1,11 @@
+$kind: http-request
+description: Remove the linked card from the current user.
+url: "{{baseUrl}}/api/users/me/unlink-card"
+method: POST
+headers:
+  Accept: application/json
+body:
+  type: text
+  content: ""
+examples: ./.resources/Unlink Card.resources/examples
+order: 5000

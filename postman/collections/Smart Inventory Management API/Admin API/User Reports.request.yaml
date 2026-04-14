@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/api/damaged-reports/user/:user_id"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  user_id: "1623"
+body:
+  type: text
+  content: ""
+examples: ./.resources/User Reports.resources/examples
+order: 6000

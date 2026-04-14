@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/api/items/:item_id/samples/:sample_id"
+method: DELETE
+headers:
+  Accept: application/json
+pathVariables:
+  item_id: "898"
+  sample_id: "7845"
+body:
+  type: text
+  content: ""
+examples: ./.resources/Delete Item Sample Route.resources/examples
+order: 20000

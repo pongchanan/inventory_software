@@ -1,0 +1,29 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/users/:user_id"
+  method: GET
+  headers:
+    Accept: application/json
+  pathVariables:
+    user_id: "1623"
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 3470,
+        "name": "string",
+        "email": "string",
+        "role": "string",
+        "card_id": "string",
+        "is_blacklist": false,
+        "created_at": "1992-04-07T12:31:00.456Z"
+      }
+order: 1000

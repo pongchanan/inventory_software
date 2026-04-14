@@ -1,0 +1,43 @@
+$kind: http-request
+description: |-
+  Start a background enrollment job.
+
+  **New item** (``item_id`` omitted): ``video`` is required.
+  Creates the Item row, then runs the ML pipeline.
+
+  **Existing item** (``item_id`` provided): adds ``quantity`` to the
+  existing item.  If a ``video`` is also provided the ML pipeline runs
+  to add more sample data.  Cover image is optional for existing items.
+
+  Poll ``GET /api/items/enroll/jobs/{job_id}`` until ``status`` is
+  ``"done"`` or ``"failed"``.
+url: "{{baseUrl}}/api/items/enroll"
+method: POST
+headers:
+  Content-Type: multipart/form-data
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: name
+      value: string
+      description: ""
+    - type: text
+      key: quantity
+      value: "47"
+      description: ""
+    - type: file
+      key: video
+      src: ""
+      description: ""
+    - type: file
+      key: image
+      src: ""
+      description: ""
+    - type: text
+      key: item_id
+      value: "9533"
+      description: ""
+examples: ./.resources/Enroll Item Route.resources/examples
+order: 15000

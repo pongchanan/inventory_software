@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/api/damaged-reports/:report_id/image"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  report_id: "4351"
+body:
+  type: text
+  content: ""
+examples: ./.resources/Report Image.resources/examples
+order: 8000

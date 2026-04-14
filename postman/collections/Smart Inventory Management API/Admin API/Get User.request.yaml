@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/api/users/:user_id"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  user_id: "1623"
+body:
+  type: text
+  content: ""
+examples: ./.resources/Get User.resources/examples
+order: 25000

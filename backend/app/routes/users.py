@@ -8,7 +8,7 @@ from app.services.auth_service import require_admin
 from app.services.users_service import get_all_users, get_user_by_id, update_user
 
 router = APIRouter(
-    prefix="/api/users", tags=["Users"], dependencies=[Depends(require_admin)]
+    prefix="/api/users", tags=["Admin API"], dependencies=[Depends(require_admin)]
 )
 
 

@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{baseUrl}}/api/users/"
+method: GET
+headers:
+  Accept: application/json
+body:
+  type: text
+  content: ""
+examples: ./.resources/List Users.resources/examples
+order: 24000

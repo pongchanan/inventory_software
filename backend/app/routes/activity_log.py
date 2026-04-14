@@ -6,7 +6,7 @@ from app.schemas.activity_log import ActivityLogEntry
 from app.services.activity_log_service import get_activity_log
 from app.services.auth_service import require_admin
 
-router = APIRouter(prefix="/api/activity-log", tags=["Activity Log"])
+router = APIRouter(prefix="/api/activity-log", tags=["Admin API"])
 
 
 @router.get(

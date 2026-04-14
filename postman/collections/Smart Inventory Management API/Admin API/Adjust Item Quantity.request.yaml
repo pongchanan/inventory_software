@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{baseUrl}}/api/items/:item_id/quantity"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Accept: application/json
+pathVariables:
+  item_id: "898"
+body:
+  type: json
+  content: |-
+    {
+      "delta": 7447
+    }
+examples: ./.resources/Adjust Item Quantity.resources/examples
+order: 14000

@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{baseUrl}}/api/activity-log/"
+method: GET
+headers:
+  Accept: application/json
+body:
+  type: text
+  content: ""
+examples: ./.resources/List Activity Log.resources/examples
+order: 1000

@@ -1,0 +1,23 @@
+$kind: http-request
+description: |-
+  Replace (or set) the cover image for an existing item.
+
+  Uploads the provided image file to S3, stores the S3 object key in
+  ``item.image_path``, and returns the updated item with a live presigned
+  URL as the ``image`` field — ready to use as an ``<img src>``.
+url: "{{baseUrl}}/api/items/:item_id/image"
+method: PUT
+headers:
+  Content-Type: multipart/form-data
+  Accept: application/json
+pathVariables:
+  item_id: "898"
+body:
+  type: formdata
+  content:
+    - type: file
+      key: image
+      src: ""
+      description: ""
+examples: ./.resources/Upload Item Image Route.resources/examples
+order: 17000

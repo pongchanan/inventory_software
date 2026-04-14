@@ -1,0 +1,38 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/users/"
+  method: GET
+  headers:
+    Accept: application/json
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      [
+        {
+          "id": 8026,
+          "name": "string",
+          "email": "string",
+          "role": "string",
+          "card_id": "string",
+          "is_blacklist": false,
+          "created_at": "1955-09-24T03:20:54.037Z"
+        },
+        {
+          "id": 8366,
+          "name": "string",
+          "email": "string",
+          "role": "string",
+          "card_id": "string",
+          "is_blacklist": false,
+          "created_at": "1954-01-09T09:05:21.189Z"
+        }
+      ]
+order: 1000
