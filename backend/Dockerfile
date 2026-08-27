@@ -42,5 +42,6 @@ COPY . .
 ENV PORT=3000
 EXPOSE 3000
 
-# Run with uvicorn directly (no reload in production)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3000"]
+# Railway injects PORT at runtime.  Use it instead of pinning Uvicorn to the
+# Dockerfile default so the public-networking port and the application agree.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-3000}"]
