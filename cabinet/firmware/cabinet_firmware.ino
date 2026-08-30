@@ -27,14 +27,14 @@
 
 // ======================== CONFIG ========================
 // WiFi
-const char* WIFI_SSID     = "αιεχ Iphone";
-const char* WIFI_PASSWORD = "Gne31@y13hA";
+const char* WIFI_SSID     = "OplorHotspot";
+const char* WIFI_PASSWORD = "1212312121";
 
 // MQTT broker
-const char* MQTT_HOST     = "interchange.proxy.rlwy.net";
-const int   MQTT_PORT     = 12264;
+const char* MQTT_HOST     = "altaria.proxy.rlwy.net";
+const int   MQTT_PORT     = 54004;
 const char* MQTT_USER     = "admin";
-const char* JWT_SECRET    = "ij11kndivmplh2l9e3rmi5hrpteqbvvr";
+const char* JWT_SECRET    = "1212312121";
 
 // MQTT topics (must match backend MQTT_SUBSCRIBE_TOPICS base)
 const char* TOPIC_PUB_OPEN = "cabinet/access/request";
