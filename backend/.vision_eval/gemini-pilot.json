@@ -1,0 +1,83 @@
+{
+  "model": "google/gemini-3.7-flash",
+  "full_images": [
+    {
+      "image": "35.jpg",
+      "objects": [
+        {
+          "label": "Cable",
+          "box": [
+            0.449,
+            0.217,
+            0.746,
+            0.448
+          ]
+        },
+        {
+          "label": "Cable",
+          "box": [
+            0.001,
+            0.133,
+            0.161,
+            0.26
+          ]
+        },
+        {
+          "label": "Soldering flux",
+          "box": [
+            0.296,
+            0.09,
+            0.38,
+            0.201
+          ]
+        },
+        {
+          "label": "Battery AA",
+          "box": [
+            0.33,
+            0.25,
+            0.36,
+            0.352
+          ]
+        },
+        {
+          "label": "Battery AA",
+          "box": [
+            0.354,
+            0.249,
+            0.383,
+            0.35
+          ]
+        },
+        {
+          "label": "Battery AA",
+          "box": [
+            0.388,
+            0.245,
+            0.417,
+            0.347
+          ]
+        },
+        {
+          "label": "Big oled",
+          "box": [
+            0.222,
+            0.258,
+            0.299,
+            0.388
+          ]
+        },
+        {
+          "label": "Raspberry pi pico",
+          "box": [
+            0.513,
+            0.664,
+            0.568,
+            0.766
+          ]
+        }
+      ]
+    }
+  ],
+  "crops": []
+}

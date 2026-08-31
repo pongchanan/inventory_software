@@ -1,0 +1,391 @@
+Embedding Enroll reference 1/389: AC Motor
+[recognizer] Using vanilla MobileNet backbone (576-dim)
+Embedding Enroll reference 2/389: AC Motor
+Embedding Enroll reference 3/389: AC Motor
+Embedding Enroll reference 4/389: AC Motor
+Embedding Enroll reference 5/389: AC Motor
+Embedding Enroll reference 6/389: AC Motor
+Embedding Enroll reference 7/389: AC Motor
+Embedding Enroll reference 8/389: AC Motor
+Embedding Enroll reference 9/389: AC Motor
+Embedding Enroll reference 10/389: Adaptor
+Embedding Enroll reference 11/389: Adaptor
+Embedding Enroll reference 12/389: Adaptor
+Embedding Enroll reference 13/389: Adaptor
+Embedding Enroll reference 14/389: Adaptor
+Embedding Enroll reference 15/389: Adaptor
+Embedding Enroll reference 16/389: Adaptor
+Embedding Enroll reference 17/389: Adaptor
+Embedding Enroll reference 18/389: Adaptor
+Embedding Enroll reference 19/389: Adaptor
+Embedding Enroll reference 20/389: Battery AA
+Embedding Enroll reference 21/389: Battery AA
+Embedding Enroll reference 22/389: Battery AA
+Embedding Enroll reference 23/389: Battery AA
+Embedding Enroll reference 24/389: Battery AA
+Embedding Enroll reference 25/389: Battery AA
+Embedding Enroll reference 26/389: Battery AA
+Embedding Enroll reference 27/389: Button
+Embedding Enroll reference 28/389: Button
+Embedding Enroll reference 29/389: Button
+Embedding Enroll reference 30/389: Button
+Embedding Enroll reference 31/389: Button
+Embedding Enroll reference 32/389: Button
+Embedding Enroll reference 33/389: Button
+Embedding Enroll reference 34/389: Button
+Embedding Enroll reference 35/389: Button
+Embedding Enroll reference 36/389: Button
+Embedding Enroll reference 37/389: Button
+Embedding Enroll reference 38/389: Button
+Embedding Enroll reference 39/389: Button
+Embedding Enroll reference 40/389: Button
+Embedding Enroll reference 41/389: Button
+Embedding Enroll reference 42/389: Button
+Embedding Enroll reference 43/389: Button
+Embedding Enroll reference 44/389: Button
+Embedding Enroll reference 45/389: Button
+Embedding Enroll reference 46/389: Button
+Embedding Enroll reference 47/389: Button
+Embedding Enroll reference 48/389: Button
+Embedding Enroll reference 49/389: Button
+Embedding Enroll reference 50/389: Button
+Embedding Enroll reference 51/389: Button
+Embedding Enroll reference 52/389: Button
+Embedding Enroll reference 53/389: Button
+Embedding Enroll reference 54/389: Buzzer
+Embedding Enroll reference 55/389: Buzzer
+Embedding Enroll reference 56/389: Buzzer
+Embedding Enroll reference 57/389: Buzzer
+Embedding Enroll reference 58/389: Buzzer
+Embedding Enroll reference 59/389: Buzzer
+Embedding Enroll reference 60/389: Buzzer
+Embedding Enroll reference 61/389: Buzzer
+Embedding Enroll reference 62/389: Buzzer
+Embedding Enroll reference 63/389: Buzzer
+Embedding Enroll reference 64/389: Buzzer
+Embedding Enroll reference 65/389: Buzzer
+Embedding Enroll reference 66/389: Buzzer
+Embedding Enroll reference 67/389: Buzzer
+Embedding Enroll reference 68/389: Buzzer
+Embedding Enroll reference 69/389: Buzzer
+Embedding Enroll reference 70/389: Buzzer
+Embedding Enroll reference 71/389: Buzzer
+Embedding Enroll reference 72/389: Buzzer
+Embedding Enroll reference 73/389: Buzzer
+Embedding Enroll reference 74/389: Buzzer
+Embedding Enroll reference 75/389: Buzzer
+Embedding Enroll reference 76/389: Buzzer
+Embedding Enroll reference 77/389: Buzzer
+Embedding Enroll reference 78/389: Buzzer
+Embedding Enroll reference 79/389: Buzzer
+Embedding Enroll reference 80/389: Buzzer
+Embedding Enroll reference 81/389: Cable
+Embedding Enroll reference 82/389: Cable
+Embedding Enroll reference 83/389: Cable
+Embedding Enroll reference 84/389: Cable
+Embedding Enroll reference 85/389: Cable
+Embedding Enroll reference 86/389: Cable
+Embedding Enroll reference 87/389: Cable
+Embedding Enroll reference 88/389: Cable
+Embedding Enroll reference 89/389: Cable
+Embedding Enroll reference 90/389: Cable
+Embedding Enroll reference 91/389: Cable
+Embedding Enroll reference 92/389: Cutter
+Embedding Enroll reference 93/389: Cutter
+Embedding Enroll reference 94/389: Cutter
+Embedding Enroll reference 95/389: Cutter
+Embedding Enroll reference 96/389: Cutter
+Embedding Enroll reference 97/389: Cutter
+Embedding Enroll reference 98/389: Cutter
+Embedding Enroll reference 99/389: Cutter
+Embedding Enroll reference 100/389: ESP helper board
+Embedding Enroll reference 101/389: ESP helper board
+Embedding Enroll reference 102/389: ESP helper board
+Embedding Enroll reference 103/389: ESP helper board
+Embedding Enroll reference 104/389: ESP helper board
+Embedding Enroll reference 105/389: ESP helper board
+Embedding Enroll reference 106/389: ESP helper board
+Embedding Enroll reference 107/389: ESP-CAM
+Embedding Enroll reference 108/389: ESP-CAM
+Embedding Enroll reference 109/389: ESP-CAM
+Embedding Enroll reference 110/389: ESP-CAM
+Embedding Enroll reference 111/389: ESP-CAM
+Embedding Enroll reference 112/389: ESP-CAM
+Embedding Enroll reference 113/389: ESP-CAM
+Embedding Enroll reference 114/389: ESP-CAM
+Embedding Enroll reference 115/389: ESP-CAM
+Embedding Enroll reference 116/389: ESP-CAM
+Embedding Enroll reference 117/389: ESP-CAM
+Embedding Enroll reference 118/389: ESP-CAM
+Embedding Enroll reference 119/389: ESP-CAM
+Embedding Enroll reference 120/389: ESP-CAM
+Embedding Enroll reference 121/389: ESP-CAM
+Embedding Enroll reference 122/389: ESP-CAM
+Embedding Enroll reference 123/389: ESP-CAM
+Embedding Enroll reference 124/389: ESP-CAM
+Embedding Enroll reference 125/389: ESP-CAM
+Embedding Enroll reference 126/389: ESP-CAM
+Embedding Enroll reference 127/389: ESP-CAM
+Embedding Enroll reference 128/389: ESP32
+Embedding Enroll reference 129/389: ESP32
+Embedding Enroll reference 130/389: ESP32
+Embedding Enroll reference 131/389: ESP32
+Embedding Enroll reference 132/389: ESP32
+Embedding Enroll reference 133/389: ESP32
+Embedding Enroll reference 134/389: ESP32
+Embedding Enroll reference 135/389: ESP32
+Embedding Enroll reference 136/389: ESP32
+Embedding Enroll reference 137/389: ESP32
+Embedding Enroll reference 138/389: ESP32
+Embedding Enroll reference 139/389: ESP32
+Embedding Enroll reference 140/389: ESP32
+Embedding Enroll reference 141/389: ESP32
+Embedding Enroll reference 142/389: ESP32
+Embedding Enroll reference 143/389: ESP32
+Embedding Enroll reference 144/389: ESP32
+Embedding Enroll reference 145/389: ESP32
+Embedding Enroll reference 146/389: ESP32
+Embedding Enroll reference 147/389: ESP32
+Embedding Enroll reference 148/389: HDMI to VGA
+Embedding Enroll reference 149/389: HDMI to VGA
+Embedding Enroll reference 150/389: HDMI to VGA
+Embedding Enroll reference 151/389: HDMI to VGA
+Embedding Enroll reference 152/389: HDMI to VGA
+Embedding Enroll reference 153/389: HDMI to VGA
+Embedding Enroll reference 154/389: HDMI to VGA
+Embedding Enroll reference 155/389: HDMI to VGA
+Embedding Enroll reference 156/389: HDMI to VGA
+Embedding Enroll reference 157/389: HDMI to VGA
+Embedding Enroll reference 158/389: HDMI to VGA
+Embedding Enroll reference 159/389: HLK-PM01
+Embedding Enroll reference 160/389: HLK-PM01
+Embedding Enroll reference 161/389: HLK-PM01
+Embedding Enroll reference 162/389: HLK-PM01
+Embedding Enroll reference 163/389: HLK-PM01
+Embedding Enroll reference 164/389: HLK-PM01
+Embedding Enroll reference 165/389: HLK-PM01
+Embedding Enroll reference 166/389: HLK-PM01
+Embedding Enroll reference 167/389: HLK-PM01
+Embedding Enroll reference 168/389: HLK-PM01
+Embedding Enroll reference 169/389: HLK-PM01
+Embedding Enroll reference 170/389: HLK-PM01
+Embedding Enroll reference 171/389: HLK-PM01
+Embedding Enroll reference 172/389: HLK-PM01
+Embedding Enroll reference 173/389: HLK-PM01
+Embedding Enroll reference 174/389: Head Wire
+Embedding Enroll reference 175/389: Head Wire
+Embedding Enroll reference 176/389: Head Wire
+Embedding Enroll reference 177/389: Head Wire
+Embedding Enroll reference 178/389: Head Wire
+Embedding Enroll reference 179/389: Head Wire
+Embedding Enroll reference 180/389: Head Wire
+Embedding Enroll reference 181/389: Hot Glue Gun
+Embedding Enroll reference 182/389: Hot Glue Gun
+Embedding Enroll reference 183/389: Hot Glue Gun
+Embedding Enroll reference 184/389: Hot Glue Gun
+Embedding Enroll reference 185/389: Hot Glue Gun
+Embedding Enroll reference 186/389: Hot Glue Gun
+Embedding Enroll reference 187/389: Hot Glue Gun
+Embedding Enroll reference 188/389: Hot Glue Gun
+Embedding Enroll reference 189/389: LAN Cable
+Embedding Enroll reference 190/389: LAN Cable
+Embedding Enroll reference 191/389: LAN Cable
+Embedding Enroll reference 192/389: LAN Cable
+Embedding Enroll reference 193/389: LAN Cable
+Embedding Enroll reference 194/389: LAN Cable
+Embedding Enroll reference 195/389: LAN Cable
+Embedding Enroll reference 196/389: LAN Cable
+Embedding Enroll reference 197/389: LAN Cable
+Embedding Enroll reference 198/389: Lead Sucker
+Embedding Enroll reference 199/389: Lead Sucker
+Embedding Enroll reference 200/389: Lead Sucker
+Embedding Enroll reference 201/389: Lead Sucker
+Embedding Enroll reference 202/389: Lead Sucker
+Embedding Enroll reference 203/389: Lead Sucker
+Embedding Enroll reference 204/389: Lead Sucker
+Embedding Enroll reference 205/389: Lead Sucker
+Embedding Enroll reference 206/389: Lead
+Embedding Enroll reference 207/389: Lead
+Embedding Enroll reference 208/389: Lead
+Embedding Enroll reference 209/389: Lead
+Embedding Enroll reference 210/389: Lead
+Embedding Enroll reference 211/389: Lead
+Embedding Enroll reference 212/389: Lead
+Embedding Enroll reference 213/389: Lead
+Embedding Enroll reference 214/389: Lead
+Embedding Enroll reference 215/389: Lead
+Embedding Enroll reference 216/389: Lead
+Embedding Enroll reference 217/389: Lead
+Embedding Enroll reference 218/389: Lead
+Embedding Enroll reference 219/389: Led
+Embedding Enroll reference 220/389: Led
+Embedding Enroll reference 221/389: Led
+Embedding Enroll reference 222/389: Led
+Embedding Enroll reference 223/389: Led
+Embedding Enroll reference 224/389: Led
+Embedding Enroll reference 225/389: Led
+Embedding Enroll reference 226/389: Led
+Embedding Enroll reference 227/389: Led
+Embedding Enroll reference 228/389: Led
+Embedding Enroll reference 229/389: Led
+Embedding Enroll reference 230/389: Led
+Embedding Enroll reference 231/389: Led
+Embedding Enroll reference 232/389: Led
+Embedding Enroll reference 233/389: Led
+Embedding Enroll reference 234/389: Light Sensor
+Embedding Enroll reference 235/389: Light Sensor
+Embedding Enroll reference 236/389: Light Sensor
+Embedding Enroll reference 237/389: Light Sensor
+Embedding Enroll reference 238/389: Light Sensor
+Embedding Enroll reference 239/389: Light Sensor
+Embedding Enroll reference 240/389: Light Sensor
+Embedding Enroll reference 241/389: Light Sensor
+Embedding Enroll reference 242/389: Light Sensor
+Embedding Enroll reference 243/389: Light Sensor
+Embedding Enroll reference 244/389: Light Sensor
+Embedding Enroll reference 245/389: Light Sensor
+Embedding Enroll reference 246/389: Light Sensor
+Embedding Enroll reference 247/389: Light Sensor
+Embedding Enroll reference 248/389: Light Sensor
+Embedding Enroll reference 249/389: Motion Sensor
+Embedding Enroll reference 250/389: Motion Sensor
+Embedding Enroll reference 251/389: Motion Sensor
+Embedding Enroll reference 252/389: Motion Sensor
+Embedding Enroll reference 253/389: Motion Sensor
+Embedding Enroll reference 254/389: Motion Sensor
+Embedding Enroll reference 255/389: Motion Sensor
+Embedding Enroll reference 256/389: Motion Sensor
+Embedding Enroll reference 257/389: Motion Sensor
+Embedding Enroll reference 258/389: Motion Sensor
+Embedding Enroll reference 259/389: Motion Sensor
+Embedding Enroll reference 260/389: Motion Sensor
+Embedding Enroll reference 261/389: NRF24I01
+Embedding Enroll reference 262/389: NRF24I01
+Embedding Enroll reference 263/389: NRF24I01
+Embedding Enroll reference 264/389: NRF24I01
+Embedding Enroll reference 265/389: NRF24I01
+Embedding Enroll reference 266/389: NRF24I01
+Embedding Enroll reference 267/389: NRF24I01
+Embedding Enroll reference 268/389: NRF24I01
+Embedding Enroll reference 269/389: NRF24I01
+Embedding Enroll reference 270/389: NRF24I01
+Embedding Enroll reference 271/389: OLED
+Embedding Enroll reference 272/389: OLED
+Embedding Enroll reference 273/389: OLED
+Embedding Enroll reference 274/389: OLED
+Embedding Enroll reference 275/389: OLED
+Embedding Enroll reference 276/389: OLED
+Embedding Enroll reference 277/389: OLED
+Embedding Enroll reference 278/389: OLED
+Embedding Enroll reference 279/389: OLED
+Embedding Enroll reference 280/389: OLED
+Embedding Enroll reference 281/389: OLED
+Embedding Enroll reference 282/389: OLED
+Embedding Enroll reference 283/389: OLED
+Embedding Enroll reference 284/389: Raspberry pi pico
+Embedding Enroll reference 285/389: Raspberry pi pico
+Embedding Enroll reference 286/389: Raspberry pi pico
+Embedding Enroll reference 287/389: Raspberry pi pico
+Embedding Enroll reference 288/389: Raspberry pi pico
+Embedding Enroll reference 289/389: Raspberry pi pico
+Embedding Enroll reference 290/389: Raspberry pi pico
+Embedding Enroll reference 291/389: Raspberry pi pico
+Embedding Enroll reference 292/389: Raspberry pi pico
+Embedding Enroll reference 293/389: Raspberry pi pico
+Embedding Enroll reference 294/389: Raspberry pi pico
+Embedding Enroll reference 295/389: Raspberry pi pico
+Embedding Enroll reference 296/389: Raspberry pi pico
+Embedding Enroll reference 297/389: Raspberry pi pico
+Embedding Enroll reference 298/389: Raspberry pi pico
+Embedding Enroll reference 299/389: Relay
+Embedding Enroll reference 300/389: Relay
+Embedding Enroll reference 301/389: Relay
+Embedding Enroll reference 302/389: Relay
+Embedding Enroll reference 303/389: Relay
+Embedding Enroll reference 304/389: Relay
+Embedding Enroll reference 305/389: Relay
+Embedding Enroll reference 306/389: Relay
+Embedding Enroll reference 307/389: Relay
+Embedding Enroll reference 308/389: Relay
+Embedding Enroll reference 309/389: Relay
+Embedding Enroll reference 310/389: Resistor
+Embedding Enroll reference 311/389: Resistor
+Embedding Enroll reference 312/389: Resistor
+Embedding Enroll reference 313/389: Resistor
+Embedding Enroll reference 314/389: Resistor
+Embedding Enroll reference 315/389: Resistor
+Embedding Enroll reference 316/389: Resistor
+Embedding Enroll reference 317/389: Resistor
+Embedding Enroll reference 318/389: Resistor
+Embedding Enroll reference 319/389: Resistor
+Embedding Enroll reference 320/389: Resistor
+Embedding Enroll reference 321/389: Resistor
+Embedding Enroll reference 322/389: Resistor
+Embedding Enroll reference 323/389: Resistor
+Embedding Enroll reference 324/389: Resistor
+Embedding Enroll reference 325/389: Resistor
+Embedding Enroll reference 326/389: Resistor
+Embedding Enroll reference 327/389: Resistor
+Embedding Enroll reference 328/389: Resistor
+Embedding Enroll reference 329/389: Screw Driver
+Embedding Enroll reference 330/389: Screw Driver
+Embedding Enroll reference 331/389: Screw Driver
+Embedding Enroll reference 332/389: Screw Driver
+Embedding Enroll reference 333/389: Screw Driver
+Embedding Enroll reference 334/389: Screw Driver
+Embedding Enroll reference 335/389: Screw Driver
+Embedding Enroll reference 336/389: Screw Driver
+Embedding Enroll reference 337/389: Screw Driver
+Embedding Enroll reference 338/389: Screw Driver
+Embedding Enroll reference 339/389: Screw Driver
+Embedding Enroll reference 340/389: Screw Driver
+Embedding Enroll reference 341/389: Screw
+Embedding Enroll reference 342/389: Screw
+Embedding Enroll reference 343/389: Screw
+Embedding Enroll reference 344/389: Screw
+Embedding Enroll reference 345/389: Screw
+Embedding Enroll reference 346/389: Soldering tool
+Embedding Enroll reference 347/389: Soldering tool
+Embedding Enroll reference 348/389: Soldering tool
+Embedding Enroll reference 349/389: Soldering tool
+Embedding Enroll reference 350/389: Soldering tool
+Embedding Enroll reference 351/389: Soldering tool
+Embedding Enroll reference 352/389: Soldering tool
+Embedding Enroll reference 353/389: Soldering tool
+Embedding Enroll reference 354/389: Soldering tool
+Embedding Enroll reference 355/389: Soldering tool
+Embedding Enroll reference 356/389: Sound Sensor
+Embedding Enroll reference 357/389: Sound Sensor
+Embedding Enroll reference 358/389: Sound Sensor
+Embedding Enroll reference 359/389: Sound Sensor
+Embedding Enroll reference 360/389: Sound Sensor
+Embedding Enroll reference 361/389: Sound Sensor
+Embedding Enroll reference 362/389: Sound Sensor
+Embedding Enroll reference 363/389: USB Cable
+Embedding Enroll reference 364/389: USB Cable
+Embedding Enroll reference 365/389: USB Cable
+Embedding Enroll reference 366/389: USB Cable
+Embedding Enroll reference 367/389: USB Cable
+Embedding Enroll reference 368/389: USB Cable
+Embedding Enroll reference 369/389: USB Cable
+Embedding Enroll reference 370/389: USB Cable
+Embedding Enroll reference 371/389: USB Cable
+Embedding Enroll reference 372/389: USB Cable
+Embedding Enroll reference 373/389: USB Cable
+Embedding Enroll reference 374/389: Wire Cutter
+Embedding Enroll reference 375/389: Wire Cutter
+Embedding Enroll reference 376/389: Wire Cutter
+Embedding Enroll reference 377/389: Wire Cutter
+Embedding Enroll reference 378/389: Wire Cutter
+Embedding Enroll reference 379/389: Wire
+Embedding Enroll reference 380/389: Wire
+Embedding Enroll reference 381/389: Wire
+Embedding Enroll reference 382/389: Wire
+Embedding Enroll reference 383/389: Wire
+Embedding Enroll reference 384/389: Wire
+Embedding Enroll reference 385/389: Wire
+Embedding Enroll reference 386/389: Wire
+Embedding Enroll reference 387/389: Wire
+Embedding Enroll reference 388/389: Wire
+Embedding Enroll reference 389/389: Wire
+Saved predictions for 1 images to .vision_eval\existing-pipeline-one-image.json

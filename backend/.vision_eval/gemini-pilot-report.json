@@ -1,0 +1,29 @@
+{
+  "model": "google/gemini-3.7-flash",
+  "split": "val",
+  "images": 1,
+  "iou_threshold": 0.5,
+  "detection": {
+    "true_positive": 7,
+    "false_positive": 1,
+    "false_negative": 43,
+    "precision": 0.875,
+    "recall": 0.14,
+    "f1": 0.2414
+  },
+  "recognition": {
+    "expected": 47,
+    "correct": 0,
+    "incorrect": 0,
+    "missing": 47,
+    "accuracy": 0.0
+  },
+  "end_to_end": {
+    "true_positive": 3,
+    "false_positive": 5,
+    "false_negative": 44,
+    "precision": 0.375,
+    "recall": 0.0638,
+    "f1": 0.1091
+  }
+}

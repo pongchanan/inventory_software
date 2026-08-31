@@ -1,0 +1,29 @@
+{
+  "model": "qwen/qwen2.5-vl-72b-instruct",
+  "split": "val",
+  "images": 1,
+  "iou_threshold": 0.5,
+  "detection": {
+    "true_positive": 0,
+    "false_positive": 3,
+    "false_negative": 50,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0
+  },
+  "recognition": {
+    "expected": 47,
+    "correct": 8,
+    "incorrect": 39,
+    "missing": 0,
+    "accuracy": 0.1702
+  },
+  "end_to_end": {
+    "true_positive": 0,
+    "false_positive": 3,
+    "false_negative": 47,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0
+  }
+}

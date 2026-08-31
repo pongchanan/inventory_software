@@ -1,0 +1,29 @@
+{
+  "model": "openai/gpt-5.6-luna",
+  "split": "val",
+  "images": 1,
+  "iou_threshold": 0.5,
+  "detection": {
+    "true_positive": 9,
+    "false_positive": 10,
+    "false_negative": 41,
+    "precision": 0.4737,
+    "recall": 0.18,
+    "f1": 0.2609
+  },
+  "recognition": {
+    "expected": 47,
+    "correct": 6,
+    "incorrect": 41,
+    "missing": 0,
+    "accuracy": 0.1277
+  },
+  "end_to_end": {
+    "true_positive": 1,
+    "false_positive": 18,
+    "false_negative": 46,
+    "precision": 0.0526,
+    "recall": 0.0213,
+    "f1": 0.0303
+  }
+}

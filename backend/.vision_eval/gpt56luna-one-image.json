@@ -1,0 +1,372 @@
+{
+  "model": "openai/gpt-5.6-luna",
+  "full_images": [
+    {
+      "image": "35.jpg",
+      "objects": [
+        {
+          "label": "Soldering tool",
+          "box": [
+            0.14,
+            0.08,
+            0.26,
+            0.21
+          ]
+        },
+        {
+          "label": "Soldering lead",
+          "box": [
+            0.29,
+            0.09,
+            0.375,
+            0.22
+          ]
+        },
+        {
+          "label": "Big oled",
+          "box": [
+            0.165,
+            0.265,
+            0.295,
+            0.375
+          ]
+        },
+        {
+          "label": "Battery AA",
+          "box": [
+            0.335,
+            0.25,
+            0.425,
+            0.365
+          ]
+        },
+        {
+          "label": "Wire Cutter",
+          "box": [
+            0.055,
+            0.4,
+            0.19,
+            0.52
+          ]
+        },
+        {
+          "label": "Hot Glue Gun",
+          "box": [
+            0.66,
+            0.075,
+            0.78,
+            0.21
+          ]
+        },
+        {
+          "label": "Data wire type-c",
+          "box": [
+            0.47,
+            0.23,
+            0.76,
+            0.35
+          ]
+        },
+        {
+          "label": "Cable",
+          "box": [
+            0.465,
+            0.225,
+            0.765,
+            0.48
+          ]
+        },
+        {
+          "label": "Wire",
+          "box": [
+            0.47,
+            0.335,
+            0.75,
+            0.475
+          ]
+        },
+        {
+          "label": "Lead",
+          "box": [
+            0.5,
+            0.375,
+            0.735,
+            0.475
+          ]
+        },
+        {
+          "label": "Screw",
+          "box": [
+            0.18,
+            0.575,
+            0.265,
+            0.675
+          ]
+        },
+        {
+          "label": "Adaptor",
+          "box": [
+            0.545,
+            0.515,
+            0.655,
+            0.635
+          ]
+        },
+        {
+          "label": "OLED",
+          "box": [
+            0.22,
+            0.72,
+            0.265,
+            0.805
+          ]
+        },
+        {
+          "label": "Soldering flux",
+          "box": [
+            0.285,
+            0.695,
+            0.315,
+            0.785
+          ]
+        },
+        {
+          "label": "Led",
+          "box": [
+            0.32,
+            0.715,
+            0.355,
+            0.77
+          ]
+        },
+        {
+          "label": "Raspberry pi pico",
+          "box": [
+            0.415,
+            0.69,
+            0.465,
+            0.765
+          ]
+        },
+        {
+          "label": "ESP32",
+          "box": [
+            0.505,
+            0.67,
+            0.58,
+            0.79
+          ]
+        },
+        {
+          "label": "NRF24I01",
+          "box": [
+            0.585,
+            0.695,
+            0.63,
+            0.76
+          ]
+        },
+        {
+          "label": "Buzzer",
+          "box": [
+            0.65,
+            0.7,
+            0.705,
+            0.775
+          ]
+        }
+      ]
+    }
+  ],
+  "crops": [
+    {
+      "sample": "35.jpg#0",
+      "label": "Battery AA"
+    },
+    {
+      "sample": "35.jpg#1",
+      "label": "ESP-CAM"
+    },
+    {
+      "sample": "35.jpg#2",
+      "label": "Wire"
+    },
+    {
+      "sample": "35.jpg#3",
+      "label": "Screw Driver"
+    },
+    {
+      "sample": "35.jpg#4",
+      "label": "Soldering tool"
+    },
+    {
+      "sample": "35.jpg#5",
+      "label": "Battery AA"
+    },
+    {
+      "sample": "35.jpg#6",
+      "label": "Resistor"
+    },
+    {
+      "sample": "35.jpg#7",
+      "label": "Battery AA"
+    },
+    {
+      "sample": "35.jpg#8",
+      "label": "Soldering tool"
+    },
+    {
+      "sample": "35.jpg#9",
+      "label": "Screw"
+    },
+    {
+      "sample": "35.jpg#10",
+      "label": "Head Wire"
+    },
+    {
+      "sample": "35.jpg#11",
+      "label": "Screw Driver"
+    },
+    {
+      "sample": "35.jpg#12",
+      "label": "Soldering tool"
+    },
+    {
+      "sample": "35.jpg#13",
+      "label": "Lead Sucker"
+    },
+    {
+      "sample": "35.jpg#15",
+      "label": "Big oled"
+    },
+    {
+      "sample": "35.jpg#16",
+      "label": "Head Wire"
+    },
+    {
+      "sample": "35.jpg#17",
+      "label": "Wire"
+    },
+    {
+      "sample": "35.jpg#18",
+      "label": "Button"
+    },
+    {
+      "sample": "35.jpg#19",
+      "label": "Screw"
+    },
+    {
+      "sample": "35.jpg#20",
+      "label": "Soldering tool"
+    },
+    {
+      "sample": "35.jpg#21",
+      "label": "Soldering tool"
+    },
+    {
+      "sample": "35.jpg#22",
+      "label": "Raspberry pi pico"
+    },
+    {
+      "sample": "35.jpg#23",
+      "label": "OLED"
+    },
+    {
+      "sample": "35.jpg#25",
+      "label": "Screw Driver"
+    },
+    {
+      "sample": "35.jpg#26",
+      "label": "Wire"
+    },
+    {
+      "sample": "35.jpg#27",
+      "label": "Head Wire"
+    },
+    {
+      "sample": "35.jpg#28",
+      "label": "Button"
+    },
+    {
+      "sample": "35.jpg#29",
+      "label": "Soldering lead"
+    },
+    {
+      "sample": "35.jpg#30",
+      "label": "Screw"
+    },
+    {
+      "sample": "35.jpg#31",
+      "label": "Button"
+    },
+    {
+      "sample": "35.jpg#32",
+      "label": "Screw"
+    },
+    {
+      "sample": "35.jpg#33",
+      "label": "Screw"
+    },
+    {
+      "sample": "35.jpg#34",
+      "label": "Screw"
+    },
+    {
+      "sample": "35.jpg#35",
+      "label": "Screw"
+    },
+    {
+      "sample": "35.jpg#36",
+      "label": "Screw"
+    },
+    {
+      "sample": "35.jpg#37",
+      "label": "Screw"
+    },
+    {
+      "sample": "35.jpg#38",
+      "label": "Wire"
+    },
+    {
+      "sample": "35.jpg#39",
+      "label": "Cable"
+    },
+    {
+      "sample": "35.jpg#40",
+      "label": "ESP32"
+    },
+    {
+      "sample": "35.jpg#41",
+      "label": "Resistor"
+    },
+    {
+      "sample": "35.jpg#42",
+      "label": "Soldering lead"
+    },
+    {
+      "sample": "35.jpg#43",
+      "label": "Buzzer"
+    },
+    {
+      "sample": "35.jpg#44",
+      "label": "Soldering lead"
+    },
+    {
+      "sample": "35.jpg#45",
+      "label": "Battery AA"
+    },
+    {
+      "sample": "35.jpg#46",
+      "label": "Adaptor"
+    },
+    {
+      "sample": "35.jpg#47",
+      "label": "Screw"
+    },
+    {
+      "sample": "35.jpg#49",
+      "label": "Buzzer"
+    }
+  ],
+  "errors": []
+}

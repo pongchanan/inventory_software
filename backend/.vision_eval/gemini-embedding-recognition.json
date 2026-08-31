@@ -1,0 +1,319 @@
+{
+  "model": "google/gemini-embedding-2 reference-recognizer",
+  "full_images": [
+    {
+      "image": "35.jpg",
+      "objects": [
+        {
+          "label": "Cable",
+          "box": [
+            0.449,
+            0.217,
+            0.746,
+            0.448
+          ]
+        },
+        {
+          "label": "Cable",
+          "box": [
+            0.001,
+            0.133,
+            0.161,
+            0.26
+          ]
+        },
+        {
+          "label": "Soldering flux",
+          "box": [
+            0.296,
+            0.09,
+            0.38,
+            0.201
+          ]
+        },
+        {
+          "label": "Battery AA",
+          "box": [
+            0.33,
+            0.25,
+            0.36,
+            0.352
+          ]
+        },
+        {
+          "label": "Battery AA",
+          "box": [
+            0.354,
+            0.249,
+            0.383,
+            0.35
+          ]
+        },
+        {
+          "label": "Battery AA",
+          "box": [
+            0.388,
+            0.245,
+            0.417,
+            0.347
+          ]
+        },
+        {
+          "label": "Big oled",
+          "box": [
+            0.222,
+            0.258,
+            0.299,
+            0.388
+          ]
+        },
+        {
+          "label": "Raspberry pi pico",
+          "box": [
+            0.513,
+            0.664,
+            0.568,
+            0.766
+          ]
+        }
+      ]
+    }
+  ],
+  "crops": [
+    {
+      "sample": "35.jpg#0",
+      "label": "ESP32",
+      "confidence": 0.7573
+    },
+    {
+      "sample": "35.jpg#1",
+      "label": "ESP32",
+      "confidence": 0.7648
+    },
+    {
+      "sample": "35.jpg#2",
+      "label": "Cutter",
+      "confidence": 0.7097
+    },
+    {
+      "sample": "35.jpg#3",
+      "label": "Raspberry pi pico",
+      "confidence": 0.6824
+    },
+    {
+      "sample": "35.jpg#4",
+      "label": "Motion Sensor",
+      "confidence": 0.7128
+    },
+    {
+      "sample": "35.jpg#5",
+      "label": "Raspberry pi pico",
+      "confidence": 0.6968
+    },
+    {
+      "sample": "35.jpg#6",
+      "label": "Motion Sensor",
+      "confidence": 0.6887
+    },
+    {
+      "sample": "35.jpg#7",
+      "label": "USB Cable",
+      "confidence": 0.6705
+    },
+    {
+      "sample": "35.jpg#8",
+      "label": "ESP32",
+      "confidence": 0.7283
+    },
+    {
+      "sample": "35.jpg#9",
+      "label": "AC Motor",
+      "confidence": 0.7245
+    },
+    {
+      "sample": "35.jpg#10",
+      "label": "Adaptor",
+      "confidence": 0.7375
+    },
+    {
+      "sample": "35.jpg#11",
+      "label": "AC Motor",
+      "confidence": 0.6978
+    },
+    {
+      "sample": "35.jpg#12",
+      "label": "Cutter",
+      "confidence": 0.7046
+    },
+    {
+      "sample": "35.jpg#13",
+      "label": "Button",
+      "confidence": 0.7211
+    },
+    {
+      "sample": "35.jpg#15",
+      "label": "OLED",
+      "confidence": 0.7736
+    },
+    {
+      "sample": "35.jpg#16",
+      "label": "Adaptor",
+      "confidence": 0.7255
+    },
+    {
+      "sample": "35.jpg#17",
+      "label": "NRF24I01",
+      "confidence": 0.7355
+    },
+    {
+      "sample": "35.jpg#18",
+      "label": "Button",
+      "confidence": 0.7084
+    },
+    {
+      "sample": "35.jpg#19",
+      "label": "NRF24I01",
+      "confidence": 0.7218
+    },
+    {
+      "sample": "35.jpg#20",
+      "label": "HDMI to VGA",
+      "confidence": 0.7213
+    },
+    {
+      "sample": "35.jpg#21",
+      "label": "ESP32",
+      "confidence": 0.7152
+    },
+    {
+      "sample": "35.jpg#22",
+      "label": "Raspberry pi pico",
+      "confidence": 0.777
+    },
+    {
+      "sample": "35.jpg#23",
+      "label": "Adaptor",
+      "confidence": 0.6872
+    },
+    {
+      "sample": "35.jpg#25",
+      "label": "USB Cable",
+      "confidence": 0.7167
+    },
+    {
+      "sample": "35.jpg#26",
+      "label": "USB Cable",
+      "confidence": 0.7226
+    },
+    {
+      "sample": "35.jpg#27",
+      "label": "USB Cable",
+      "confidence": 0.7147
+    },
+    {
+      "sample": "35.jpg#28",
+      "label": "USB Cable",
+      "confidence": 0.7566
+    },
+    {
+      "sample": "35.jpg#29",
+      "label": "Screw Driver",
+      "confidence": 0.7381
+    },
+    {
+      "sample": "35.jpg#30",
+      "label": "Cutter",
+      "confidence": 0.7384
+    },
+    {
+      "sample": "35.jpg#31",
+      "label": "Motion Sensor",
+      "confidence": 0.7253
+    },
+    {
+      "sample": "35.jpg#32",
+      "label": "USB Cable",
+      "confidence": 0.7299
+    },
+    {
+      "sample": "35.jpg#33",
+      "label": "Buzzer",
+      "confidence": 0.7258
+    },
+    {
+      "sample": "35.jpg#34",
+      "label": "Screw Driver",
+      "confidence": 0.7215
+    },
+    {
+      "sample": "35.jpg#35",
+      "label": "ESP32",
+      "confidence": 0.7348
+    },
+    {
+      "sample": "35.jpg#36",
+      "label": "Adaptor",
+      "confidence": 0.7271
+    },
+    {
+      "sample": "35.jpg#37",
+      "label": "Screw Driver",
+      "confidence": 0.73
+    },
+    {
+      "sample": "35.jpg#38",
+      "label": "Screw",
+      "confidence": 0.7377
+    },
+    {
+      "sample": "35.jpg#39",
+      "label": "NRF24I01",
+      "confidence": 0.7691
+    },
+    {
+      "sample": "35.jpg#40",
+      "label": "ESP32",
+      "confidence": 0.7114
+    },
+    {
+      "sample": "35.jpg#41",
+      "label": "Cutter",
+      "confidence": 0.7249
+    },
+    {
+      "sample": "35.jpg#42",
+      "label": "Cutter",
+      "confidence": 0.6777
+    },
+    {
+      "sample": "35.jpg#43",
+      "label": "Cutter",
+      "confidence": 0.6963
+    },
+    {
+      "sample": "35.jpg#44",
+      "label": "Cutter",
+      "confidence": 0.6961
+    },
+    {
+      "sample": "35.jpg#45",
+      "label": "Motion Sensor",
+      "confidence": 0.7198
+    },
+    {
+      "sample": "35.jpg#46",
+      "label": "Head Wire",
+      "confidence": 0.8136
+    },
+    {
+      "sample": "35.jpg#47",
+      "label": "Adaptor",
+      "confidence": 0.7312
+    },
+    {
+      "sample": "35.jpg#49",
+      "label": "USB Cable",
+      "confidence": 0.7655
+    }
+  ]
+}
