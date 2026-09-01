@@ -16,6 +16,7 @@ from app.routes import (
     auth_router,
     borrowings_router,
     card_router,
+    chat_router,
     damaged_reports_router,
     dashboard_router,
     items_router,
@@ -91,6 +92,7 @@ app.include_router(activity_log_router)
 app.include_router(auth_router)
 app.include_router(borrowings_router)
 app.include_router(card_router)
+app.include_router(chat_router)
 app.include_router(damaged_reports_router)
 app.include_router(dashboard_router)
 app.include_router(items_router)

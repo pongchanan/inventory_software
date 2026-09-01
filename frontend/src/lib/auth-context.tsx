@@ -61,20 +61,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Hydrate on mount
   useEffect(() => {
-    const saved = localStorage.getItem(TOKEN_KEY);
-    if (!saved) {
-      setLoading(false);
-      return;
-    }
-    setToken(saved);
-    api<User>("/api/auth/me", { token: saved })
-      .then((u) => {
+    const hydrate = async () => {
+      const saved = localStorage.getItem(TOKEN_KEY);
+      if (!saved) {
+        setLoading(false);
+        return;
+      }
+      setToken(saved);
+      try {
+        const u = await api<User>("/api/auth/me", { token: saved });
         setUser(u);
-      })
-      .catch(() => {
+      } catch {
         localStorage.removeItem(TOKEN_KEY);
-      })
-      .finally(() => setLoading(false));
+        setToken(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    hydrate();
   }, []);
 
   const login = async (email: string, password: string) => {

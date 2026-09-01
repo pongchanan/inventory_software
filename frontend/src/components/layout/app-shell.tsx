@@ -2,8 +2,9 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Sidebar from "@/components/layout/sidebar";
+import ChatWidget from "@/components/chat/chat-widget";
 
 const PUBLIC_PATHS = ["/login", "/register"];
 
@@ -11,7 +12,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -41,12 +41,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       <Sidebar />
       {/* Main content — push right on desktop */}
       <main className="lg:ml-64 pt-14 lg:pt-0 min-h-screen transition-all duration-200">
         <div className="p-4 md:p-6 lg:p-8 animate-fade-in">{children}</div>
       </main>
+      {/* Floating AI Chatbot Assistant Widget */}
+      <ChatWidget />
     </div>
   );
 }

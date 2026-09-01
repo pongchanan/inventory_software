@@ -156,3 +156,29 @@ export interface EnrollJob {
   frames_sampled: number | null;
   error: string | null;
 }
+
+// ── AI Chatbot ──
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface RecommendedItem {
+  id: number;
+  name: string;
+  quantity: number;
+  image_url: string | null;
+  in_stock: boolean;
+  reason: string | null;
+}
+
+export interface ChatRequest {
+  message: string;
+  history?: ChatMessage[];
+}
+
+export interface ChatResponse {
+  reply: string;
+  recommended_items: RecommendedItem[];
+  suggested_queries: string[];
+}
