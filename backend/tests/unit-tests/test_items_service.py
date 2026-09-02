@@ -8,6 +8,7 @@ class TestGetActiveItems:
     def _setup_query(self, mock_db, items, total):
         query = MagicMock()
         mock_db.query.return_value.filter.return_value = query
+        query.scalar.return_value = total
         query.count.return_value = total
         query.order_by.return_value.offset.return_value.limit.return_value.all.return_value = (
             items
@@ -23,6 +24,7 @@ class TestGetActiveItems:
         item = result["items"][0]
         assert item["id"] == sample_item.id
         assert item["name"] == sample_item.name
+        assert item["locker_number"] is None
         assert item["quantity"] == sample_item.quantity
         assert item["is_active"] == sample_item.is_active
         assert result["total"] == 1
@@ -47,6 +49,7 @@ class TestGetActiveItems:
         assert result["items"][0]["image"] == fake_url
 
     def test_image_is_none_when_no_sample(self, mock_db, sample_item):
+        sample_item.image_path = None
         self._setup_query(mock_db, [sample_item], 1)
 
         with patch(

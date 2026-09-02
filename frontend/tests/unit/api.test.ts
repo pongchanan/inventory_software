@@ -18,7 +18,7 @@ describe("api()", () => {
 
     const result = await api("/api/items/");
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://localhost:8000/api/items/",
+      "http://localhost:3000/api/items/",
       expect.objectContaining({ method: "GET" }),
     );
     expect(result).toEqual({ data: "test" });

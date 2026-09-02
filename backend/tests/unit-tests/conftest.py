@@ -50,6 +50,7 @@ def sample_item():
     item = MagicMock(spec=Item)
     item.id = 1
     item.name = "Screwdriver"
+    item.locker_number = None
     item.image_path = "/images/screwdriver.jpg"
     item.quantity = 5
     item.is_active = True

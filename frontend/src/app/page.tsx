@@ -217,14 +217,14 @@ export default function HomePage() {
 
       {/* Loading skeleton */}
       {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
               className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse"
             >
-              <div className="w-full h-44 bg-gray-100" />
-              <div className="p-4">
+              <div className="w-full h-32 sm:h-44 bg-gray-100" />
+              <div className="p-3 sm:p-4">
                 <div className="h-4 bg-gray-100 rounded w-3/4 mb-2" />
                 <div className="h-3 bg-gray-100 rounded w-1/2" />
               </div>
@@ -262,7 +262,7 @@ export default function HomePage() {
       {/* Item cards grid */}
       {!loading && items.length > 0 && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {items.map((item) => (
               <ItemCard key={item.id} item={item} />
             ))}
@@ -286,7 +286,7 @@ function ItemCard({ item }: { item: Item }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md hover:border-gray-300 transition-all duration-200 group">
       {/* Image */}
-      <div className="relative w-full h-44 bg-gray-50 overflow-hidden">
+      <div className="relative w-full h-32 sm:h-44 bg-gray-50 overflow-hidden">
         {item.image && !imgError ? (
           <img
             src={item.image}
@@ -325,9 +325,11 @@ function ItemCard({ item }: { item: Item }) {
       </div>
 
       {/* Info */}
-      <div className="p-4">
-        <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
-        <p className="text-sm text-gray-500 mt-0.5">ID: {item.id}</p>
+      <div className="p-3 sm:p-4">
+        <h3 className="text-sm sm:text-base font-medium text-gray-900 truncate">{item.name}</h3>
+        <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+          Locker: {item.locker_number ?? "—"}
+        </p>
       </div>
     </div>
   );

@@ -63,9 +63,9 @@ const mockUser = {
 
 const mockItems = {
   items: [
-    { id: 1, name: "Arduino Uno", quantity: 5, is_active: true, image: null, enroll_status: null },
-    { id: 2, name: "Raspberry Pi", quantity: 0, is_active: true, image: null, enroll_status: null },
-    { id: 3, name: "ESP32 Board", quantity: 3, is_active: true, image: null, enroll_status: "processing" as const },
+    { id: 1, name: "Arduino Uno", locker_number: "063", quantity: 5, is_active: true, image: null, enroll_status: null },
+    { id: 2, name: "Raspberry Pi", locker_number: "077", quantity: 0, is_active: true, image: null, enroll_status: null },
+    { id: 3, name: "ESP32 Board", locker_number: null, quantity: 3, is_active: true, image: null, enroll_status: "processing" as const },
   ],
   total: 3,
   page: 1,
@@ -111,6 +111,15 @@ describe("Home Page — System Test", () => {
       expect(screen.getByText("Arduino Uno")).toBeInTheDocument();
       expect(screen.getByText("Raspberry Pi")).toBeInTheDocument();
       expect(screen.getByText("ESP32 Board")).toBeInTheDocument();
+    });
+  });
+
+  it("shows the locker number instead of the internal item ID", async () => {
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByText("Locker: 063")).toBeInTheDocument();
+      expect(screen.queryByText("ID: 1")).not.toBeInTheDocument();
     });
   });
 

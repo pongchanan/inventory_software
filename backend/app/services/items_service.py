@@ -58,6 +58,7 @@ def item_to_out(item: Item, sample_count: int = 0) -> dict:
     return {
         "id": item.id,
         "name": item.name,
+        "locker_number": item.locker_number,
         "quantity": item.quantity,
         "is_active": item.is_active,
         "image": get_presigned_url(item.image_path) if item.image_path else None,
@@ -131,6 +132,7 @@ def get_active_items(
             {
                 "id": item.id,
                 "name": item.name,
+                "locker_number": item.locker_number,
                 "quantity": item.quantity,
                 "is_active": item.is_active,
                 "image": get_presigned_url(raw_key) if raw_key else None,
@@ -188,6 +190,7 @@ def get_admin_items(
             {
                 "id": item.id,
                 "name": item.name,
+                "locker_number": item.locker_number,
                 "quantity": item.quantity,
                 "is_active": item.is_active,
                 "image": get_presigned_url(raw_key) if raw_key else None,

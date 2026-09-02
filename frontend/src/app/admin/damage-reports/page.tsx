@@ -75,7 +75,7 @@ export default function AdminDamageReportsPage() {
     setExporting(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/damaged-reports/export`,
+        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"}/api/damaged-reports/export`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       if (!res.ok) throw new Error("Export failed");

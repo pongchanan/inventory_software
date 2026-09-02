@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class ItemOut(BaseModel):
     id: int
     name: str
+    locker_number: str | None = None
     quantity: int
     is_active: bool
     image: str | None = None

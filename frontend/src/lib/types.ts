@@ -19,6 +19,7 @@ export interface AuthResponse {
 export interface Item {
   id: number;
   name: string;
+  locker_number: string | null;
   quantity: number;
   is_active: boolean;
   image: string | null;

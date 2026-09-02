@@ -20,13 +20,13 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+When run from the monorepo root, open [http://localhost:3001](http://localhost:3001) in your browser.
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API base URL |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:3000` | Backend API base URL |
 
 ## Scripts
 
