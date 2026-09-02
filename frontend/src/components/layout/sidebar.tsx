@@ -5,8 +5,6 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Home,
-  Package,
-  FileWarning,
   LayoutDashboard,
   BoxesIcon,
   ClipboardList,
@@ -29,12 +27,6 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/", icon: <Home size={20} /> },
-  { label: "My Borrows", href: "/borrows", icon: <Package size={20} /> },
-  {
-    label: "Damage Reports",
-    href: "/damage-reports",
-    icon: <FileWarning size={20} />,
-  },
   {
     label: "Dashboard",
     href: "/admin/dashboard",
