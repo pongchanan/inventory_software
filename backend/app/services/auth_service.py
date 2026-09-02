@@ -15,6 +15,7 @@ JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 
 
 def hash_password(password: str) -> str:
@@ -59,6 +60,26 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> User:
+    payload = decode_token(credentials.credentials)
+    user_id = int(payload["sub"])
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
+    if user.is_blacklist:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="User is blacklisted"
+        )
+    return user
+
+
+def get_optional_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_security),
+    db: Session = Depends(get_db),
+) -> User | None:
+    if credentials is None:
+        return None
     payload = decode_token(credentials.credentials)
     user_id = int(payload["sub"])
     user = db.query(User).filter(User.id == user_id).first()

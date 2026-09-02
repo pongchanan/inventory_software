@@ -21,6 +21,7 @@ from app.routes import (
     items_router,
     sessions_router,
     users_router,
+    votes_router,
 )
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -96,6 +97,7 @@ app.include_router(dashboard_router)
 app.include_router(items_router)
 app.include_router(sessions_router)
 app.include_router(users_router)
+app.include_router(votes_router)
 
 
 @app.get("/", tags=["General"])

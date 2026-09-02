@@ -41,6 +41,29 @@ export interface PaginatedItems {
   total_pages: number;
 }
 
+// ── Weekly votes ──
+export type VoteCategory = "equipment" | "board_game";
+
+export interface VoteProposal {
+  id: number;
+  category: VoteCategory;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  created_at: string;
+  is_active: boolean;
+  has_voted: boolean;
+}
+
+export interface VoteCycle {
+  id: number;
+  week_start: string;
+}
+
+export interface VoteResult extends VoteProposal {
+  vote_count: number;
+}
+
 // ── Borrowings ──
 export interface BorrowingUser {
   id: number;

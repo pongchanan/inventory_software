@@ -81,6 +81,23 @@ def upload_item_image(data: bytes, item_id: int, content_type: str = "image/jpeg
     return key
 
 
+def upload_vote_proposal_image(data: bytes, proposal_id: int, content_type: str = "image/jpeg") -> str:
+    """Upload an optional cover image for a vote proposal."""
+    client = _get_client()
+    bucket = _get_bucket()
+    ext = "jpg" if "jpeg" in content_type or "jpg" in content_type else content_type.split("/")[-1]
+    key = f"vote-proposals/{proposal_id}/{uuid.uuid4().hex[:8]}.{ext}"
+
+    client.put_object(
+        Bucket=bucket,
+        Key=key,
+        Body=data,
+        ContentType=content_type,
+    )
+
+    return key
+
+
 def _normalize_key(key: str) -> str:
     """Strip s3://bucket/ prefix if present, returning a bare object key."""
     if key.startswith("s3://"):

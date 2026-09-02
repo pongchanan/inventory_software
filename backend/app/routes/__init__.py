@@ -7,6 +7,7 @@ from app.routes.dashboard import router as dashboard_router
 from app.routes.items import router as items_router
 from app.routes.sessions import router as sessions_router
 from app.routes.users import router as users_router
+from app.routes.votes import router as votes_router
 
 __all__ = [
     "activity_log_router",
@@ -18,4 +19,5 @@ __all__ = [
     "items_router",
     "sessions_router",
     "users_router",
+    "votes_router",
 ]

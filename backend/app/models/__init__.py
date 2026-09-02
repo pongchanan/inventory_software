@@ -6,6 +6,9 @@ from app.models.damaged_item_report import DamagedItemReport
 from app.models.ai_label import AiLabel
 from app.models.ai_sample import AiSample
 from app.models.ai_prototype import AiPrototype
+from app.models.vote_cycle import VoteCycle
+from app.models.vote_proposal import VoteProposal
+from app.models.proposal_vote import ProposalVote
 
 __all__ = [
     "User",
@@ -16,4 +19,7 @@ __all__ = [
     "AiLabel",
     "AiSample",
     "AiPrototype",
+    "VoteCycle",
+    "VoteProposal",
+    "ProposalVote",
 ]

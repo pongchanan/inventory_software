@@ -14,7 +14,9 @@ import {
   Menu,
   X,
   LogOut,
+  LogIn,
   ChevronLeft,
+  Vote,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
@@ -27,6 +29,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/", icon: <Home size={20} /> },
+  { label: "Votes", href: "/votes", icon: <Vote size={20} /> },
   {
     label: "Dashboard",
     href: "/admin/dashboard",
@@ -61,6 +64,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Cabinet Logs",
     href: "/admin/cabinet-logs",
     icon: <Server size={20} />,
+    adminOnly: true,
+  },
+  {
+    label: "Vote Results",
+    href: "/admin/votes",
+    icon: <Vote size={20} />,
     adminOnly: true,
   },
 ];
@@ -168,37 +177,45 @@ export default function Sidebar() {
 
       {/* User footer */}
       <div className="border-t border-gray-200 p-3">
-        <div
-          className={`flex items-center ${collapsed ? "justify-center" : "gap-3"}`}
-        >
-          <Link
-            href="/profile"
-            onClick={() => setMobileOpen(false)}
-            className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0 hover:ring-2 hover:ring-blue-300 transition-all"
-            title="My Profile"
-          >
-            {user?.name?.charAt(0).toUpperCase() ?? "?"}
-          </Link>
-          {!collapsed && (
+        {user ? (
+          <div className={`flex items-center ${collapsed ? "justify-center" : "gap-3"}`}>
             <Link
               href="/profile"
               onClick={() => setMobileOpen(false)}
-              className="flex-1 min-w-0 hover:opacity-80 transition-opacity"
+              className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0 hover:ring-2 hover:ring-blue-300 transition-all"
+              title="My Profile"
             >
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user?.name}
-              </p>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              {user.name.charAt(0).toUpperCase()}
             </Link>
-          )}
-          <button
-            onClick={logout}
-            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-red-600 transition-colors"
-            title="Logout"
+            {!collapsed && (
+              <Link
+                href="/profile"
+                onClick={() => setMobileOpen(false)}
+                className="flex-1 min-w-0 hover:opacity-80 transition-opacity"
+              >
+                <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              </Link>
+            )}
+            <button
+              onClick={logout}
+              className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-red-600 transition-colors"
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 ${collapsed ? "justify-center" : "gap-3 px-2"}`}
+            title="Log in"
           >
-            <LogOut size={18} />
-          </button>
-        </div>
+            <LogIn size={20} />
+            {!collapsed && <span>Log in</span>}
+          </Link>
+        )}
       </div>
     </nav>
   );

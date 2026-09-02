@@ -2,23 +2,23 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Sidebar from "@/components/layout/sidebar";
 
-const PUBLIC_PATHS = ["/login", "/register"];
+const AUTH_PATHS = ["/login", "/register"];
+const isGuestPath = (pathname: string) => pathname === "/" || pathname.startsWith("/votes");
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     if (loading) return;
-    const isPublic = PUBLIC_PATHS.includes(pathname);
-    if (!user && !isPublic) {
+    const isAuthPath = AUTH_PATHS.includes(pathname);
+    if (!user && !isGuestPath(pathname) && !isAuthPath) {
       router.replace("/login");
-    } else if (user && isPublic) {
+    } else if (user && isAuthPath) {
       router.replace("/");
     }
   }, [user, loading, pathname, router]);
@@ -32,13 +32,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Public pages: no sidebar
-  if (PUBLIC_PATHS.includes(pathname)) {
+  if (AUTH_PATHS.includes(pathname)) {
     return <>{children}</>;
   }
 
-  // If not logged in, don't render anything (redirect will happen)
-  if (!user) return null;
+  if (!user && !isGuestPath(pathname)) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
