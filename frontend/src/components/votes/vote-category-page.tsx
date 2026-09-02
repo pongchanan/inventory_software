@@ -174,7 +174,7 @@ export default function VoteCategoryPage({ category }: { category: VoteCategory 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
           <p className="text-sm text-blue-900">Log in to add a choice or cast a vote.</p>
           <Link href="/login" className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-800">
-            <LogIn size={16} /> Log in to vote
+            <LogIn size={16} /> Log in to vote &amp; create new choice
           </Link>
         </div>
       )}
@@ -220,7 +220,7 @@ export default function VoteCategoryPage({ category }: { category: VoteCategory 
                         {votingId === proposal.id ? "Saving…" : proposal.has_voted ? "Voted" : "Vote"}
                       </button>
                     ) : (
-                      <Link href="/login" className="text-sm font-medium text-blue-600 hover:text-blue-700">Log in to vote</Link>
+                      <Link href="/login" className="text-sm font-medium text-blue-600 hover:text-blue-700">Log in to vote &amp; create new choice</Link>
                     )}
                   </div>
                 </div>
