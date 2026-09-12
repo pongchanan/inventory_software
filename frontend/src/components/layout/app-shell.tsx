@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import Sidebar from "@/components/layout/sidebar";
+import ChatWidget from "@/components/chat/chat-widget";
 
 const AUTH_PATHS = ["/login", "/register"];
 const isGuestPath = (pathname: string) => pathname === "/" || pathname.startsWith("/votes");
@@ -39,12 +40,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (!user && !isGuestPath(pathname)) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       <Sidebar />
       {/* Main content — push right on desktop */}
       <main className="lg:ml-64 pt-14 lg:pt-0 min-h-screen transition-all duration-200">
         <div className="p-4 md:p-6 lg:p-8 animate-fade-in">{children}</div>
       </main>
+      {/* Floating AI Chatbot Assistant Widget */}
+      <ChatWidget />
     </div>
   );
 }

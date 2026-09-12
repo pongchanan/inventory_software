@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError } from "@/lib/api";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -20,7 +22,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      // Redirect handled by AppShell
+      router.replace("/");
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.detail);
