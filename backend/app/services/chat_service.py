@@ -4,9 +4,12 @@ import json
 import logging
 import os
 import re
+import ssl
 import urllib.request
 import urllib.error
+from pathlib import Path
 from typing import Any
+from dotenv import load_dotenv
 
 from sqlalchemy.orm import Session
 
@@ -14,7 +17,19 @@ from app.models.item import Item
 from app.schemas.chat import ChatMessage, ChatRequest, ChatResponse, RecommendedItem
 from app.services.s3_storage import get_presigned_url
 
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(BACKEND_DIR / ".env", override=True)
+
 logger = logging.getLogger(__name__)
+
+
+def _get_ssl_context() -> ssl.SSLContext:
+    """Create a resilient SSL context that works on macOS and Linux."""
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl._create_unverified_context()
 
 
 def _get_inventory_context(db: Session) -> list[dict[str, Any]]:
@@ -37,6 +52,63 @@ def _get_inventory_context(db: Session) -> list[dict[str, Any]]:
             "image_url": image_url,
         })
     return context_list
+
+
+def _call_openrouter_api(
+    api_key: str,
+    system_instruction: str,
+    history: list[ChatMessage],
+    user_message: str,
+    model: str | None = None,
+) -> str | None:
+    """Call OpenRouter API via REST with system instructions and chat history."""
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    raw_model = model or os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-001")
+    # Clean up model name if :online suffix was passed with web plugin
+    selected_model = raw_model.strip()
+
+    messages = [{"role": "system", "content": system_instruction}]
+    for msg in history[-6:]:  # Keep last 6 turns
+        messages.append({
+            "role": "user" if msg.role == "user" else "assistant",
+            "content": msg.content,
+        })
+    messages.append({
+        "role": "user",
+        "content": user_message,
+    })
+
+    payload: dict[str, Any] = {
+        "model": selected_model,
+        "messages": messages,
+        "temperature": 0.5,
+        "max_tokens": 800,
+        "plugins": [{"id": "web"}],
+    }
+
+    try:
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+                "HTTP-Referer": "http://localhost:3000",
+                "X-Title": "Inventory Software Assistant",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=25, context=_get_ssl_context()) as response:
+            res_data = json.loads(response.read().decode("utf-8"))
+            choices = res_data.get("choices", [])
+            if choices:
+                return choices[0].get("message", {}).get("content", "").strip()
+    except urllib.error.HTTPError as http_err:
+        err_body = http_err.read().decode("utf-8", errors="ignore")
+        logger.warning("[chat_service] OpenRouter HTTP %d error: %s", http_err.code, err_body)
+    except Exception as exc:
+        logger.warning("[chat_service] OpenRouter API call failed: %s", exc)
+    return None
 
 
 def _call_gemini_api(
@@ -77,7 +149,7 @@ def _call_gemini_api(
             headers={"Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=12) as response:
+        with urllib.request.urlopen(req, timeout=15, context=_get_ssl_context()) as response:
             res_data = json.loads(response.read().decode("utf-8"))
             candidates = res_data.get("candidates", [])
             if candidates:
@@ -95,8 +167,23 @@ def _local_rule_based_response(user_query: str, inventory: list[dict[str, Any]])
     recommended: list[dict[str, Any]] = []
     suggestions: list[str] = []
 
-    # 1. Temperature / Humidity
-    if any(k in q for k in ["temp", "humidity", "climate", "weather", "greenhouse", "dht"]):
+    # 1. Thermal Imaging / Fever / Infrared
+    if any(k in q for k in ["thermal", "fever", "infrared", "mlx90640", "amg8833", "grid-eye", "lepton", "heat map"]):
+        reply = (
+            "### 🌡️ Thermal Imaging & Fever Detection Sensor Recommendations\n\n"
+            "For non-contact temperature scanning, human body thermal imaging, and fever screening:\n\n"
+            "* **MLX90640 IR Array Sensor (32x24 pixels)**: Most popular for DIY fever screening cameras. Communicates via I2C and creates a 768-pixel thermal heatmap.\n"
+            "* **Panasonic AMG8833 Grid-EYE (8x8 pixels)**: 64-pixel infrared array sensor (0°C to 80°C, ±2.5°C accuracy). Ideal for human presence and fever screening.\n"
+            "* **FLIR Lepton 3.5 (160x120 pixels)**: Professional-grade radiometric thermal camera module.\n\n"
+            "**Lab Status:** Note that thermal camera modules are high-grade specialty parts; check below for compatible microcontrollers (ESP32/Arduino) in our cabinet."
+        )
+        for item in inventory:
+            if any(k in item["name"].lower() for k in ["thermal", "mlx", "amg8833", "esp32", "arduino"]):
+                recommended.append(item)
+        suggestions = ["How to wire MLX90640 to ESP32", "Connect AMG8833 to Arduino", "Check available ESP32 boards"]
+
+    # 2. Temperature / Humidity (DHT11, DHT22)
+    elif any(k in q for k in ["temp", "humidity", "climate", "weather", "greenhouse", "dht"]):
         reply = (
             "### 🌡️ Temperature & Humidity Sensor Recommendation\n\n"
             "For measuring ambient temperature and humidity, the most common choices are:\n\n"
@@ -111,7 +198,7 @@ def _local_rule_based_response(user_query: str, inventory: list[dict[str, Any]])
                 recommended.append(item)
         suggestions = ["How to wire DHT11 to ESP32?", "What is the accuracy of DHT11?", "Check available Arduino boards"]
 
-    # 2. Distance / Obstacle / Proximity
+    # 3. Distance / Obstacle / Proximity
     elif any(k in q for k in ["distance", "obstacle", "ultrasonic", "proximity", "range", "hc-sr04", "sonar"]):
         reply = (
             "### 🦇 Distance & Obstacle Detection Recommendation\n\n"
@@ -125,7 +212,7 @@ def _local_rule_based_response(user_query: str, inventory: list[dict[str, Any]])
                 recommended.append(item)
         suggestions = ["Parts for obstacle avoiding car", "Calculate distance from ultrasonic echo", "Check Servo motor stock"]
 
-    # 3. Motors / Servos / Actuators / Drivers
+    # 4. Motors / Servos / Actuators / Drivers
     elif any(k in q for k in ["motor", "servo", "driver", "l298n", "sg90", "stepper", "speed"]):
         reply = (
             "### ⚙️ Motors & Actuators Recommendation\n\n"
@@ -138,8 +225,8 @@ def _local_rule_based_response(user_query: str, inventory: list[dict[str, Any]])
                 recommended.append(item)
         suggestions = ["Difference between Servo and Stepper", "How to wire L298N driver", "Check ESP32 stock"]
 
-    # 4. Microcontrollers / Dev Boards / Wi-Fi
-    elif any(k in q for k in ["esp32", "arduino", "microcontroller", "board", "wifi", "bluetooth", "ble"]):
+    # 5. Microcontrollers / Dev Boards / Wi-Fi
+    elif any(k in q for k in ["esp32", "arduino", "microcontroller", "dev board", "wifi", "bluetooth", "ble module"]):
         reply = (
             "### 📟 Microcontroller Recommendations\n\n"
             "* **ESP32-WROOM-32D**: High-performance dual-core 240MHz MCU with built-in Wi-Fi and Bluetooth BLE. "
@@ -151,7 +238,7 @@ def _local_rule_based_response(user_query: str, inventory: list[dict[str, Any]])
                 recommended.append(item)
         suggestions = ["Connect ESP32 to MQTT broker", "Read analog sensor on ESP32", "Check temperature sensor stock"]
 
-    # 5. Project Bill of Materials (Obstacle car, Plant waterer, etc.)
+    # 6. Project Bill of Materials (Obstacle car, Plant waterer, etc.)
     elif any(k in q for k in ["robot", "car", "plant", "water", "irrigation", "project", "bom"]):
         if any(k in q for k in ["plant", "water", "irrigation"]):
             reply = (
@@ -204,9 +291,10 @@ def _local_rule_based_response(user_query: str, inventory: list[dict[str, Any]])
 def process_chat_query(db: Session, request: ChatRequest) -> ChatResponse:
     """Process user message, ground with inventory database, and return AI response."""
     inventory = _get_inventory_context(db)
-    api_key = os.getenv("GEMINI_API_KEY")
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    gemini_key = os.getenv("GEMINI_API_KEY")
 
-    if api_key:
+    if openrouter_key or gemini_key:
         # Build grounding prompt with real-time inventory list
         inv_summary = "\n".join(
             f"- ID {item['id']}: {item['name']} (Quantity in stock: {item['quantity']}, Status: {'In Stock' if item['in_stock'] else 'Out of Stock'})"
@@ -225,7 +313,12 @@ def process_chat_query(db: Session, request: ChatRequest) -> ChatResponse:
             "4. Format your response cleanly using GitHub markdown."
         )
 
-        ai_reply = _call_gemini_api(api_key, system_prompt, request.history, request.message)
+        ai_reply = None
+        if openrouter_key:
+            ai_reply = _call_openrouter_api(openrouter_key, system_prompt, request.history, request.message)
+        if not ai_reply and gemini_key:
+            ai_reply = _call_gemini_api(gemini_key, system_prompt, request.history, request.message)
+
         if ai_reply:
             # Find mentioned items in the AI reply to render cards
             matched_items: list[dict[str, Any]] = []

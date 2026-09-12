@@ -5,10 +5,12 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-# Load .env from backend/ dir (parents[1] = backend/)
-load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=True)
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(BACKEND_DIR / ".env", override=True)
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./inventory.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+if not DATABASE_URL or DATABASE_URL == "sqlite:///./inventory.db":
+    DATABASE_URL = f"sqlite:///{BACKEND_DIR / 'inventory.db'}"
 
 # Fix Railway's postgres:// prefix
 if DATABASE_URL.startswith("postgres://"):

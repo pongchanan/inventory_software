@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 380" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="chip_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M 24 0 L 0 0 0 24" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="380" rx="16" fill="url(#bg)"/>
+  <rect width="600" height="380" rx="16" fill="url(#grid)"/>
+
+  <!-- Circuit Trace Accents -->
+  <path d="M 40 40 L 140 40 L 180 80 L 420 80 L 460 40 L 560 40" fill="none" stroke="#60a5fa" stroke-width="2" stroke-opacity="0.3"/>
+  <circle cx="140" cy="40" r="4" fill="#60a5fa"/>
+  <circle cx="460" cy="40" r="4" fill="#60a5fa"/>
+  <circle cx="560" cy="40" r="4" fill="#60a5fa"/>
+
+  <!-- Central PCB / Component Visual -->
+  <g transform="translate(180, 70)">
+    <rect x="0" y="0" width="240" height="150" rx="12" fill="url(#chip_grad)" stroke="#60a5fa" stroke-width="2.5" stroke-opacity="0.9"/>
+    
+    <!-- Gold Contact Pins (Top & Bottom) -->
+    <g fill="#eab308">
+      <rect x="25" y="-8" width="10" height="8" rx="2"/>
+      <rect x="55" y="-8" width="10" height="8" rx="2"/>
+      <rect x="85" y="-8" width="10" height="8" rx="2"/>
+      <rect x="115" y="-8" width="10" height="8" rx="2"/>
+      <rect x="145" y="-8" width="10" height="8" rx="2"/>
+      <rect x="175" y="-8" width="10" height="8" rx="2"/>
+      <rect x="205" y="-8" width="10" height="8" rx="2"/>
+
+      <rect x="25" y="150" width="10" height="8" rx="2"/>
+      <rect x="55" y="150" width="10" height="8" rx="2"/>
+      <rect x="85" y="150" width="10" height="8" rx="2"/>
+      <rect x="115" y="150" width="10" height="8" rx="2"/>
+      <rect x="145" y="150" width="10" height="8" rx="2"/>
+      <rect x="175" y="150" width="10" height="8" rx="2"/>
+      <rect x="205" y="150" width="10" height="8" rx="2"/>
+    </g>
+
+    <!-- Main Microcontroller / Sensor Core Die -->
+    <rect x="40" y="25" width="160" height="100" rx="8" fill="#0f172a" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+    <circle cx="55" cy="40" r="3" fill="#22c55e"/>
+    
+    <!-- Chip Text -->
+    <text x="120" y="70" fill="#f8fafc" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" text-anchor="middle" letter-spacing="1">HARDWARE LAB</text>
+    <text x="120" y="92" fill="#60a5fa" font-family="monospace" font-size="11" font-weight="600" text-anchor="middle">SG90</text>
+  </g>
+
+  <!-- Bottom Details & Typography -->
+  <g transform="translate(40, 265)">
+    <!-- Badge -->
+    <rect x="0" y="0" width="220" height="26" rx="13" fill="rgba(0,0,0,0.4)" stroke="#60a5fa" stroke-width="1.2"/>
+    <circle cx="12" cy="13" r="4" fill="#22c55e"/>
+    <text x="24" y="17" fill="#f1f5f9" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="600">1.8 kg/cm Torque | 5V PWM</text>
+
+    <!-- Title & Subtitle -->
+    <text x="0" y="56" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="800">SG90 Micro Servo</text>
+    <text x="0" y="80" fill="rgba(255,255,255,0.7)" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13">9g 180° Position Actuator</text>
+  </g>
+</svg>
