@@ -8,7 +8,6 @@ from app.models.borrowing import Borrowing
 from app.models.damaged_item_report import DamagedItemReport
 from app.models.item import Item
 from app.services.s3_storage import get_presigned_url
-from app.services.items_service import _first_image_for_items
 
 
 def get_dashboard_stats(db: Session) -> dict:
@@ -50,21 +49,19 @@ def get_most_damaged_items(db: Session, limit: int = 5) -> list[dict]:
             DamagedItemReport.item_id,
             Item.name,
             Item.image_path,
+            Item.web_thumbnail_path,
             func.count(DamagedItemReport.id).label("report_count"),
         )
         .join(Item, DamagedItemReport.item_id == Item.id)
-        .group_by(DamagedItemReport.item_id, Item.name, Item.image_path)
+        .group_by(DamagedItemReport.item_id, Item.name, Item.image_path, Item.web_thumbnail_path)
         .order_by(func.count(DamagedItemReport.id).desc())
         .limit(limit)
         .all()
     )
 
-    item_ids = [r.item_id for r in rows]
-    sample_map = _first_image_for_items(db, item_ids)
-
     result = []
     for r in rows:
-        key = r.image_path or sample_map.get(r.item_id)
+        key = r.web_thumbnail_path or r.image_path
         result.append({
             "item_id": r.item_id,
             "name": r.name,

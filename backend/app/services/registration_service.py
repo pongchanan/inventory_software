@@ -3,10 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.services.auth_service import hash_password
+from app.services.email_policy import require_kmitl_email
 
 
 def create_registration(db: Session, name: str, email: str, password: str) -> User:
     """Register a new user with card_id=None (card can be linked later)."""
+    email = require_kmitl_email(email)
     existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
         raise HTTPException(
@@ -29,6 +31,7 @@ def create_registration(db: Session, name: str, email: str, password: str) -> Us
 def register_with_card(
     db: Session, name: str, email: str, password: str, card_id: str
 ) -> User:
+    email = require_kmitl_email(email)
     existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
         raise HTTPException(

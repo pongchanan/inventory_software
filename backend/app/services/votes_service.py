@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta, timezone
+from urllib.parse import urlparse
 
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -29,7 +30,7 @@ def current_cycle(db: Session) -> VoteCycle:
     return cycle
 
 
-def proposal_out(proposal: VoteProposal, has_voted: bool = False) -> dict:
+def proposal_out(proposal: VoteProposal, has_voted: bool = False, vote_count: int = 0) -> dict:
     image_path = getattr(proposal, "image_path", None)
     return {
         "id": proposal.id,
@@ -37,6 +38,11 @@ def proposal_out(proposal: VoteProposal, has_voted: bool = False) -> dict:
         "title": proposal.title,
         "description": proposal.description,
         "image_url": get_presigned_url(image_path) if image_path else None,
+        "purchase_url": proposal.purchase_url,
+        "estimated_price": proposal.estimated_price,
+        "review_status": proposal.review_status,
+        "purchase_status": proposal.purchase_status,
+        "vote_count": vote_count,
         "created_at": proposal.created_at,
         "is_active": proposal.is_active,
         "has_voted": has_voted,
@@ -46,7 +52,7 @@ def proposal_out(proposal: VoteProposal, has_voted: bool = False) -> dict:
 def list_public_proposals(db: Session, user: User | None = None) -> list[dict]:
     proposals = (
         db.query(VoteProposal)
-        .filter(VoteProposal.is_active == True)  # noqa: E712
+        .filter(VoteProposal.is_active == True, VoteProposal.review_status == "approved")  # noqa: E712
         .order_by(VoteProposal.created_at.desc())
         .all()
     )
@@ -65,7 +71,23 @@ def list_public_proposals(db: Session, user: User | None = None) -> list[dict]:
                 .all()
             )
         }
-    return [proposal_out(proposal, proposal.id in voted_ids) for proposal in proposals]
+    counts = dict(
+        db.query(ProposalVote.proposal_id, func.count(ProposalVote.id))
+        .filter(ProposalVote.cycle_id == current_cycle(db).id)
+        .group_by(ProposalVote.proposal_id).all()
+    ) if proposals else {}
+    return [proposal_out(proposal, proposal.id in voted_ids, counts.get(proposal.id, 0)) for proposal in proposals]
+
+
+def _validated_shopee_url(value: str) -> str:
+    url = value.strip()
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    if parsed.scheme not in {"https", "http"} or not host or not (
+        host == "shopee.co.th" or host.endswith(".shopee.co.th")
+    ):
+        raise ValueError("Use a valid Shopee Thailand link (shopee.co.th)")
+    return url
 
 
 def create_proposal(
@@ -74,16 +96,25 @@ def create_proposal(
     category: str,
     title: str,
     description: str | None,
+    purchase_url: str,
+    estimated_price: int | None,
     image_bytes: bytes | None = None,
     image_content_type: str = "image/jpeg",
 ) -> dict:
     clean_title = " ".join(title.split())
     clean_description = " ".join(description.split()) if description else None
+    if estimated_price is not None and estimated_price < 0:
+        raise ValueError("Estimated price cannot be negative")
     proposal = VoteProposal(
         category=category,
         title=clean_title,
         description=clean_description or None,
         created_by=user.id,
+        purchase_url=_validated_shopee_url(purchase_url),
+        estimated_price=estimated_price,
+        # Choices are visible and votable immediately by product decision.
+        review_status="approved",
+        is_active=True,
     )
     db.add(proposal)
     db.flush()
@@ -146,16 +177,22 @@ def cycle_results(db: Session, cycle_id: int) -> list[dict]:
         .all()
     )
     return [
-        {**proposal_out(proposal), "vote_count": vote_count}
+        proposal_out(proposal, vote_count=vote_count)
         for proposal, vote_count in rows
     ]
 
 
-def set_proposal_status(db: Session, proposal_id: int, is_active: bool) -> dict:
+def set_proposal_status(db: Session, proposal_id: int, review_status: str | None = None, purchase_status: str | None = None, is_active: bool | None = None) -> dict:
     proposal = db.query(VoteProposal).filter(VoteProposal.id == proposal_id).first()
     if proposal is None:
         raise ValueError("Vote choice not found")
-    proposal.is_active = is_active
+    if review_status is not None:
+        proposal.review_status = review_status
+        proposal.is_active = review_status == "approved"
+    if purchase_status is not None:
+        proposal.purchase_status = purchase_status
+    if is_active is not None:
+        proposal.is_active = is_active
     db.commit()
     db.refresh(proposal)
     return proposal_out(proposal)

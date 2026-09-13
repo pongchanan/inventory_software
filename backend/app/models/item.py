@@ -11,6 +11,7 @@ class Item(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     locker_number: Mapped[str | None] = mapped_column(String(3), nullable=True, index=True)
     image_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    web_thumbnail_path: Mapped[str | None] = mapped_column(String, nullable=True)
     quantity: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     # Tracks the async enrollment pipeline state.

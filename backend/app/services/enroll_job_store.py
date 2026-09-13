@@ -105,19 +105,17 @@ def _run_job(job_id: str, video_bytes: bytes) -> None:
         result = run_enroll_pipeline(
             db, item_id=item_id, name=name, video_bytes=video_bytes
         )
-        # Persist success status.  Also populate image_path from the first
-        # accepted frame when the admin did not upload an explicit cover image.
+        # AI training frames deliberately stay separate from student-facing
+        # media.  Admins set a cover image explicitly; no sample leaks to web.
         update_vals: dict = {"enroll_status": "done"}
         first_frame_key: str | None = result["images"][0] if result["images"] else None
         current_path = db.query(Item.image_path).filter(Item.id == item_id).scalar()
-        if current_path is None and first_frame_key:
-            update_vals["image_path"] = first_frame_key
         db.execute(sa_update(Item).where(Item.id == item_id).values(**update_vals))
         db.commit()
 
         # Resolve image key → presigned URL for the in-memory store so the
         # poll response gives the frontend a ready-to-use URL.
-        resolved_key = update_vals.get("image_path") or current_path or first_frame_key
+        resolved_key = update_vals.get("image_path") or current_path
         image_url = get_presigned_url(resolved_key) if resolved_key else None
 
         with _lock:

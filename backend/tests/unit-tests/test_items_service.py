@@ -32,15 +32,13 @@ class TestGetActiveItems:
         assert result["page_size"] == 20
         assert result["total_pages"] == 1
 
-    def test_image_is_presigned_url_when_sample_exists(self, mock_db, sample_item):
+    def test_image_is_presigned_url_when_web_thumbnail_exists(self, mock_db, sample_item):
         self._setup_query(mock_db, [sample_item], 1)
-        fake_key = "samples/item_1_abc.jpg"
+        fake_key = "item-thumbnails/1/abc.jpg"
         fake_url = "https://s3.example.com/presigned"
+        sample_item.web_thumbnail_path = fake_key
 
         with patch(
-            "app.services.items_service._first_image_for_items",
-            return_value={sample_item.id: fake_key},
-        ), patch(
             "app.services.items_service.get_presigned_url",
             return_value=fake_url,
         ):
@@ -48,15 +46,12 @@ class TestGetActiveItems:
 
         assert result["items"][0]["image"] == fake_url
 
-    def test_image_is_none_when_no_sample(self, mock_db, sample_item):
+    def test_image_is_none_when_no_web_cover(self, mock_db, sample_item):
         sample_item.image_path = None
+        sample_item.web_thumbnail_path = None
         self._setup_query(mock_db, [sample_item], 1)
 
-        with patch(
-            "app.services.items_service._first_image_for_items",
-            return_value={sample_item.id: None},
-        ):
-            result = get_active_items(mock_db, page=1, page_size=20)
+        result = get_active_items(mock_db, page=1, page_size=20)
 
         assert result["items"][0]["image"] is None
 

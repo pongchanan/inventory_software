@@ -111,7 +111,7 @@ def root():
 
 @app.get("/health", tags=["General"])
 def health_check():
-    return {"status": "healthy"}
+    return {"status": "healthy", "environment": os.getenv("APP_ENV", "unset")}
 
 
 @app.post("/api/admin/re-embed", tags=["Admin API"])

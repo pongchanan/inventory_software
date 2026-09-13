@@ -11,7 +11,6 @@ from app.models.borrowing import Borrowing
 from app.models.item import Item
 from app.models.open_session import OpenSession
 from app.schemas.ai_pipeline import RecognizeFromImageInput
-from app.services.items_service import _first_image_for_items
 from app.services.s3_storage import download_image, get_presigned_url
 
 logger = logging.getLogger(__name__)
@@ -19,11 +18,10 @@ logger = logging.getLogger(__name__)
 
 def _enrich_borrowings(db: Session, borrowings: list) -> list:
     """Attach item.image_url (presigned) to each borrowing's item."""
-    item_ids = list({b.item_id for b in borrowings})
-    sample_map = _first_image_for_items(db, item_ids)
     for b in borrowings:
         if b.item:
-            key = sample_map.get(b.item_id)
+            # Never expose a training sample in the borrowing UI.
+            key = b.item.web_thumbnail_path or b.item.image_path
             b.item.image_url = get_presigned_url(key) if key else None
     return borrowings
 

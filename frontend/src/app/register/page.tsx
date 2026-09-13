@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, UserPlus, CreditCard, Check, Loader2 } from "lucide-react";
+import { GoogleSignIn } from "@/components/auth/google-sign-in";
 
 type Step = "form" | "scanning" | "done";
 
@@ -236,6 +237,10 @@ export default function RegisterPage() {
               </>
             )}
           </button>
+
+          <div className="flex items-center gap-3 text-xs text-gray-400"><div className="h-px flex-1 bg-gray-200" />or<div className="h-px flex-1 bg-gray-200" /></div>
+          <GoogleSignIn onSuccess={() => router.replace("/")} />
+          <p className="text-xs text-gray-500">Registration is limited to verified <strong>@kmitl.ac.th</strong> accounts.</p>
 
           <p className="text-center text-sm text-gray-500">
             Already have an account?{" "}

@@ -9,7 +9,6 @@ from app.models.borrowing import Borrowing
 from app.models.damaged_item_report import DamagedItemReport
 from app.models.item import Item
 from app.models.user import User
-from app.services.items_service import _first_image_for_items
 from app.services.s3_storage import _get_bucket, _get_client, get_presigned_url
 
 
@@ -51,12 +50,10 @@ def _enrich_reports(
     db: Session, reports: list[DamagedItemReport]
 ) -> list[DamagedItemReport]:
     """Attach presigned illustrated_url and item.image_url to each report."""
-    item_ids = list({r.item_id for r in reports})
-    sample_map = _first_image_for_items(db, item_ids)
     for report in reports:
         report.illustrated_url = get_presigned_url(report.illustrated_path)
         if report.item:
-            key = sample_map.get(report.item_id)
+            key = report.item.web_thumbnail_path or report.item.image_path
             report.item.image_url = get_presigned_url(key) if key else None
     return reports
 

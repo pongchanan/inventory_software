@@ -10,13 +10,13 @@ import type { VoteCategory, VoteProposal } from "@/lib/types";
 const POLL_CONTENT: Record<VoteCategory, { title: string; description: string; inputLabel: string; inputPlaceholder: string }> = {
   equipment: {
     title: "New Equipment",
-    description: "Suggest equipment for the lab or your projects. Vote totals are visible to administrators only.",
+    description: "Suggest equipment for the lab or your projects. Scores and purchase progress are public.",
     inputLabel: "Add an equipment choice",
     inputPlaceholder: "Equipment name",
   },
   board_game: {
     title: "New Board Games",
-    description: "Suggest board games for shared activities. Vote totals are visible to administrators only.",
+    description: "Suggest board games for shared activities. Scores and purchase progress are public.",
     inputLabel: "Add a board game choice",
     inputPlaceholder: "Board game name",
   },
@@ -29,11 +29,14 @@ export default function VoteCategoryPage({ category }: { category: VoteCategory 
   const [proposals, setProposals] = useState<VoteProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [votingId, setVotingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [purchaseUrl, setPurchaseUrl] = useState("");
+  const [estimatedPrice, setEstimatedPrice] = useState("");
   const [image, setImage] = useState<File | null>(null);
 
   const loadProposals = useCallback(async () => {
@@ -56,6 +59,8 @@ export default function VoteCategoryPage({ category }: { category: VoteCategory 
     setShowForm(false);
     setTitle("");
     setDescription("");
+    setPurchaseUrl("");
+    setEstimatedPrice("");
     setImage(null);
     if (imageInputRef.current) imageInputRef.current.value = "";
   }
@@ -70,9 +75,12 @@ export default function VoteCategoryPage({ category }: { category: VoteCategory 
       formData.append("category", category);
       formData.append("title", title);
       if (description) formData.append("description", description);
+      formData.append("purchase_url", purchaseUrl);
+      if (estimatedPrice) formData.append("estimated_price", estimatedPrice);
       if (image) formData.append("image", image);
       await api("/api/votes/proposals", { method: "POST", token, formData });
       closeForm();
+      setNotice("Your choice is live now. Everyone can see its score and purchase progress.");
       await loadProposals();
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : "Could not add your choice.");
@@ -140,6 +148,8 @@ export default function VoteCategoryPage({ category }: { category: VoteCategory 
                 placeholder="Optional description"
                 className="w-full mt-3 px-3 py-2.5 border border-gray-300 rounded-lg text-sm resize-y"
               />
+              <input required type="url" value={purchaseUrl} onChange={(event) => setPurchaseUrl(event.target.value)} placeholder="Shopee Thailand link (required)" className="w-full mt-3 px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
+              <input type="number" min="0" value={estimatedPrice} onChange={(event) => setEstimatedPrice(event.target.value)} placeholder="Estimated price in THB (optional)" className="w-full mt-3 px-3 py-2.5 border border-gray-300 rounded-lg text-sm" />
               <div className="flex items-center justify-between gap-3 mt-3">
                 <div>
                   <button
@@ -180,6 +190,7 @@ export default function VoteCategoryPage({ category }: { category: VoteCategory 
       )}
 
       {error && <p className="mb-4 text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg p-3">{error}</p>}
+      {notice && <p className="mb-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg p-3">{notice}</p>}
 
       <section>
         <h2 className="font-semibold text-gray-900">Choices</h2>
@@ -205,6 +216,12 @@ export default function VoteCategoryPage({ category }: { category: VoteCategory 
                 <div className="p-3 flex flex-1 flex-col">
                   {proposal.image_url && <h3 className="font-medium text-gray-900 text-sm">{proposal.title}</h3>}
                   {proposal.description && <p className="text-xs text-gray-500 mt-1">{proposal.description}</p>}
+                  <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                    <span className="rounded-full bg-blue-50 px-2 py-1 font-semibold text-blue-700">{proposal.vote_count} votes</span>
+                    <span className="rounded-full bg-gray-100 px-2 py-1 text-gray-600">{proposal.purchase_status}</span>
+                    {proposal.estimated_price !== null && <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">฿{proposal.estimated_price.toLocaleString()}</span>}
+                  </div>
+                  {proposal.purchase_url && <a href={proposal.purchase_url} target="_blank" rel="noreferrer" className="mt-2 text-xs font-medium text-orange-600 hover:text-orange-700">View on Shopee ↗</a>}
                   <div className="flex justify-end mt-3 pt-1">
                     {user ? (
                       <button

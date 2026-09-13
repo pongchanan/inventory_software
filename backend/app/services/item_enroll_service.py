@@ -7,7 +7,7 @@ from app.models.ai_label import AiLabel
 from app.models.ai_sample import AiSample
 from app.schemas.ai_pipeline import EnrollFromVideoInput
 from app.services.ai_service import enroll_from_video
-from app.services.s3_storage import upload_item_image
+from app.services.s3_storage import upload_item_image, upload_item_thumbnail
 
 
 def add_quantity_to_existing(
@@ -33,6 +33,7 @@ def add_quantity_to_existing(
     if image_bytes:
         key = upload_item_image(image_bytes, item.id, image_content_type)
         item.image_path = key
+        item.web_thumbnail_path = upload_item_thumbnail(image_bytes, item.id)
         db.commit()
         db.refresh(item)
 
@@ -67,6 +68,7 @@ def create_item_record(
     if image_bytes:
         key = upload_item_image(image_bytes, item.id, image_content_type)
         item.image_path = key
+        item.web_thumbnail_path = upload_item_thumbnail(image_bytes, item.id)
         db.commit()
         db.refresh(item)
 

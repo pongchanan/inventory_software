@@ -116,7 +116,7 @@ export default function AdminAssetsPage() {
                     <button onClick={() => setShowTips(false)} className="text-gray-400 hover:text-gray-600"><X size={14} /></button>
                   </div>
                   <ul className="space-y-2">
-                    <li className="flex gap-2"><Video size={14} className="text-blue-500 shrink-0 mt-0.5" /><span><strong>Enroll</strong> — Upload a video of the item to train AI recognition.</span></li>
+                    <li className="flex gap-2"><Images size={14} className="text-blue-500 shrink-0 mt-0.5" /><span><strong>Add item</strong> — Take 1–6 photos, check for an existing item, then confirm.</span></li>
                     <li className="flex gap-2"><Images size={14} className="text-blue-500 shrink-0 mt-0.5" /><span><strong>Samples</strong> — Click the sample count on a card to view, add, or remove AI training images.</span></li>
                     <li className="flex gap-2"><Eye size={14} className="text-blue-500 shrink-0 mt-0.5" /><span><strong>Active / Inactive</strong> — Inactive items are hidden from students and ignored by AI.</span></li>
                   </ul>
@@ -131,7 +131,7 @@ export default function AdminAssetsPage() {
           className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shrink-0"
         >
           <Plus size={16} />
-          Enroll New Item
+          Add Item
         </button>
       </div>
 
@@ -647,7 +647,7 @@ function EnrollModal({
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [video, setVideo] = useState<File | null>(null);
-  const [image, setImage] = useState<File | null>(null);
+  const [images, setImages] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -725,8 +725,8 @@ function EnrollModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedItem && !video) {
-      setError("Video file is required for new items");
+    if (!selectedItem && !video && images.length === 0) {
+      setError("Take or upload 1–6 product photos (or add a training video)");
       return;
     }
     setSubmitting(true);
@@ -736,7 +736,7 @@ function EnrollModal({
       fd.append("name", name);
       fd.append("quantity", String(quantity));
       if (video) fd.append("video", video);
-      if (image) fd.append("image", image);
+      images.forEach((image) => fd.append("images", image));
       if (selectedItem) fd.append("item_id", String(selectedItem.id));
 
       const result = await api<{ job_id: string; status: string; item_id: number }>(
@@ -768,7 +768,7 @@ function EnrollModal({
         {/* header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">
-            {jobId ? "Enrollment Progress" : selectedItem ? "Add to Existing Item" : "Enroll New Item"}
+            {jobId ? "Enrollment Progress" : selectedItem ? "Add to Existing Item" : "Add New Item"}
           </h2>
           {!jobId && (
             <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600">
@@ -846,8 +846,7 @@ function EnrollModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Video File {!selectedItem && <span className="text-red-500">*</span>}
-                {selectedItem && <span className="text-gray-400 font-normal">(optional — adds sample data)</span>}
+                Training Video <span className="text-gray-400 font-normal">(optional — improves AI recognition)</span>
               </label>
               <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
                 {video ? (
@@ -881,18 +880,18 @@ function EnrollModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cover Image <span className="text-gray-400 font-normal">(optional)</span>
+                Product photos <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(1–6 photos; first becomes the web thumbnail)</span>
               </label>
               <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
-                {image ? (
+                {images.length ? (
                   <div className="flex items-center gap-2 text-sm text-gray-700">
                     <ImageIcon size={18} className="text-emerald-500" />
-                    <span className="truncate max-w-[200px]">{image.name}</span>
+                    <span className="truncate max-w-[200px]">{images.length} photo{images.length > 1 ? "s" : ""} selected</span>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
-                        setImage(null);
+                        setImages([]);
                       }}
                       className="text-gray-400 hover:text-red-500"
                     >
@@ -902,14 +901,15 @@ function EnrollModal({
                 ) : (
                   <div className="text-center text-sm text-gray-400">
                     <ImageIcon size={20} className="mx-auto mb-1" />
-                    Click to upload cover image
+                    Take or upload product photos
                   </div>
                 )}
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
-                  onChange={(e) => setImage(e.target.files?.[0] ?? null)}
+                  onChange={(e) => setImages(Array.from(e.target.files ?? []).slice(0, 6))}
                 />
               </label>
             </div>
@@ -927,7 +927,7 @@ function EnrollModal({
               className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium flex items-center justify-center gap-2"
             >
               {submitting && <Loader2 size={16} className="animate-spin" />}
-              {selectedItem ? (video ? "Add Quantity & Sample Data" : "Add Quantity") : "Start Enrollment"}
+              {selectedItem ? (video || images.length ? "Add Quantity & Photos" : "Add Quantity") : "Confirm & Add Item"}
             </button>
           </form>
         ) : (

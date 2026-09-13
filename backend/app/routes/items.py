@@ -93,6 +93,7 @@ async def enroll_item_route(
     quantity: int = Form(..., ge=0),
     video: Optional[UploadFile] = File(None),
     image: Optional[UploadFile] = File(None),
+    images: list[UploadFile] = File([]),
     item_id: Optional[int] = Form(None),
     db: Session = Depends(get_db),
 ):
@@ -122,6 +123,17 @@ async def enroll_item_route(
         image_content_type = image.content_type or "image/jpeg"
         if not image_bytes:
             image_bytes = None
+    if len(images) > 6:
+        raise HTTPException(status_code=400, detail="Upload at most 6 product photos")
+    product_photos: list[tuple[bytes, str]] = []
+    for photo in images:
+        data = await photo.read()
+        if data:
+            product_photos.append((data, photo.content_type or "image/jpeg"))
+    # The first mobile photo becomes a web cover if the legacy cover field was
+    # not used.  The rest are stored only as AI training samples below.
+    if image_bytes is None and product_photos:
+        image_bytes, image_content_type = product_photos[0]
 
     # --- existing item path --------------------------------------------------
     if item_id is not None:
@@ -134,6 +146,9 @@ async def enroll_item_route(
         )
         if item is None:
             raise HTTPException(status_code=404, detail="Item not found")
+
+        for photo_bytes, photo_type in product_photos:
+            upload_sample_image(db, item.id, photo_bytes, photo_type)
 
         # If a video was provided, run the ML pipeline for more samples
         if video_bytes:
@@ -155,8 +170,8 @@ async def enroll_item_route(
         )
 
     # --- new item path -------------------------------------------------------
-    if not video_bytes:
-        raise HTTPException(status_code=400, detail="Video file is required for new items")
+    if not video_bytes and not product_photos:
+        raise HTTPException(status_code=400, detail="Upload 1–6 product photos or a training video")
 
     item = create_item_record(
         db,
@@ -165,6 +180,16 @@ async def enroll_item_route(
         image_bytes=image_bytes,
         image_content_type=image_content_type,
     )
+
+    for photo_bytes, photo_type in product_photos:
+        upload_sample_image(db, item.id, photo_bytes, photo_type)
+
+    if not video_bytes:
+        # Product-sorter style quick path: photos are retained as AI samples,
+        # while a separately-compressed cover is returned to the website.
+        item.enroll_status = "done"
+        db.commit()
+        return JSONResponse(status_code=202, content=EnrollJobAccepted(job_id="", status="done", item_id=item.id).model_dump())
 
     job_id = create_job(item_id=item.id, name=item.name, quantity=item.quantity)
     submit_job(job_id, video_bytes)

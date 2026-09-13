@@ -19,13 +19,20 @@ class VoteProposalOut(BaseModel):
     title: str
     description: str | None
     image_url: str | None
+    purchase_url: str | None = None
+    estimated_price: int | None = None
+    review_status: str = "approved"
+    purchase_status: str = "voting"
+    vote_count: int = 0
     created_at: datetime
     is_active: bool
     has_voted: bool = False
 
 
 class VoteProposalStatusUpdate(BaseModel):
-    is_active: bool
+    review_status: Literal["pending", "approved", "rejected"] | None = None
+    purchase_status: Literal["voting", "shortlisted", "purchased"] | None = None
+    is_active: bool | None = None
 
 
 class VoteCycleOut(BaseModel):

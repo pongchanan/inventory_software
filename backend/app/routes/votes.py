@@ -47,6 +47,8 @@ async def add_proposal(
     category: VoteCategory = Form(...),
     title: str = Form(..., min_length=2, max_length=120),
     description: str | None = Form(None, max_length=500),
+    purchase_url: str = Form(..., max_length=1000),
+    estimated_price: int | None = Form(None, ge=0),
     image: UploadFile | None = File(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -59,7 +61,7 @@ async def add_proposal(
         current_user,
         category,
         title,
-        description,
+        description, purchase_url, estimated_price,
         image_bytes,
         (image.content_type or "image/jpeg") if image else "image/jpeg",
     )
@@ -124,6 +126,6 @@ def update_proposal_status(
     db: Session = Depends(get_db),
 ):
     try:
-        return set_proposal_status(db, proposal_id, body.is_active)
+        return set_proposal_status(db, proposal_id, body.review_status, body.purchase_status, body.is_active)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.models.item import Item
 from app.models.ai_label import AiLabel
 from app.models.ai_sample import AiSample
-from app.services.s3_storage import delete_s3_object, get_presigned_url, upload_item_image
+from app.services.s3_storage import delete_s3_object, get_presigned_url, upload_item_image, upload_item_thumbnail
 
 
 def _sample_counts_for_items(db: Session, item_ids: list[int]) -> dict[int, int]:
@@ -26,29 +26,6 @@ def _sample_counts_for_items(db: Session, item_ids: list[int]) -> dict[int, int]
     return result
 
 
-def _first_image_for_items(db: Session, item_ids: list[int]) -> dict[int, str | None]:
-    if not item_ids:
-        return {}
-    # One row per item: the AiSample with the lowest id for that item.
-    subq = (
-        db.query(func.min(AiSample.id).label("sample_id"))
-        .join(AiLabel, AiLabel.id == AiSample.label_id)
-        .filter(AiLabel.item_id.in_(item_ids))
-        .group_by(AiLabel.item_id)
-        .subquery()
-    )
-    rows = (
-        db.query(AiLabel.item_id, AiSample.image_path)
-        .join(AiLabel, AiLabel.id == AiSample.label_id)
-        .filter(AiSample.id.in_(subq))
-        .all()
-    )
-    result: dict[int, str | None] = {iid: None for iid in item_ids}
-    for row in rows:
-        result[row.item_id] = row.image_path
-    return result
-
-
 def item_to_out(item: Item, sample_count: int = 0) -> dict:
     """Convert an Item ORM object to a dict compatible with ``ItemOut``.
 
@@ -61,7 +38,7 @@ def item_to_out(item: Item, sample_count: int = 0) -> dict:
         "locker_number": item.locker_number,
         "quantity": item.quantity,
         "is_active": item.is_active,
-        "image": get_presigned_url(item.image_path) if item.image_path else None,
+        "image": get_presigned_url(item.web_thumbnail_path or item.image_path) if (item.web_thumbnail_path or item.image_path) else None,
         "enroll_status": item.enroll_status,
         "sample_count": sample_count,
     }
@@ -95,6 +72,7 @@ def update_item_image(
         raise ValueError(f"Item {item_id} not found")
     key = upload_item_image(image_bytes, item_id, content_type)
     item.image_path = key
+    item.web_thumbnail_path = upload_item_thumbnail(image_bytes, item_id)
     db.commit()
     db.refresh(item)
     return item_to_out(item)
@@ -116,18 +94,11 @@ def get_active_items(
         query.order_by(Item.id).offset((page - 1) * page_size).limit(page_size).all()
     )
 
-    # For items that don't yet have image_path set (legacy rows), fall back to
-    # the first accepted AiSample frame.
-    items_without_path = [i for i in items if not i.image_path]
-    sample_image_map = _first_image_for_items(db, [i.id for i in items_without_path])
     sample_counts = _sample_counts_for_items(db, [i.id for i in items])
 
     items_out = []
     for item in items:
-        if item.image_path:
-            raw_key: str | None = item.image_path
-        else:
-            raw_key = sample_image_map.get(item.id)
+        raw_key: str | None = item.web_thumbnail_path or item.image_path
         items_out.append(
             {
                 "id": item.id,
@@ -176,16 +147,11 @@ def get_admin_items(
         .all()
     )
 
-    items_without_path = [i for i in items if not i.image_path]
-    sample_image_map = _first_image_for_items(db, [i.id for i in items_without_path])
     sample_counts = _sample_counts_for_items(db, [i.id for i in items])
 
     items_out = []
     for item in items:
-        if item.image_path:
-            raw_key: str | None = item.image_path
-        else:
-            raw_key = sample_image_map.get(item.id)
+        raw_key: str | None = item.web_thumbnail_path or item.image_path
         items_out.append(
             {
                 "id": item.id,

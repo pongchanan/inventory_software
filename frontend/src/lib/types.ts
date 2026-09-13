@@ -50,6 +50,11 @@ export interface VoteProposal {
   title: string;
   description: string | null;
   image_url: string | null;
+  purchase_url: string | null;
+  estimated_price: number | null;
+  review_status: "pending" | "approved" | "rejected";
+  purchase_status: "voting" | "shortlisted" | "purchased";
+  vote_count: number;
   created_at: string;
   is_active: boolean;
   has_voted: boolean;

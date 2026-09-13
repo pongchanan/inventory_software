@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.auth import (
     LoginRequest,
+    GoogleLoginRequest,
     LoginResponse,
     RegisterRequest,
     RegisterWithCardRequest,
@@ -12,6 +13,7 @@ from app.schemas.auth import (
 )
 from app.services.auth_service import (
     authenticate_user,
+    authenticate_google_user,
     create_access_token,
     get_current_user,
 )
@@ -35,6 +37,15 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     user = authenticate_user(db, body.email, body.password)
     token = create_access_token(user.id, user.role)
     return LoginResponse(access_token=token, user=UserOut.model_validate(user))
+
+
+@router.post("/google", response_model=LoginResponse, tags=["General"])
+def google_login(body: GoogleLoginRequest, db: Session = Depends(get_db)):
+    user = authenticate_google_user(db, body.id_token)
+    return LoginResponse(
+        access_token=create_access_token(user.id, user.role),
+        user=UserOut.model_validate(user),
+    )
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=201, tags=["General"])

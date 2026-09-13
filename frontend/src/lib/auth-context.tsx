@@ -16,6 +16,7 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   register: (
     name: string,
     email: string,
@@ -85,6 +86,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persist(data.access_token, data.user);
   };
 
+  const loginWithGoogle = async (idToken: string) => {
+    const data = await api<AuthResponse>("/api/auth/google", {
+      method: "POST", body: { id_token: idToken },
+    });
+    persist(data.access_token, data.user);
+  };
+
   const register = async (
     name: string,
     email: string,
@@ -106,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         loading,
         login,
+        loginWithGoogle,
         register,
         logout,
         refreshUser,

@@ -8,6 +8,9 @@ Uses boto3 with endpoint/credentials from environment variables:
 import os
 import uuid
 
+import cv2
+import numpy as np
+
 import boto3
 from botocore.config import Config
 
@@ -78,6 +81,23 @@ def upload_item_image(data: bytes, item_id: int, content_type: str = "image/jpeg
         ContentType=content_type,
     )
 
+    return key
+
+
+def upload_item_thumbnail(data: bytes, item_id: int) -> str:
+    """Store a small, web-only derivative; AI sample objects are never reused."""
+    image = cv2.imdecode(np.frombuffer(data, dtype=np.uint8), cv2.IMREAD_COLOR)
+    if image is None:
+        raise ValueError("The cover image could not be decoded")
+    height, width = image.shape[:2]
+    scale = min(1.0, 640 / max(height, width))
+    if scale < 1:
+        image = cv2.resize(image, (round(width * scale), round(height * scale)), interpolation=cv2.INTER_AREA)
+    ok, encoded = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 78])
+    if not ok:
+        raise ValueError("The cover image could not be compressed")
+    key = f"item-thumbnails/{item_id}/{uuid.uuid4().hex[:8]}.jpg"
+    _get_client().put_object(Bucket=_get_bucket(), Key=key, Body=encoded.tobytes(), ContentType="image/jpeg")
     return key
 
 

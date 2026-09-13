@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ApiError } from "@/lib/api";
 import Link from "next/link";
 import { Eye, EyeOff, LogIn } from "lucide-react";
+import { GoogleSignIn } from "@/components/auth/google-sign-in";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -106,6 +107,10 @@ export default function LoginPage() {
               </>
             )}
           </button>
+
+          <div className="flex items-center gap-3 text-xs text-gray-400"><div className="h-px flex-1 bg-gray-200" />or<div className="h-px flex-1 bg-gray-200" /></div>
+          <GoogleSignIn />
+          <p className="text-xs text-gray-500">Google sign-in is limited to verified <strong>@kmitl.ac.th</strong> accounts.</p>
 
           <p className="text-center text-sm text-gray-500">
             Don&apos;t have an account?{" "}

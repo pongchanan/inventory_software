@@ -14,6 +14,10 @@ class VoteProposal(Base):
     title: Mapped[str] = mapped_column(String(120), nullable=False)
     description: Mapped[str | None] = mapped_column(String(500), nullable=True)
     image_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    purchase_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    estimated_price: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    review_status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
+    purchase_status: Mapped[str] = mapped_column(String(20), default="voting", nullable=False)
     created_by: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, nullable=False, index=True
